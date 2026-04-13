@@ -7,7 +7,9 @@ authors = [
     { name = "Henry Crosswell", email = "henry.crosswell100@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "streamlit>=1.56.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.11.3,<0.12.0"]
@@ -16,6 +18,7 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "mkdocs>=1.6.1",
+    "mypy>=1.20.1",
     "pre-commit>=4.5.1",
     "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
