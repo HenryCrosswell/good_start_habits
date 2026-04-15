@@ -1,4 +1,4 @@
-"""Habits are defined here"""
+"""Globals are defined here"""
 
 HABITS = [
     "SPF applied",
