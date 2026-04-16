@@ -28,12 +28,12 @@ Built in Python, runs in the browser via Streamlit, ports to Raspberry Pi later.
 ## Project Structure
 
 ```
-good-start-habits/
+src/good_start_habits/
+├── __init__.py       # inits project file
 ├── app.py            # Streamlit UI — the whole app
 ├── config.py         # Your habits, schedule, active hours
 ├── habits.py         # Streak logic, state load/save
 ├── state.json        # Auto-created. Tracks streaks + today's completions
-└── CLAUDE.md         # This file
 ```
 
 New files are added per phase. Nothing is deleted — only extended.
