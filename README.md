@@ -22,3 +22,8 @@ habits.py
 App.py
 - feed information from checklist to habits.py
 - recieve streak and reset information from habits.py
+
+
+To-Do
+- write tests for all functions
+- implement github actions for CI/CD
