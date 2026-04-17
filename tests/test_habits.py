@@ -2,7 +2,7 @@ from good_start_habits.habits import day_diff, daily_maintenance
 import pytest
 from typing import Any
 
-### Variables init ##############################################################################
+### Variables init ###############################################################################
 list_diff_dates: list[tuple[str, str, int]] = [
     ("2026-04-01", "2026-04-10", 9),
     ("2026-04-01", "2026-05-01", 30),
