@@ -1,13 +1,9 @@
-from good_start_habits.habits import (
-    day_diff,
-    daily_reset,
-    mark_done,
-    incomplete_tasks,
-)
+from good_start_habits.habits import day_diff, daily_maintenance
 import pytest
 from typing import Any
 
-list_of_dates: list[tuple[str, str, int]] = [
+### Variables init ##############################################################################
+list_diff_dates: list[tuple[str, str, int]] = [
     ("2026-04-01", "2026-04-10", 9),
     ("2026-04-01", "2026-05-01", 30),
     ("2025-12-31", "2026-01-05", 5),
@@ -15,62 +11,102 @@ list_of_dates: list[tuple[str, str, int]] = [
     ("56", "2026-04-10", 0),
 ]
 
-json_list: list[dict[str, Any]] = [
-    {
-        "last_written": None,
-        "SPF applied": {"streak": 0, "last_completed": None, "done_today": False},
-    },
-    {
-        "last_written": "2026-04-10",
-        "Piano practice": {
-            "streak": 0,
-            "last_completed": "2026-04-10",
-            "done_today": True,
+list_json_dicts: list[tuple[dict[str, Any], dict[str, Any], int]] = [
+    # ({input},
+    # {expected output}),
+    # day_diff
+    (
+        {
+            "SPF applied": {
+                "streak": 12,
+                "last_completed": "2026-04-02",
+                "done_today": True,
+            }
         },
-    },
-    {
-        "last_written": "2026-04-10",
-        "Run logged": {
-            "streak": 12,
-            "last_completed": "2026-04-01",
-            "done_today": False,
+        {
+            "SPF applied": {
+                "streak": 12,
+                "last_completed": "2026-04-02",
+                "done_today": True,
+            }
         },
-    },
-    {
-        "last_written": "2026-01-05",
-        "None": {"streak": 125, "last_completed": "2026-01-01", "done_today": False},
-    },
+        0,
+    ),
+    (
+        {
+            "SPF applied": {
+                "streak": 12,
+                "last_completed": "2026-04-08",
+                "done_today": False,
+            }
+        },
+        {
+            "SPF applied": {
+                "streak": 0,
+                "last_completed": "2026-04-08",
+                "done_today": False,
+            }
+        },
+        10,
+    ),
+    (
+        {
+            "SPF applied": {
+                "streak": 12,
+                "last_completed": "2026-04-10",
+                "done_today": True,
+            }
+        },
+        {
+            "SPF applied": {
+                "streak": 12,
+                "last_completed": "2026-04-10",
+                "done_today": False,
+            }
+        },
+        1,
+    ),
+    (
+        {
+            "SPF applied": {
+                "streak": 12,
+                "last_completed": "2026-04-10",
+                "done_today": True,
+            }
+        },
+        {
+            "SPF applied": {
+                "streak": 12,
+                "last_completed": "2026-04-10",
+                "done_today": False,
+            }
+        },
+        2,
+    ),
 ]
 
-
-@pytest.fixture
-def test_json():
-    base_json: dict[str, Any] = {
-        "last_written": None,
-        "SPF applied": {"streak": 0, "last_completed": None, "done_today": False},
-    }
-    return base_json
+### TESTS ########################################################################################
 
 
-@pytest.mark.parametrize("previous_date, current_date, expected", list_of_dates)
+# COMPLETED
+@pytest.mark.parametrize("previous_date, current_date, expected", list_diff_dates)
 def test_day_diff(previous_date: str, current_date: str, expected: int):
     assert day_diff(previous_date, current_date) == expected
 
 
-@pytest.mark.parametrize("json_dict", json_list)
-def test_daily_reset(mocker: Any, json_dict: dict[str, Any]):
-    last_written_date, habit_dict = [y for x, y in json_dict.items()]
-    keys, values = [a for z, a in habit_dict]
+@pytest.mark.parametrize("input, expected, day_diff", list_json_dicts)
+def test_daily_maintenance(
+    mocker: Any, input: dict[str, Any], expected: dict[str, Any], day_diff: int
+):
+    mocker.patch("good_start_habits.habits.day_diff", return_value=day_diff)
     mocker.patch("good_start_habits.habits.save_state")
-    daily_reset(json_dict)
-    ...
+
+    daily_maintenance(input)
+    assert input == expected
 
 
-def test_mark_done():
-    mark_done()
-    ...
+# TODO
 
-
-def test_incomplete_tasks():
-    incomplete_tasks()
-    ...
+# def test_mark_done():
+#     mark_done()
+#     ...

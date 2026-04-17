@@ -9,7 +9,6 @@ habits.py
 import pathlib
 import json
 from datetime import datetime, date
-from .config import HABITS
 from typing import Any
 
 
@@ -34,19 +33,29 @@ def day_diff(previous_date: str, current_date: str):
     return (date2 - date1).days
 
 
-def daily_reset(state_json: dict[str, Any]):
+def daily_maintenance(state_json: dict[str, Any]):
     """check json file for previous or existing date, if none"""
     cur_date = str(date.today())
-    stored_date = state_json["last_written"]
 
-    if not stored_date:  # checks if value is populated
-        stored_date = cur_date
+    for habit_name, habit_dict in state_json.items():
+        stored_date = habit_dict["last_completed"]
+        if not stored_date:  # checks if value not null
+            stored_date = cur_date
+        days_between = day_diff(stored_date, cur_date)
+        match days_between:
+            case 0:
+                continue
+            case 1:
+                habit_dict["done_today"] = False
 
-    days_between = day_diff(stored_date, cur_date)
-    if days_between >= 1:
-        state_json["last_written"] = cur_date
-        for habit in HABITS:
-            state_json[habit]["done_today"] = False
+            case 2:
+                habit_dict["done_today"] = False
+                print(f"Only one more day to complete {habit_name} before it resets.")
+
+            case _:
+                habit_dict["streak"] = 0
+                habit_dict["done_today"] = False
+                print(f"Too late! {habit_name}'s streak has been reset")
 
     save_state(state_json)
 
@@ -68,17 +77,3 @@ def mark_done(state_json: dict[str, Any], habit_name: str):
         save_state(state_json)
     else:
         print(f"The {habit_name} box has already been checked today")
-
-
-def incomplete_tasks(state_json: dict[str, Any]):
-    cur_date = str(date.today())
-
-    for habit in HABITS:
-        stored_date = state_json[habit]["last_completed"]
-        days_between = day_diff(stored_date, cur_date)
-        if days_between > 1:
-            state_json[habit]["streak"] = 0
-            print(f"Too late! {habit}'s streak has been reset")
-        else:
-            print(f"Only one more day to complete {habit} before it resets.")
-    save_state(state_json)
