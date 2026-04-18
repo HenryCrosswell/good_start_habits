@@ -85,10 +85,44 @@ maintenance_jsons: list[tuple[dict[str, Any], dict[str, Any], int]] = [
     ),
 ]
 
+mark_done_jsons: list[tuple[dict[str, Any], dict[str, Any]]] = [
+    (
+        {
+            "SPF applied": {
+                "streak": 12,
+                "last_completed": "2026-04-02",
+                "done_today": False,
+            }
+        },
+        {
+            "SPF applied": {
+                "streak": 13,
+                "last_completed": "2026-04-03",
+                "done_today": True,
+            }
+        },
+    ),
+    (
+        {
+            "SPF applied": {
+                "streak": 8,
+                "last_completed": "2026-04-02",
+                "done_today": True,
+            }
+        },
+        {
+            "SPF applied": {
+                "streak": 8,
+                "last_completed": "2026-04-02",
+                "done_today": True,
+            }
+        },
+    ),
+]
+
 ### TESTS ########################################################################################
 
 
-# COMPLETED
 @pytest.mark.parametrize("previous_date, current_date, expected", list_diff_dates)
 def test_day_diff(previous_date: str, current_date: str, expected: int):
     assert day_diff(previous_date, current_date) == expected
@@ -105,18 +139,10 @@ def test_daily_maintenance(
     assert input == expected
 
 
-# TODO
-json: list[tuple[dict[str, Any], dict[str, Any]]] = []
-
-
-@pytest.mark.parametrize(
-    "input, expected, day_diff", json
-)  # new list of jsons with updated streaks
-def test_mark_done(
-    mocker: Any, input: dict[str, Any], expected: dict[str, Any], day_diff: int
-):
+@pytest.mark.parametrize("input, expected", mark_done_jsons)
+def test_mark_done(mocker: Any, input: dict[str, Any], expected: dict[str, Any]):
     mock_date = mocker.patch("good_start_habits.habits.date")
-    mock_date.today.return_value = "2026-04-02"
+    mock_date.today.return_value = "2026-04-03"
     mocker.patch("good_start_habits.habits.save_state")
 
     mark_done(input, "SPF applied")
