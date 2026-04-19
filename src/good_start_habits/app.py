@@ -1,27 +1,22 @@
 """Front-end App - created using streamlit for interactive usability"""
 
+from good_start_habits.habits import (
+    load_state,
+    daily_maintenance,
+    mark_done,
+    state_init,
+)
 import streamlit as st
-
+from good_start_habits.config import HABITS
 
 st.title("good-start-habits")
 st.write("hello world")
 
-"""
-Checkboxes to show completion of tasks
 
-Ticking will stop any escalation alarm
-"""
+state_json = load_state()
+state_init(state_json)
+daily_maintenance(state_json)
 
-
-if st.checkbox("SPF applied"):
-    st.write("Good Job!")
-if st.checkbox("Vitamins & Omega-3"):
-    st.write("Good Job!")
-if st.checkbox("Log meal"):
-    st.write("On MFP? Nice!")
-st.checkbox("Piano practice")
-st.checkbox("Journal entry")
-st.checkbox("Neuroscience notes")
-st.checkbox("Check to-do book")
-st.checkbox("Workout logged")
-st.checkbox("Run logged")
+for habit in HABITS:
+    if st.checkbox(habit):
+        mark_done(state_json, habit)
