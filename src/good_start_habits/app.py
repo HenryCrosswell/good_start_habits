@@ -1,6 +1,6 @@
 """Front-end App - created using streamlit for interactive usability"""
 
-from .habits import load_state, daily_maintenance, mark_done
+from good_start_habits.habits import load_state, daily_maintenance, mark_done
 import streamlit as st
 
 st.title("good-start-habits")

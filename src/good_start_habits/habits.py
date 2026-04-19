@@ -10,6 +10,7 @@ import pathlib
 import json
 from datetime import datetime, date
 from typing import Any
+from .config import HABITS
 
 
 def load_state():
@@ -21,6 +22,26 @@ def load_state():
 def save_state(state_json: dict[str, Any]):
     with open(pathlib.Path(__file__).parent / "state.json", "w") as json_data:
         json.dump(state_json, json_data, indent=4)
+
+
+def state_init(state_json: dict[str, Any]):
+    """
+    Initiliasis the Json if not already populated
+
+    Args:
+        state_json (dict[str, Any])
+    """
+    for habits in HABITS:
+        if habits not in state_json:
+            state_json[habits] = {
+                "streak": 0,
+                "last_completed": None,
+                "done_today": False,
+            }
+        else:
+            print(f"{habits} already present in json")
+
+    save_state(state_json)
 
 
 def day_diff(previous_date: str, current_date: str):

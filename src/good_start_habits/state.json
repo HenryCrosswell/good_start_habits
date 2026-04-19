@@ -1,3 +1,7 @@
 {
-    "SPF applied": { "streak": 0, "last_completed": null, "done_today": false }
+    "SPF applied": {
+        "streak": 1,
+        "last_completed": "2026-04-19",
+        "done_today": true
+    }
 }

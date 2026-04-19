@@ -1,8 +1,64 @@
-from good_start_habits.habits import day_diff, daily_maintenance, mark_done
+from good_start_habits.habits import day_diff, daily_maintenance, mark_done, state_init
 import pytest
 from typing import Any
 
 ### Variables init ###############################################################################
+list_state_init: list[tuple[dict[str, Any], dict[str, Any]]] = [
+    (
+        {
+            # empty
+        },
+        {
+            "a": {
+                "streak": 0,
+                "last_completed": None,
+                "done_today": False,
+            },
+            "b": {
+                "streak": 0,
+                "last_completed": None,
+                "done_today": False,
+            },
+            "c": {
+                "streak": 0,
+                "last_completed": None,
+                "done_today": False,
+            },
+        },
+    ),
+    (
+        {
+            "b": {
+                "streak": 13,
+                "last_completed": "12-12-2025",
+                "done_today": False,
+            },
+            "c": {
+                "streak": 45,
+                "last_completed": "12-12-2025",
+                "done_today": False,
+            },
+        },
+        {
+            "a": {
+                "streak": 0,
+                "last_completed": None,
+                "done_today": False,
+            },
+            "b": {
+                "streak": 13,
+                "last_completed": "12-12-2025",
+                "done_today": False,
+            },
+            "c": {
+                "streak": 45,
+                "last_completed": "12-12-2025",
+                "done_today": False,
+            },
+        },
+    ),
+]
+
 list_diff_dates: list[tuple[str, str, int]] = [
     ("2026-04-01", "2026-04-10", 9),
     ("2026-04-01", "2026-05-01", 30),
@@ -121,6 +177,15 @@ mark_done_jsons: list[tuple[dict[str, Any], dict[str, Any]]] = [
 ]
 
 ### TESTS ########################################################################################
+
+
+@pytest.mark.parametrize("input, expected", list_state_init)
+def test_state_init(mocker: Any, input: dict[str, Any], expected: dict[str, Any]):
+    mocker.patch("good_start_habits.habits.HABITS", new=["a", "b", "c"])
+    mocker.patch("good_start_habits.habits.save_state")
+
+    state_init(input)
+    assert input == expected
 
 
 @pytest.mark.parametrize("previous_date, current_date, expected", list_diff_dates)
