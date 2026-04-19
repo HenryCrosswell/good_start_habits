@@ -34,7 +34,17 @@ def day_diff(previous_date: str, current_date: str):
 
 
 def daily_maintenance(state_json: dict[str, Any]):
-    """check json file for previous or existing date, if none"""
+    """
+    check states of whether a habit was done today and
+    whether the streak should be reset
+
+        Args:
+        state_json (dict[str, Any]): dict {
+        "streak": int,
+        "last_completed": str,
+        "done_today": bool
+        }
+    """
     cur_date = str(date.today())
 
     for habit_name, habit_dict in state_json.items():
