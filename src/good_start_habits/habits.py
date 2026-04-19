@@ -10,7 +10,8 @@ import pathlib
 import json
 from datetime import datetime, date
 from typing import Any
-from .config import HABITS
+from good_start_habits.config import HABITS
+from loguru import logger
 
 
 def load_state():
@@ -38,8 +39,7 @@ def state_init(state_json: dict[str, Any]):
                 "last_completed": None,
                 "done_today": False,
             }
-        else:
-            print(f"{habits} already present in json")
+            logger.info(f"{habits} added to json")
 
     save_state(state_json)
 
@@ -106,5 +106,3 @@ def mark_done(state_json: dict[str, Any], habit_name: str):
         habit["streak"] += 1
         habit["last_completed"] = str(date.today())
         save_state(state_json)
-    else:
-        print(f"The {habit_name} box has already been checked today")

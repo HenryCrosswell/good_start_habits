@@ -3,5 +3,45 @@
         "streak": 1,
         "last_completed": "2026-04-19",
         "done_today": true
+    },
+    "Vitamins & Omega-3": {
+        "streak": 1,
+        "last_completed": "2026-04-19",
+        "done_today": true
+    },
+    "Log meal": {
+        "streak": 0,
+        "last_completed": null,
+        "done_today": false
+    },
+    "Piano practice": {
+        "streak": 0,
+        "last_completed": null,
+        "done_today": false
+    },
+    "Journal entry": {
+        "streak": 0,
+        "last_completed": null,
+        "done_today": false
+    },
+    "Neuroscience notes": {
+        "streak": 0,
+        "last_completed": null,
+        "done_today": false
+    },
+    "Check to-do book": {
+        "streak": 0,
+        "last_completed": null,
+        "done_today": false
+    },
+    "Workout logged": {
+        "streak": 0,
+        "last_completed": null,
+        "done_today": false
+    },
+    "Run logged": {
+        "streak": 0,
+        "last_completed": null,
+        "done_today": false
     }
 }
