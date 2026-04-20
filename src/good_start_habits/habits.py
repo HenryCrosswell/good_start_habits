@@ -108,7 +108,7 @@ def mark_done(state_json: dict[str, Any], habit_name: str):
         save_state(state_json)
 
 
-def check_current_datetime():
+def check_current_datetime() -> bool:
     current_date = datetime.now().strftime("%A")
     current_time = datetime.now().strftime("%H:%M:%S")
     start_time, end_time = ACTIVE_TIMES[current_date]

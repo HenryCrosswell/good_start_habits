@@ -12,51 +12,97 @@ HABITS = [
     "Run logged",
 ]
 
-AVAILABLE_TIMES = [
-    (
-        "SPF applied",
-        "08:00:00",
-    ),
-    (
-        "Vitamins & Omega-3",
-        "18:26:11",
-    ),
-    (
-        "Log meal",
-        "18:26:11",
-    ),
-    (
-        "Piano practice",
-        "18:26:11",
-    ),
-    (
-        "Journal entry",
-        "18:26:11",
-    ),
-    (
-        "Neuroscience notes",
-        "18:26:11",
-    ),
-    (
-        "Check to-do book",
-        "18:26:11",
-    ),
-    (
-        "Workout logged",
-        "18:26:11",
-    ),
-    (
-        "Run logged",
-        "18:26:11",
-    ),
-]
+HABIT_REMINDER_TIME = {
+    "SPF applied": {
+        "Monday": "06:30:00",
+        "Tuesday": "06:30:00",
+        "Wednesday": "06:30:00",
+        "Thursday": "06:30:00",
+        "Friday": "06:30:00",
+        "Saturday": "06:30:00",
+        "Sunday": "06:30:00",
+    },
+    "Vitamins & Omega-3": {
+        "Monday": "12:30:00",
+        "Tuesday": "12:30:00",
+        "Wednesday": "12:30:00",
+        "Thursday": "12:30:00",
+        "Friday": "12:30:00",
+        "Saturday": "12:30:00",
+        "Sunday": "12:30:00",
+    },
+    "Log Meal": {
+        "Monday": ("06:50:00", "13:00:00", "21:00:00"),
+        "Tuesday": ("06:50:00", "13:00:00", "21:00:00"),
+        "Wednesday": ("06:50:00", "13:00:00", "21:00:00"),
+        "Thursday": ("06:00:00", "13:00:00", "21:00:00"),
+        "Friday": ("06:00:00", "13:00:00", "21:00:00"),
+        "Saturday": ("08:00:00", "13:00:00", "21:00:00"),
+        "Sunday": ("08:00:00", "13:00:00", "21:00:00"),
+    },
+    "Piano practice": {
+        "Monday": "08:10:00",
+        "Tuesday": "08:10:00",
+        "Wednesday": "08:10:00",
+        "Thursday": "08:10:00",
+        "Friday": "08:10:00",
+        "Saturday": "08:10:00",
+        "Sunday": "08:10:00",
+    },
+    "Journal Entry": {
+        "Monday": "08:30:00",
+        "Tuesday": "08:30:00",
+        "Wednesday": "08:30:00",
+        "Thursday": "08:30:00",
+        "Friday": "08:30:00",
+        "Saturday": "08:30:00",
+        "Sunday": "08:30:00",
+    },
+    "Neuroscience notes": {
+        "Monday": "08:35:00",
+        "Tuesday": "08:35:00",
+        "Wednesday": "08:35:00",
+        "Thursday": "08:35:00",
+        "Friday": "08:35:00",
+        "Saturday": None,
+        "Sunday": None,
+    },
+    "Check To-Do List": {
+        "Monday": ("06:30:00", "12:00:00", "15:30:00"),
+        "Tuesday": ("06:30:00", "12:00:00", "15:30:00"),
+        "Wednesday": ("06:30:00", "12:00:00", "15:30:00"),
+        "Thursday": ("06:30:00", "12:00:00", "15:30:00"),
+        "Friday": ("06:30:00", "12:00:00", "15:30:00"),
+        "Saturday": ("08:30:00", "12:00:00", "15:30:00"),
+        "Sunday": ("08:30:00", "12:00:00", "15:30:00"),
+    },
+    # These two are not every day things and need attention
+    "Track Workout": {
+        "Monday": "06:50:00",
+        "Tuesday": None,
+        "Wednesday": "06:50:00",
+        "Thursday": None,
+        "Friday": "06:50:00",
+        "Saturday": None,
+        "Sunday": None,
+    },
+    "Track Run": {
+        "Monday": None,
+        "Tuesday": "06:50:00",
+        "Wednesday": None,
+        "Thursday": "06:50:00",
+        "Friday": None,
+        "Saturday": "08:00:00",
+        "Sunday": None,
+    },
+}
 
 ACTIVE_TIMES = {
-    "Monday": ("08:00:00", "21:00:00"),
-    "Tuesday": ("08:00:00", "21:00:00"),
-    "Wednesday": ("08:00:00", "21:00:00"),
-    "Thursday": ("08:00:00", "21:00:00"),
-    "Friday": ("08:00:00", "21:00:00"),
+    "Monday": ("06:00:00", "21:00:00"),
+    "Tuesday": ("06:00:00", "21:00:00"),
+    "Wednesday": ("06:00:00", "21:00:00"),
+    "Thursday": ("06:00:00", "21:00:00"),
+    "Friday": ("06:00:00", "21:00:00"),
     "Saturday": ("08:00:00", "21:00:00"),
     "Sunday": ("08:00:00", "21:00:00"),
 }
