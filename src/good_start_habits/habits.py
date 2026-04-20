@@ -10,7 +10,7 @@ import pathlib
 import json
 from datetime import datetime, date
 from typing import Any
-from good_start_habits.config import HABITS
+from good_start_habits.config import HABITS, ACTIVE_TIMES
 from loguru import logger
 
 
@@ -106,3 +106,13 @@ def mark_done(state_json: dict[str, Any], habit_name: str):
         habit["streak"] += 1
         habit["last_completed"] = str(date.today())
         save_state(state_json)
+
+
+def check_current_datetime():
+    current_date = datetime.now().strftime("%A")
+    current_time = datetime.now().strftime("%H:%M:%S")
+    start_time, end_time = ACTIVE_TIMES[current_date]
+    if start_time <= current_time <= end_time:
+        return True
+    else:
+        return False

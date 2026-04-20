@@ -1,6 +1,13 @@
-from good_start_habits.habits import day_diff, daily_maintenance, mark_done, state_init
+from good_start_habits.habits import (
+    day_diff,
+    daily_maintenance,
+    mark_done,
+    state_init,
+    check_current_datetime,
+)
 import pytest
 from typing import Any
+from datetime import datetime
 
 ### Variables init ###############################################################################
 list_state_init: list[tuple[dict[str, Any], dict[str, Any]]] = [
@@ -176,6 +183,13 @@ mark_done_jsons: list[tuple[dict[str, Any], dict[str, Any]]] = [
     ),
 ]
 
+list_of_datetime: list[tuple[Any, bool]] = [
+    (datetime(2026, 4, 20, 9, 0, 0), True),  # Thursday 9am
+    (datetime(2026, 4, 25, 15, 0, 0), True),  # Saturday 3pm
+    (datetime(2026, 4, 14, 1, 0, 0), False),  # Tuesday 1am
+]
+
+
 ### TESTS ########################################################################################
 
 
@@ -212,3 +226,20 @@ def test_mark_done(mocker: Any, input: dict[str, Any], expected: dict[str, Any])
 
     mark_done(input, "SPF applied")
     assert input == expected
+
+
+@pytest.mark.parametrize("input, expected", list_of_datetime)
+def test_check_current_datetime(mocker: Any, input: Any, expected: bool):
+    TEST_ACTIVE_TIMES = {
+        "Monday": ("08:00:00", "21:00:00"),
+        "Tuesday": ("08:00:00", "21:00:00"),
+        "Thursday": ("08:00:00", "21:00:00"),
+        "Saturday": ("08:00:00", "21:00:00"),
+    }
+    mocker.patch("good_start_habits.habits.ACTIVE_TIMES", TEST_ACTIVE_TIMES)
+
+    mock_datetime = mocker.patch("good_start_habits.habits.datetime")
+    mock_datetime.now.return_value = input  # m,d, h,m,s
+
+    bool = check_current_datetime()
+    assert bool == expected

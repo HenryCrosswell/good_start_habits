@@ -1,18 +1,18 @@
 {
     "SPF applied": {
-        "streak": 1,
-        "last_completed": "2026-04-19",
+        "streak": 2,
+        "last_completed": "2026-04-20",
         "done_today": true
     },
     "Vitamins & Omega-3": {
-        "streak": 1,
-        "last_completed": "2026-04-19",
+        "streak": 2,
+        "last_completed": "2026-04-20",
         "done_today": true
     },
     "Log meal": {
-        "streak": 0,
-        "last_completed": null,
-        "done_today": false
+        "streak": 1,
+        "last_completed": "2026-04-20",
+        "done_today": true
     },
     "Piano practice": {
         "streak": 0,
