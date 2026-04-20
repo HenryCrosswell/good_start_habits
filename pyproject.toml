@@ -25,4 +25,5 @@ dev = [
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.15.1",
     "ruff>=0.15.10",
+    "streamlit-autorefresh>=1.0.1",
 ]
