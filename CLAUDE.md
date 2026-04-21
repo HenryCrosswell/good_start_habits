@@ -1,7 +1,7 @@
 # good-start-habits — CLAUDE.md
 
-A personal habit accountability dashboard. Starts simple, grows over time.
-Built in Python, runs in the browser via Streamlit, ports to Raspberry Pi later.
+A personal dashboard for tracking habits, fitness, and budget.
+Built in Python/Flask, runs in the browser now (WSL2), ports to Raspberry Pi later.
 
 ---
 
@@ -18,159 +18,199 @@ Built in Python, runs in the browser via Streamlit, ports to Raspberry Pi later.
 
 | Thing | Choice | Why |
 |---|---|---|
-| Language | Python 3.11+ | Only language needed |
-| UI | Streamlit | Python-native browser UI, Pi-friendly |
-| State | JSON file | Simple, readable, no database needed yet |
-| Config | config.py | Plain Python dict, easy to edit |
+| Language | Python 3.12+ | Only language needed |
+| Web framework | Flask | Lightweight, Pi-friendly |
+| Templating | Jinja2 | Bundled with Flask |
+| Database | SQLite (`dashboard.db`) | Zero setup, local, Pi-friendly |
+| Graphs | Plotly (Python) | Renders in browser, no heavy deps |
+| Scheduling | APScheduler | Background jobs (token refresh etc.) |
+| Styling | Plain CSS in Jinja templates | No build step, no frameworks |
 
 ---
 
-## Project Structure
+## Project Structure (target)
 
 ```
 src/good_start_habits/
-├── __init__.py       # inits project file
-├── app.py            # Streamlit UI — the whole app
-├── config.py         # Your habits, schedule, active hours
-├── habits.py         # Streak logic, state load/save
-├── state.json        # Auto-created. Tracks streaks + today's completions
+├── __init__.py
+├── app.py                  # Flask app, all routes
+├── config.py               # Habits, active hours, active days per habit
+├── habits.py               # Streak logic (SQLite-backed)
+├── db.py                   # SQLite connection + schema
+├── templates/
+│   ├── base.html
+│   ├── standby.html
+│   ├── habits.html
+│   ├── fitness.html
+│   └── budget.html
+├── static/
+│   └── style.css
+└── integrations/
+    ├── strava.py
+    ├── hevy.py
+    └── truelayer.py
 ```
 
-New files are added per phase. Nothing is deleted — only extended.
+---
+
+## Pages
+
+| Page | Route | Notes |
+|---|---|---|
+| Standby (clock) | `/` | Default view. Large clock + date. Rotates to habits during active hours. |
+| Habits | `/habits` | One button per habit, streak shown. Only shows habits relevant to today. |
+| Fitness | `/fitness` | Running (Strava) + weights (Hevy) graphs via Plotly |
+| Budget | `/budget` | Spending by category, Monzo/Nationwide/Amex via TrueLayer |
 
 ---
 
 ## Habits (defined in config.py)
 
-| Habit | Trigger | How it completes |
+| Habit | When it appears | How it completes |
 |---|---|---|
-| SPF applied | Morning | Button |
-| Vitamins & Omega-3 | Morning | Button |
-| Log meal | Meal times | Button (API later) |
+| SPF applied | Daily | Button |
+| Vitamins & Omega-3 | Daily | Button |
+| Log meal | Daily | Button |
 | Piano practice | Daily | Button |
 | Journal entry | Daily | Button |
-| Neuroscience notes | Daily | Button |
+| Neuroscience notes | Weekdays | Button |
 | Check to-do book | Daily | Button |
-| Workout logged | Exercise days | Button (Hevy API later) |
-| Run logged | Run days | Button (Strava API later) |
+| Workout logged | Mon / Wed / Fri | Button (Hevy API later) |
+| Run logged | Tue / Thu / Sat | Button (Strava API later) |
+
+Habit visibility is controlled by active days in `config.py` — habits not scheduled for today simply don't appear. There is no time-based urgency or escalation.
 
 ---
 
-## Escalation Levels (time since reminder appeared)
+## Active Hours & Rotation
 
-| Time pending | Level | Visual |
-|---|---|---|
-| 0–15 min | 1 | Grey — subtle |
-| 15–30 min | 2 | Amber — soft nudge |
-| 30–60 min | 3 | Red — urgent |
-| 60+ min | 4 | Flashing red — aggressive |
+Active hours (defined per day in `config.py`) define the window when the dashboard is "live". Outside that window the clock shows with a quiet message — no habits, no data, just the time.
+
+Within active hours the screen periodically transitions from the clock to the habits page, then back. The point is not to remind or nag — it's that a screen change draws the eye passively. You glance, you see your streaks and today's habits, you decide whether to act. Then the clock comes back.
+
+Things still TBD / to explore:
+- **Rotation interval:** fixed (e.g. every 20 min) or randomised within a range
+- **Habits dwell time:** how long the habits page stays up before returning to the clock
+- **Transition style:** randomly pick from a set of CSS transitions on each rotation (star wipe, rotate, scale, fade etc.) — the varied effect makes the change more eye-catching. Implement after basic rotation is working.
 
 ---
 
 ## Build Phases
 
-### ✅ Phase 1 — Core app (start here)
-**Goal:** A working checklist with streaks that saves state.
-
-Files: `app.py`, `config.py`, `habits.py`, `state.json`
-
-- [ ] `config.py` — define habits as a list of dicts (name, icon, time)
-- [ ] `habits.py` — load/save state.json, mark habit done, get streak
-- [ ] `app.py` — Streamlit UI, one button per habit, streak shown next to each
-- [ ] State resets each day automatically (check date on load)
-
-**Done when:** You can tick off habits, streaks increment, data survives a restart.
+### ✅ Already done (transfers from Streamlit prototype)
+- Habit list defined in `config.py`
+- Active hours per day of week in `config.py`
+- Active days per habit in `config.py` (repurpose `HABIT_REMINDER_TIME` day schedule, drop times)
+- Streak logic: `day_diff`, `daily_maintenance`, `mark_done`, `check_current_datetime` in `habits.py`
+- Test suite covering all habit logic functions
 
 ---
 
-### Phase 2 — Active hours + escalation
-**Goal:** App only shows reminders during your active hours. Urgency grows over time.
+### Phase 1 — Flask scaffold + SQLite migration
+**Goal:** Replace Streamlit with Flask. Migrate JSON state → SQLite.
 
-Changes to: `app.py`, `config.py`
+- [ ] Update `pyproject.toml`: remove `streamlit`/`streamlit-autorefresh`, add `flask`, `apscheduler`, `plotly`, `python-dotenv`
+- [ ] Simplify `config.py`: replace `HABIT_REMINDER_TIME` (times + days) with `HABIT_ACTIVE_DAYS` (days only)
+- [ ] Create `db.py` — SQLite connection + `habits` table schema
+- [ ] Rewrite `habits.py` storage layer: replace `load_state`/`save_state` (JSON) with SQLite reads/writes — keep all streak logic unchanged
+- [ ] Rewrite `app.py` as Flask entry point with stubbed routes: `/`, `/habits`, `/fitness`, `/budget`
+- [ ] Create `templates/base.html` — shared layout + nav
+- [ ] Update tests: mock SQLite layer instead of `save_state`
+- [ ] Delete `main.py` (dead code)
 
-- [ ] Add active hours to `config.py` (per day of week)
-- [ ] Show a sleep screen outside active hours
-- [ ] Calculate escalation level from time habit became due
-- [ ] Apply colour coding to each habit card (grey → amber → red)
-- [ ] Add `st.rerun()` loop so the page refreshes automatically
-
-**Done when:** App goes quiet at night, colours shift as time passes.
+**Done when:** Flask server runs, all routes respond, streak logic tests pass.
 
 ---
 
-### Phase 3 — Strava integration
-**Goal:** Run days auto-complete when Strava detects an activity.
+### Phase 2 — Standby clock + active hours
+**Goal:** Standby is the default view. Clock displays. During active hours it rotates to habits.
+
+- [ ] `templates/standby.html` — large clock + date, CSS-styled (no framework)
+- [ ] Vanilla JS clock tick (one `<script>` block — the only JS exception)
+- [ ] Active hours check on `/` route — sleep message outside hours
+- [ ] During active hours: page rotates to `/habits` on a timer, returns after 30s
+- [ ] Add `ROTATION_INTERVAL` to `config.py`
+
+**Done when:** App opens to clock, rotates to habits during active hours, goes quiet at night.
+
+---
+
+### Phase 3 — Habits page
+**Goal:** Clean habits checklist. Button per habit, streak shown. Only today's habits visible.
+
+- [ ] `GET /habits` — render habits active today (filter by `HABIT_ACTIVE_DAYS`)
+- [ ] `POST /habits/<name>/done` — mark habit complete, redirect
+- [ ] `templates/habits.html` — habit name, streak count, done button or ✓
+
+**Done when:** Today's habits show up, completing one persists across restarts, streaks increment correctly.
+
+---
+
+### Phase 4 — Strava integration + Fitness page (running)
+**Goal:** Run days auto-complete. Fitness page shows running data.
 
 New file: `integrations/strava.py`
 
-- [ ] Register a Strava API app (free)
-- [ ] OAuth token saved locally to `.env`
-- [ ] `strava.py` — single function: `did_i_run_today() -> bool`
-- [ ] Hook into `app.py` — if run detected, habit auto-completes
+- [ ] Register Strava app, store tokens in `.env`, refresh via APScheduler
+- [ ] `did_i_run_today() -> bool`
+- [ ] `get_recent_runs() -> list[dict]`
+- [ ] Hook into habits route: auto-complete "Run logged" if run detected
+- [ ] `templates/fitness.html` — Plotly graph (distance/pace over time)
 
-**Done when:** Going for a run ticks the box without touching the app.
+**Done when:** Running ticks the box automatically; fitness page shows data.
 
 ---
 
-### Phase 4 — Hevy integration
-**Goal:** Workout days auto-complete when Hevy detects a session.
+### Phase 5 — Hevy integration (weights)
+**Goal:** Workout days auto-complete. Fitness page extended with weights data.
 
 New file: `integrations/hevy.py`
 
-- [ ] Hevy API key (check docs.hevy.com)
-- [ ] `hevy.py` — single function: `did_i_lift_today() -> bool`
-- [ ] Hook into `app.py`
+- [ ] Hevy API key in `.env`
+- [ ] `did_i_lift_today() -> bool`
+- [ ] `get_recent_workouts() -> list[dict]`
+- [ ] Hook into habits route: auto-complete "Workout logged"
+- [ ] Extend `templates/fitness.html` with volume/PR graphs
 
-**Done when:** Logging a workout in Hevy ticks the box.
-
----
-
-### Phase 5 — MyFitnessPal
-**Goal:** Meal reminders auto-close when MFP has an entry.
-
-New file: `integrations/mfp.py`
-
-- [ ] Try `myfitnesspal` Python library first
-- [ ] Fallback: keep as manual button if API proves unreliable
-- [ ] `mfp.py` — `did_i_log_a_meal_today() -> bool`
-
-**Done when:** Logging in MFP ticks the meal box (or manual button stays — that's fine).
+**Done when:** Logging in Hevy ticks the box; page shows workout graphs.
 
 ---
 
-### Phase 6 — LLM coaching
-**Goal:** After a run, get brief feedback. On demand, get meal suggestions.
+### Phase 6 — Budget page (TrueLayer)
+**Goal:** Spending summary across Monzo, Nationwide, Amex.
 
-New file: `integrations/claude_coach.py`
+New file: `integrations/truelayer.py`
 
-- [ ] Anthropic SDK installed (`pip install anthropic`)
-- [ ] API key in `.env`
-- [ ] `get_run_feedback(activity_data, goals) -> str`
-- [ ] `get_meal_suggestion(known_meals, time_of_day) -> str`
-- [ ] Small panel in `app.py` to show coaching output
+- [ ] TrueLayer OAuth for all three accounts; tokens in SQLite
+- [ ] APScheduler job refreshes tokens
+- [ ] `get_transactions(account) -> list[dict]`
+- [ ] `templates/budget.html` — spend by category, budget vs actual (Plotly)
 
-**Done when:** A post-run note appears on the dashboard after Strava syncs.
+**Done when:** Budget page shows live data from all three accounts.
+**Note:** Build this last — most OAuth complexity.
 
 ---
 
 ### Phase 7 — Raspberry Pi deployment
-**Goal:** App runs headlessly on Pi, launches on boot, displays on screen.
+**Goal:** Headless autostart, kiosk browser.
 
-- [ ] `pip install` everything on Pi
-- [ ] Create systemd service for `streamlit run app.py`
-- [ ] Chromium kiosk mode pointing at `localhost:8501`
+- [ ] Install all deps on Pi
+- [ ] systemd service for Flask (or gunicorn)
+- [ ] Chromium kiosk mode pointing at `localhost:5000`
 - [ ] Test all integrations on Pi hardware
 
-**Done when:** Pi boots straight into the dashboard with no keyboard needed.
+**Done when:** Pi boots straight into the dashboard, no keyboard needed.
 
 ---
 
 ## Conventions
 
 - All credentials go in `.env` — never hardcode, never commit
-- `state.json` and `.env` are gitignored
-- Each integration has one job: return a bool or a string. No UI logic in integrations.
+- `dashboard.db` and `.env` are gitignored
+- Each integration has one job: return a bool or a list. No UI logic in integrations.
 - If an integration fails, log the error and fall back to manual button — never crash the app
+- All business logic in Python — keep Jinja templates thin
+- No external CSS frameworks — plain CSS only
 
 ---
 
@@ -178,8 +218,8 @@ New file: `integrations/claude_coach.py`
 
 ```bash
 # Install
-pip install streamlit
+uv sync
 
 # Run
-streamlit run app.py
+flask --app src/good_start_habits/app.py run
 ```
