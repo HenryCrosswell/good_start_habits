@@ -24,7 +24,7 @@ def init_db():
     db.commit()
 
 
-def close_db(e=None):
+def close_db(e: BaseException):
     db = g.pop("database", None)
     if db is not None:
         db.close()
