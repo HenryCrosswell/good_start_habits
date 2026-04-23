@@ -1,0 +1,37 @@
+# Environment & secrets
+.env
+.env.*
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Testing & coverage
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Type checking & linting
+.mypy_cache/
+.ruff_cache/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# MCP config (may contain local paths/tokens)
+.mcp.json
