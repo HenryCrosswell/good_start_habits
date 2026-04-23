@@ -1,5 +1,6 @@
 import sqlite3
 from flask import g
+from good_start_habits.config import HABITS
 
 
 def get_db():
@@ -28,3 +29,18 @@ def close_db(e: BaseException):
     db = g.pop("database", None)
     if db is not None:
         db.close()
+
+
+def populate_habits():
+    con = sqlite3.connect("dashboard.db")
+    cur = con.cursor()
+    for habit in HABITS:
+        cur.execute(
+            """INSERT OR IGNORE INTO habits (
+        name,
+        last_completed)
+        VALUES(?,?)
+        """,
+            (habit, None),
+        )
+    con.commit()

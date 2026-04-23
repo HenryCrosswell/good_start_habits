@@ -6,42 +6,9 @@ habits.py
 - day tracker - if checkbox clicked more than once doesn't affect the streak
 """
 
-import pathlib
-import json
 from datetime import datetime, date
-from typing import Any
-from good_start_habits.config import HABITS, ACTIVE_TIMES
-from loguru import logger
-
-
-def load_state():
-    with open(pathlib.Path(__file__).parent / "state.json") as json_data:
-        state_json = json.load(json_data)
-        return state_json
-
-
-def save_state(state_json: dict[str, Any]):
-    with open(pathlib.Path(__file__).parent / "state.json", "w") as json_data:
-        json.dump(state_json, json_data, indent=4)
-
-
-def state_init(state_json: dict[str, Any]):
-    """
-    Initiliasis the Json if not already populated
-
-    Args:
-        state_json (dict[str, Any])
-    """
-    for habits in HABITS:
-        if habits not in state_json:
-            state_json[habits] = {
-                "streak": 0,
-                "last_completed": None,
-                "done_today": False,
-            }
-            logger.info(f"{habits} added to json")
-
-    save_state(state_json)
+from good_start_habits.config import ACTIVE_TIMES
+import sqlite3
 
 
 def day_diff(previous_date: str, current_date: str):
@@ -54,44 +21,57 @@ def day_diff(previous_date: str, current_date: str):
     return (date2 - date1).days
 
 
-def daily_maintenance(state_json: dict[str, Any]):
-    """
-    check states of whether a habit was done today and
-    whether the streak should be reset
+def daily_maintenance():
+    con = sqlite3.connect("dashboard.db")
+    cur = con.cursor()
+    cur.execute("""
+        SELECT name, streak, last_completed, done_today FROM habits
+                """)
 
-        Args:
-        state_json (dict[str, Any]): dict {
-        "streak": int,
-        "last_completed": str,
-        "done_today": bool
-        }
-    """
-    cur_date = str(date.today())
+    current_date = str(date.today())
+    for name, _, last_completed, _ in cur.fetchall():
+        if not last_completed:  # checks if value not null
+            cur.execute(
+                """
+            UPDATE habits SET last_completed = ? WHERE name = ?
+            """,
+                (current_date, name),
+            )
+            last_completed = current_date
 
-    for habit_name, habit_dict in state_json.items():
-        stored_date = habit_dict["last_completed"]
-        if not stored_date:  # checks if value not null
-            stored_date = cur_date
-        days_between = day_diff(stored_date, cur_date)
+        days_between = day_diff(last_completed, current_date)
         match days_between:
             case 0:
                 continue
             case 1:
-                habit_dict["done_today"] = False
+                cur.execute(
+                    """
+                UPDATE habits SET done_today = 0 WHERE name = ?
+                """,
+                    (name,),
+                )
 
             case 2:
-                habit_dict["done_today"] = False
-                print(f"Only one more day to complete {habit_name} before it resets.")
+                cur.execute(
+                    """
+                UPDATE habits SET done_today = 0 WHERE name = ?
+                """,
+                    (name,),
+                )
+                print(f"Only one more day to complete {name} before it resets.")
 
             case _:
-                habit_dict["streak"] = 0
-                habit_dict["done_today"] = False
-                print(f"Too late! {habit_name}'s streak has been reset")
+                cur.execute(
+                    """
+                UPDATE habits SET done_today = 0, streak = 0 WHERE name = ?
+                """,
+                    (name,),
+                )
+                print(f"Too late! {name}'s streak has been reset")
+    con.commit()
 
-    save_state(state_json)
 
-
-def mark_done(state_json: dict[str, Any], habit_name: str):
+def mark_done(habit_name: str):
     """To occur as a result of the checkbox, checks current state_json file
     to see if it has been checked today and increments the string.
 
@@ -99,13 +79,24 @@ def mark_done(state_json: dict[str, Any], habit_name: str):
         state_json (_type_): _description_
         habit_name (str): _description_
     """
-
-    habit = state_json[habit_name]
-    if not habit["done_today"]:
-        habit["done_today"] = True
-        habit["streak"] += 1
-        habit["last_completed"] = str(date.today())
-        save_state(state_json)
+    con = sqlite3.connect("dashboard.db")
+    cur = con.cursor()
+    today = str(date.today())
+    cur.execute(
+        """
+        SELECT name, done_today FROM habits WHERE name = ?
+                """,
+        (habit_name,),
+    )
+    (name, done_today) = cur.fetchone()
+    if not done_today:
+        cur.execute(
+            """
+        UPDATE habits SET done_today = 1, streak = streak + 1, last_completed = ? WHERE name = ?
+        """,
+            (today, name),
+        )
+    con.commit()
 
 
 def check_current_datetime() -> bool:
