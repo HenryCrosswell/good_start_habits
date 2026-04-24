@@ -1,10 +1,4 @@
-"""
-habits.py
-- populate state.json with habits, whether it was completed?, and streak count
-- day tracker - if more than two days have passed it will reset streak
-- day tracker - daily reset app checklists to reset
-- day tracker - if checkbox clicked more than once doesn't affect the streak
-"""
+"""Streak logic and daily maintenance for habit tracking."""
 
 from datetime import datetime, date
 from good_start_habits.config import ACTIVE_TIMES
@@ -12,6 +6,15 @@ import sqlite3
 
 
 def day_diff(previous_date: str, current_date: str):
+    """Days elapsed between two dates.
+
+    Args:
+        previous_date: Earlier date as YYYY-MM-DD string.
+        current_date: Later date as YYYY-MM-DD string.
+
+    Returns:
+        Number of days between the two dates, or 0 on parse error.
+    """
     try:
         date1 = datetime.strptime(previous_date, "%Y-%m-%d")
         date2 = datetime.strptime(current_date, "%Y-%m-%d")
@@ -21,8 +24,12 @@ def day_diff(previous_date: str, current_date: str):
     return (date2 - date1).days
 
 
-def daily_maintenance():
-    con = sqlite3.connect("dashboard.db")
+def daily_maintenance(con: sqlite3.Connection):
+    """Resets done_today each new day and zeroes streaks missed by 2+ days.
+
+    Args:
+        con: Active SQLite connection, typically from get_db().
+    """
     cur = con.cursor()
     cur.execute("""
         SELECT name, streak, last_completed, done_today FROM habits
@@ -71,15 +78,15 @@ def daily_maintenance():
     con.commit()
 
 
-def mark_done(habit_name: str):
-    """To occur as a result of the checkbox, checks current state_json file
-    to see if it has been checked today and increments the string.
+def mark_done(con: sqlite3.Connection, habit_name: str):
+    """Marks a habit complete for today and increments its streak.
+
+    No-op if the habit is already marked done today.
 
     Args:
-        state_json (_type_): _description_
-        habit_name (str): _description_
+        con: Active SQLite connection, typically from get_db().
+        habit_name: Name of the habit to mark as done.
     """
-    con = sqlite3.connect("dashboard.db")
     cur = con.cursor()
     today = str(date.today())
     cur.execute(
@@ -100,6 +107,11 @@ def mark_done(habit_name: str):
 
 
 def check_current_datetime() -> bool:
+    """Checks whether the current time is within today's active hours.
+
+    Returns:
+        True if within active hours, False otherwise.
+    """
     current_date = datetime.now().strftime("%A")
     current_time = datetime.now().strftime("%H:%M:%S")
     start_time, end_time = ACTIVE_TIMES[current_date]

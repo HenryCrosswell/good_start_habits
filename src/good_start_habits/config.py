@@ -7,9 +7,9 @@ HABITS = [
     "Piano practice",
     "Journal entry",
     "Neuroscience notes",
-    "Check to-do book",
-    "Workout logged",
-    "Run logged",
+    "Check to-do List",
+    "Track workout",
+    "Track run",
 ]
 
 HABIT_ACTIVE_DAYS: dict[str, list[str]] = {
@@ -31,7 +31,7 @@ HABIT_ACTIVE_DAYS: dict[str, list[str]] = {
         "Saturday",
         "Sunday",
     ],
-    "Log Meal": [
+    "Log meal": [
         "Monday",
         "Tuesday",
         "Wednesday",
@@ -49,7 +49,7 @@ HABIT_ACTIVE_DAYS: dict[str, list[str]] = {
         "Saturday",
         "Sunday",
     ],
-    "Journal Entry": [
+    "Journal entry": [
         "Monday",
         "Tuesday",
         "Wednesday",
@@ -68,8 +68,8 @@ HABIT_ACTIVE_DAYS: dict[str, list[str]] = {
         "Saturday",
         "Sunday",
     ],
-    "Track Workout": ["Monday", "Wednesday", "Friday"],
-    "Track Run": ["Tuesday", "Thursday", "Saturday"],
+    "Track workout": ["Monday", "Wednesday", "Friday"],
+    "Track run": ["Tuesday", "Thursday", "Saturday"],
 }
 
 ACTIVE_TIMES = {

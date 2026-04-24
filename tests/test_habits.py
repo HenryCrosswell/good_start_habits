@@ -88,8 +88,7 @@ def test_daily_maintenance(
     db.commit()
     mocker.patch("good_start_habits.habits.sqlite3").connect.return_value = db
     mocker.patch("good_start_habits.habits.day_diff", return_value=day_diff)
-
-    daily_maintenance()
+    daily_maintenance(db)
 
     row = db.execute(
         "SELECT streak, last_completed, done_today FROM habits WHERE name = 'SPF applied'"
@@ -110,7 +109,7 @@ def test_mark_done(
     mock_date = mocker.patch("good_start_habits.habits.date")
     mock_date.today.return_value = "2026-04-03"
 
-    mark_done("SPF applied")
+    mark_done(db, "SPF applied")
 
     row = db.execute(
         "SELECT streak, last_completed, done_today FROM habits WHERE name = 'SPF applied'"

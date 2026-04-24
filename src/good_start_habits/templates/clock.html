@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock</title>
+    <style>
+        body {
+            margin: 0;
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Georgia;
+        }
+
+        #clock {
+            color: #EF820D;
+            font-size: 28vw;
+            font-weight: bold;
+        }
+
+        #active {
+            color: #0d7aef;
+            font-size: 5vw;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="clock">{{clock}}</h1>
+    <p1 id="active">{{active}}</p1>
+
+
+    <script>
+        function tick() {
+            const now = new Date();
+            document.getElementById("clock").textContent = now.toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+            });
+        }
+        setInterval(tick, 1000);
+        tick();
+    </script>
+</body>
+</html>

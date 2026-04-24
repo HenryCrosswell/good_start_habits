@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Habits</title>
+</head>
+<body>
+    <h1>Today's Habits</h1>
+    <ul>
+    {% for name, streak, done_today in habits %}
+        <li>
+            {{ name }} — streak: {{ streak }}
+            {% if done_today %}
+                ✓
+            {% else %}
+                <form method="post" action="/habits/{{ name }}/done">
+                    <button type="submit">Done</button>
+                </form>
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
