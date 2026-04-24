@@ -5,6 +5,14 @@ Built in Python/Flask, runs in the browser now (WSL2), ports to Raspberry Pi lat
 
 ---
 
+## Developer Context
+
+- Experienced Python developer, first time using Flask and SQLite
+- Explain Flask and SQLite patterns rather than assuming familiarity
+- Do not include code snippets in responses unless explicitly requested
+
+---
+
 ## Project Philosophy
 
 - One problem at a time
