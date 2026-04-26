@@ -133,6 +133,34 @@ def test_mark_done(
     assert row == expected
 
 
+def test_daily_maintenance_null_last_completed(mocker: Any, db: sqlite3.Connection):
+    """Habit with no last_completed gets it set to today, then continues (day_diff=0)."""
+    today = "2026-04-26"
+    db.execute(
+        "INSERT INTO habits (name, streak, last_completed, done_today) VALUES (?,?,?,?)",
+        ("SPF applied", 5, None, 0),
+    )
+    db.commit()
+    mocker.patch("good_start_habits.habits.sqlite3").connect.return_value = db
+    mocker.patch("good_start_habits.habits.day_diff", return_value=0)
+    mock_date = mocker.patch("good_start_habits.habits.date")
+    mock_date.today.return_value = today
+
+    daily_maintenance(db)
+
+    row = db.execute(
+        "SELECT streak, last_completed, done_today FROM habits WHERE name = 'SPF applied'"
+    ).fetchone()
+    assert row[1] == today
+    assert row[0] == 5  # streak unchanged
+    assert row[2] == 0  # done_today unchanged
+
+
+def test_mark_done_unknown_habit_is_noop(db: sqlite3.Connection):
+    """mark_done silently returns when the habit name doesn't exist."""
+    mark_done(db, "Nonexistent Habit")  # must not raise
+
+
 @pytest.mark.parametrize("input, expected", list_of_datetime)
 def test_check_current_datetime(mocker: Any, input: Any, expected: bool):
     TEST_ACTIVE_TIMES = {

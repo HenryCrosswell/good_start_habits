@@ -54,6 +54,9 @@ _PROVIDER_IDS = {
     "amex": "uk-oauth-amex",
 }
 
+# TrueLayer exposes credit cards under /cards, not /accounts.
+_CARD_PROVIDERS = {"amex"}
+
 
 # ---------------------------------------------------------------------------
 # PKCE helpers
@@ -270,16 +273,18 @@ def get_transactions(
     since_str = since.strftime("%Y-%m-%dT%H:%M:%SZ")
     headers = {"Authorization": f"Bearer {token}"}
 
+    resource = "cards" if provider in _CARD_PROVIDERS else "accounts"
+
     try:
-        accounts_resp = requests.get(
-            f"{_api_base()}/accounts",
+        list_resp = requests.get(
+            f"{_api_base()}/{resource}",
             headers=headers,
             timeout=15,
         )
-        accounts_resp.raise_for_status()
-        accounts = accounts_resp.json().get("results", [])
+        list_resp.raise_for_status()
+        accounts = list_resp.json().get("results", [])
     except requests.RequestException as exc:
-        log.error("Failed to fetch accounts for %s: %s", provider, exc)
+        log.error("Failed to fetch %s for %s: %s", resource, provider, exc)
         return []
 
     transactions: list[dict[str, Any]] = []
@@ -287,7 +292,7 @@ def get_transactions(
         account_id = account.get("account_id", "")
         try:
             txn_resp = requests.get(
-                f"{_api_base()}/accounts/{account_id}/transactions",
+                f"{_api_base()}/{resource}/{account_id}/transactions",
                 params={"from": since_str},
                 headers=headers,
                 timeout=15,
@@ -298,8 +303,9 @@ def get_transactions(
                 transactions.append(txn)
         except requests.RequestException as exc:
             log.warning(
-                "Failed to fetch transactions for %s / account %s: %s",
+                "Failed to fetch transactions for %s / %s %s: %s",
                 provider,
+                resource[:-1],
                 account_id,
                 exc,
             )

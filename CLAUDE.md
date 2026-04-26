@@ -171,9 +171,10 @@ New file: `hevy.py`
 The current charts (spend-by-category bar, daily total line) are placeholder. The real page design:
 
 **What the user wants to see:**
-- Per-category budget limits set by the user, compared against actual spend for the month
+- Per-category budget limits set by the user, compared against per-category actual spend for the month
 - A line graph showing cumulative spend per category over the month — the slope reveals burn rate
 - Toggles: month view (default), year view, projection to end of period
+- monzo, amex and nationwide should be seperated int
 
 **Design decisions:**
 - **Budget limits live in `config.py`** — simple dict mapping category name → monthly limit. No UI editor needed yet; editing the file is fine.

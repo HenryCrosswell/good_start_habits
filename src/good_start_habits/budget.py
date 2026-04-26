@@ -9,7 +9,11 @@ from typing import Any
 import plotly
 import plotly.graph_objects as go
 
-from good_start_habits.config import BUDGET_LIMITS, CATEGORY_MAP
+from good_start_habits.config import (
+    BUDGET_LIMITS,
+    CATEGORY_MAP,
+    DESCRIPTION_PATTERNS,
+)
 
 _CATEGORY_COLOURS = [
     "#EF820D",
@@ -24,17 +28,40 @@ _CATEGORY_COLOURS = [
 ]
 
 
-def map_category(classification: Any) -> str:
-    if not isinstance(classification, list) or not classification:
-        return "Other"
-    top = classification[0]
-    sub = classification[1] if len(classification) > 1 else ""
-    full_key = f"{top}|{sub}" if sub else top
-    return CATEGORY_MAP.get(full_key) or CATEGORY_MAP.get(top) or "Other"
+def map_category(classification: Any, description: str = "") -> str | None:
+    """Return personal category string, or None for transfers/income to exclude."""
+    if isinstance(classification, list) and classification:
+        top = classification[0]
+        sub = classification[1] if len(classification) > 1 else ""
+        full_key = f"{top}|{sub}" if sub else top
+        if full_key in CATEGORY_MAP:
+            return CATEGORY_MAP[full_key]
+        if top in CATEGORY_MAP:
+            return CATEGORY_MAP[top]
+
+    desc = description.lower()
+    for pattern, category in DESCRIPTION_PATTERNS:
+        if pattern in desc:
+            return category
+
+    return "Other"
 
 
-def _outgoing(transactions: list[dict]) -> list[dict]:
-    return [t for t in transactions if t.get("amount", 0) < 0]
+def _spending(transactions: list[dict]) -> list[dict]:
+    """Outgoing transactions only, with transfers/income excluded."""
+    result = []
+    for t in transactions:
+        if t.get("amount", 0) >= 0:
+            continue
+        if (
+            map_category(
+                t.get("transaction_classification", []), t.get("description", "")
+            )
+            is None
+        ):
+            continue
+        result.append(t)
+    return result
 
 
 def build_monthly_charts(
@@ -42,7 +69,10 @@ def build_monthly_charts(
     year: int,
     month: int,
     projection: bool,
+    cat_limits: dict[str, float] | None = None,
 ) -> dict[str, str]:
+    if cat_limits is None:
+        cat_limits = BUDGET_LIMITS
     today = date.today()
     days_in_month = monthrange(year, month)[1]
     is_current_month = today.year == year and today.month == month
@@ -50,7 +80,7 @@ def build_monthly_charts(
 
     month_prefix = f"{year:04d}-{month:02d}"
     spending = [
-        t for t in _outgoing(transactions) if t.get("timestamp", "")[:7] == month_prefix
+        t for t in _spending(transactions) if t.get("timestamp", "")[:7] == month_prefix
     ]
 
     cat_day: dict[str, dict[int, float]] = {}
@@ -59,7 +89,9 @@ def build_monthly_charts(
             day = int(txn["timestamp"][8:10])
         except (KeyError, ValueError, IndexError):
             continue
-        cat = map_category(txn.get("transaction_classification", []))
+        cat = map_category(
+            txn.get("transaction_classification", []), txn.get("description", "")
+        )
         cat_day.setdefault(cat, {})
         cat_day[cat][day] = cat_day[cat].get(day, 0.0) + abs(txn["amount"])
 
@@ -82,7 +114,7 @@ def build_monthly_charts(
     )
     for idx, (cat, day_totals) in enumerate(sorted(cat_day.items())):
         colour = _CATEGORY_COLOURS[idx % len(_CATEGORY_COLOURS)]
-        budget_for_cat = BUDGET_LIMITS.get(cat, 0.0)
+        budget_for_cat = cat_limits.get(cat, 0.0)
         running_spend = 0.0
         remaining = []
         for d in days_axis:
@@ -128,12 +160,12 @@ def build_monthly_charts(
     charts["cumulative"] = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     # ── Secondary: budget vs actual ─────────────────────────────────────────
-    all_cats = sorted(set(cat_day) | set(BUDGET_LIMITS))
+    all_cats = sorted(set(cat_day) | set(cat_limits))
     actuals = [round(sum(cat_day.get(c, {}).values()), 2) for c in all_cats]
-    limits = [BUDGET_LIMITS.get(c, 0.0) for c in all_cats]
+    lim_vals = [cat_limits.get(c, 0.0) for c in all_cats]
     pairs = [
         (c, act, lim)
-        for c, act, lim in zip(all_cats, actuals, limits)
+        for c, act, lim in zip(all_cats, actuals, lim_vals)
         if act > 0 or lim > 0
     ]
 
@@ -169,11 +201,11 @@ def build_monthly_charts(
         charts["vs_budget"] = json.dumps(bar_fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     # ── Per-category data for the linked single-category JS chart ───────────
-    all_cats_js = sorted(set(cat_day) | set(BUDGET_LIMITS))
+    all_cats_js = sorted(set(cat_day) | set(cat_limits))
     per_cat_list = []
     for cat in all_cats_js:
         dtotals = cat_day.get(cat, {})
-        budget_for_cat = BUDGET_LIMITS.get(cat, 0.0)
+        budget_for_cat = cat_limits.get(cat, 0.0)
         running_spend = 0.0
         cat_remaining: list[float] = []
         for d in days_axis:
@@ -213,13 +245,16 @@ def build_yearly_charts(
     transactions: list[dict],
     year: int,
     projection: bool,
+    cat_limits: dict[str, float] | None = None,
 ) -> dict[str, str]:
+    if cat_limits is None:
+        cat_limits = BUDGET_LIMITS
     today = date.today()
     is_current_year = today.year == year
     months_so_far = today.month if is_current_year else 12
 
     spending = [
-        t for t in _outgoing(transactions) if t.get("timestamp", "")[:4] == str(year)
+        t for t in _spending(transactions) if t.get("timestamp", "")[:4] == str(year)
     ]
 
     cat_month: dict[str, dict[int, float]] = {}
@@ -228,7 +263,9 @@ def build_yearly_charts(
             m = int(txn["timestamp"][5:7])
         except (KeyError, ValueError, IndexError):
             continue
-        cat = map_category(txn.get("transaction_classification", []))
+        cat = map_category(
+            txn.get("transaction_classification", []), txn.get("description", "")
+        )
         cat_month.setdefault(cat, {})
         cat_month[cat][m] = cat_month[cat].get(m, 0.0) + abs(txn["amount"])
 
@@ -256,7 +293,7 @@ def build_yearly_charts(
     )
     for idx, (cat, month_totals) in enumerate(sorted(cat_month.items())):
         colour = _CATEGORY_COLOURS[idx % len(_CATEGORY_COLOURS)]
-        annual_budget = BUDGET_LIMITS.get(cat, 0.0) * 12
+        annual_budget = cat_limits.get(cat, 0.0) * 12
         running_spend = 0.0
         remaining = []
         for m in months_axis:
@@ -302,9 +339,9 @@ def build_yearly_charts(
     charts["cumulative"] = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     # ── Secondary: budget vs actual ─────────────────────────────────────────
-    all_cats = sorted(set(cat_month) | set(BUDGET_LIMITS))
+    all_cats = sorted(set(cat_month) | set(cat_limits))
     actuals = [round(sum(cat_month.get(c, {}).values()), 2) for c in all_cats]
-    annual_limits = [BUDGET_LIMITS.get(c, 0.0) * 12 for c in all_cats]
+    annual_limits = [cat_limits.get(c, 0.0) * 12 for c in all_cats]
     pairs = [
         (c, act, lim)
         for c, act, lim in zip(all_cats, actuals, annual_limits)
@@ -345,25 +382,34 @@ def build_yearly_charts(
     return charts
 
 
-def monthly_summary(transactions: list[dict], year: int, month: int) -> dict:
+def monthly_summary(
+    transactions: list[dict],
+    year: int,
+    month: int,
+    cat_limits: dict[str, float] | None = None,
+) -> dict:
     """Return total spent, total budget, and per-category actuals for the month."""
+    if cat_limits is None:
+        cat_limits = BUDGET_LIMITS
     month_prefix = f"{year:04d}-{month:02d}"
     spending = [
-        t for t in _outgoing(transactions) if t.get("timestamp", "")[:7] == month_prefix
+        t for t in _spending(transactions) if t.get("timestamp", "")[:7] == month_prefix
     ]
     cat_totals: dict[str, float] = {}
     for txn in spending:
-        cat = map_category(txn.get("transaction_classification", []))
+        cat = map_category(
+            txn.get("transaction_classification", []), txn.get("description", "")
+        )
         cat_totals[cat] = cat_totals.get(cat, 0.0) + abs(txn["amount"])
 
     total_spent = round(sum(cat_totals.values()), 2)
-    total_budget = sum(BUDGET_LIMITS.values())
+    total_budget = sum(cat_limits.values())
 
-    all_cats = sorted(set(cat_totals) | set(BUDGET_LIMITS))
+    all_cats = sorted(set(cat_totals) | set(cat_limits))
     categories = []
     for cat in all_cats:
         spent = round(cat_totals.get(cat, 0.0), 2)
-        budget_limit = BUDGET_LIMITS.get(cat, 0.0)
+        budget_limit = cat_limits.get(cat, 0.0)
         if spent > 0 or budget_limit > 0:
             categories.append(
                 {

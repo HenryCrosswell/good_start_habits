@@ -69,6 +69,29 @@
     .btn-mini.disconnect { border-color: var(--subtle); color: var(--dim); }
     .btn-mini.disconnect:hover { background: var(--dim); color: var(--bg); }
 
+    /* Provider tabs */
+    .provider-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .provider-tab {
+        font-family: Georgia, serif;
+        font-size: 0.78rem;
+        padding: 0.28em 0.9em;
+        border: 1px solid var(--subtle);
+        border-radius: 4px;
+        text-decoration: none;
+        color: var(--dim);
+        letter-spacing: 0.04em;
+        transition: background 0.12s, color 0.12s;
+    }
+
+    .provider-tab:hover { background: var(--subtle); color: var(--text); }
+    .provider-tab.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+
     /* View toggles */
     .controls {
         display: flex;
@@ -245,20 +268,31 @@
     {% endfor %}
 </div>
 
+{% if connected_providers | length > 1 %}
+<div class="provider-tabs">
+    <a href="/budget?view={{ view }}&provider=all{% if projection %}&projection=on{% endif %}"
+       class="provider-tab {% if active_provider == 'all' %}active{% endif %}">All</a>
+    {% for p in connected_providers %}
+    <a href="/budget?view={{ view }}&provider={{ p }}{% if projection %}&projection=on{% endif %}"
+       class="provider-tab {% if active_provider == p %}active{% endif %}">{{ p | title }}</a>
+    {% endfor %}
+</div>
+{% endif %}
+
 {% if charts %}
 
 <div class="controls">
     <div class="toggle-group">
-        <a href="/budget?view=month{% if projection %}&projection=on{% endif %}"
+        <a href="/budget?view=month&provider={{ active_provider }}{% if projection %}&projection=on{% endif %}"
            class="{% if view == 'month' %}active{% endif %}">Month</a>
-        <a href="/budget?view=year{% if projection %}&projection=on{% endif %}"
+        <a href="/budget?view=year&provider={{ active_provider }}{% if projection %}&projection=on{% endif %}"
            class="{% if view == 'year' %}active{% endif %}">Year</a>
     </div>
     <div class="projection-toggle">
         {% if projection %}
-            <a href="/budget?view={{ view }}" class="active">Projection on</a>
+            <a href="/budget?view={{ view }}&provider={{ active_provider }}" class="active">Projection on</a>
         {% else %}
-            <a href="/budget?view={{ view }}&projection=on">Show projection</a>
+            <a href="/budget?view={{ view }}&provider={{ active_provider }}&projection=on">Show projection</a>
         {% endif %}
     </div>
 </div>
@@ -321,8 +355,8 @@
 {% else %}
 <div class="controls">
     <div class="toggle-group">
-        <a href="/budget?view=month" class="{% if view == 'month' %}active{% endif %}">Month</a>
-        <a href="/budget?view=year"  class="{% if view == 'year'  %}active{% endif %}">Year</a>
+        <a href="/budget?view=month&provider={{ active_provider }}" class="{% if view == 'month' %}active{% endif %}">Month</a>
+        <a href="/budget?view=year&provider={{ active_provider }}"  class="{% if view == 'year'  %}active{% endif %}">Year</a>
     </div>
 </div>
 <div class="no-data">Connect a bank account above to see your spending.</div>

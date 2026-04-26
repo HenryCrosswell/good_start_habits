@@ -10,17 +10,21 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from flask import Flask, abort, redirect, render_template, request, url_for
 
-load_dotenv()
-
 from good_start_habits import budget as budget_module  # noqa: E402
 from good_start_habits import truelayer  # noqa: E402
-from good_start_habits.config import DWELL_TIME, ROTATION_INTERVAL  # noqa: E402
+from good_start_habits.config import (
+    DWELL_TIME,
+    PROVIDER_BUDGET_LIMITS,
+    ROTATION_INTERVAL,
+)  # noqa: E402
 from good_start_habits.db import get_db, init_db  # noqa: E402
 from good_start_habits.habits import (  # noqa: E402
     check_current_datetime,
     daily_maintenance,
     mark_done,
 )
+
+load_dotenv()
 
 log = logging.getLogger(__name__)
 
@@ -164,43 +168,58 @@ def budget():
     today = date.today()
     view = request.args.get("view", "month")
     projection = request.args.get("projection", "") == "on"
+    active_provider = request.args.get("provider", "all")
 
     if view == "year":
         since = datetime(today.year, 1, 1, tzinfo=timezone.utc)
     else:
         since = datetime(today.year, today.month, 1, tzinfo=timezone.utc)
 
+    connected_providers = [p for p in truelayer.PROVIDERS if status[p] == "connected"]
+
+    provider_transactions: dict[str, list[dict]] = {}
     all_transactions: list[dict] = []
-    for provider in truelayer.PROVIDERS:
-        if status[provider] == "connected":
-            all_transactions.extend(
-                truelayer.get_transactions(db, provider, since=since)
-            )
+    for provider in connected_providers:
+        txns = truelayer.get_transactions(db, provider, since=since)
+        provider_transactions[provider] = txns
+        all_transactions.extend(txns)
 
-    if view == "year":
-        charts = budget_module.build_yearly_charts(
-            all_transactions, today.year, projection
-        )
-        summary = None
-    else:
-        charts = budget_module.build_monthly_charts(
-            all_transactions, today.year, today.month, projection
-        )
-        summary = budget_module.monthly_summary(
-            all_transactions, today.year, today.month
+    def _build(txns: list[dict], cat_limits=None) -> tuple[dict, dict | None]:
+        if view == "year":
+            return budget_module.build_yearly_charts(
+                txns, today.year, projection, cat_limits
+            ), None
+        return (
+            budget_module.build_monthly_charts(
+                txns, today.year, today.month, projection, cat_limits
+            ),
+            budget_module.monthly_summary(txns, today.year, today.month, cat_limits),
         )
 
+    views: dict[str, dict] = {"all": {}}
+    views["all"]["charts"], views["all"]["summary"] = _build(all_transactions)
+    for provider, txns in provider_transactions.items():
+        c, s = _build(txns, PROVIDER_BUDGET_LIMITS.get(provider))
+        views[provider] = {"charts": c, "summary": s}
+
+    if active_provider not in views:
+        active_provider = "all"
+
+    charts = views[active_provider]["charts"]
+    summary = views[active_provider]["summary"]
     flash = request.args.get("flash", "")
 
     return render_template(
         "budget.html",
         status=status,
         providers=truelayer.PROVIDERS,
+        connected_providers=connected_providers,
         charts=charts,
         flash=flash,
         view=view,
         projection=projection,
         summary=summary,
+        active_provider=active_provider,
     )
 
 
