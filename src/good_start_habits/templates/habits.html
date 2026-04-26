@@ -84,6 +84,16 @@
         background: var(--orange);
         color: var(--bg);
     }
+
+    .habit-form button.undo {
+        border-color: var(--dim);
+        color: var(--dim);
+    }
+
+    .habit-form button.undo:hover {
+        background: var(--dim);
+        color: var(--bg);
+    }
 </style>
 {% endblock %}
 
@@ -97,7 +107,9 @@
         <span class="habit-name">{{ name }}</span>
         <span class="habit-streak">streak <span>{{ streak }}</span></span>
         {% if done_today %}
-            <span class="habit-done">&#10003;</span>
+            <form class="habit-form" method="post" action="/habits/{{ name }}/undo">
+                <button type="submit" class="undo">&#10003; Undo</button>
+            </form>
         {% else %}
             <form class="habit-form" method="post" action="/habits/{{ name }}/done">
                 <button type="submit">Done</button>

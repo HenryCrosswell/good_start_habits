@@ -78,29 +78,35 @@ def daily_maintenance(con: sqlite3.Connection):
     con.commit()
 
 
-def mark_done(con: sqlite3.Connection, habit_name: str):
-    """Marks a habit complete for today and increments its streak.
+def mark_done(con: sqlite3.Connection, habit_name: str, undo: bool = False):
+    """Marks a habit complete for today and increments its streak, or undoes it.
 
-    No-op if the habit is already marked done today.
+    No-op if marking a habit already done, or undoing a habit not done.
 
     Args:
         con: Active SQLite connection, typically from get_db().
         habit_name: Name of the habit to mark as done.
+        undo: If True, reverses a same-day completion.
     """
     cur = con.cursor()
     today = str(date.today())
     cur.execute(
-        """
-        SELECT name, done_today FROM habits WHERE name = ?
-                """,
+        "SELECT name, done_today FROM habits WHERE name = ?",
         (habit_name,),
     )
-    (name, done_today) = cur.fetchone()
-    if not done_today:
+    row = cur.fetchone()
+    if row is None:
+        return
+    name, done_today = row
+
+    if undo and done_today:
         cur.execute(
-            """
-        UPDATE habits SET done_today = 1, streak = streak + 1, last_completed = ? WHERE name = ?
-        """,
+            "UPDATE habits SET done_today = 0, streak = streak - 1 WHERE name = ?",
+            (name,),
+        )
+    elif not undo and not done_today:
+        cur.execute(
+            "UPDATE habits SET done_today = 1, streak = streak + 1, last_completed = ? WHERE name = ?",
             (today, name),
         )
     con.commit()

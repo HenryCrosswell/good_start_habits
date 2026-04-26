@@ -48,6 +48,13 @@ def habit_done(name: str):
     return redirect(url_for("habits"))
 
 
+@app.route("/habits/<name>/undo", methods=["POST"])
+def habit_undo(name: str):
+    db = get_db()
+    mark_done(db, name, undo=True)
+    return redirect(url_for("habits"))
+
+
 @app.route("/budget")
 def budget():
     return "<p>This my budget!</p>"

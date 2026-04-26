@@ -18,13 +18,13 @@ The core logic is complete and tested from a Streamlit prototype:
 
 **Goal:** Replace Streamlit with Flask. Move habit state from a JSON file into SQLite. All four page routes exist and respond. Tests still pass.
 
-- [ ] Step 1 — Simplify `config.py`
-- [ ] Step 2 — Implement `db.py`
-- [ ] Step 3 — Rewrite `habits.py` storage layer
-- [ ] Step 4 — Rewrite `app.py` as a Flask app
-- [ ] Step 5 — Create `templates/base.html`
-- [ ] Step 6 — Update tests
-- [ ] Step 7 — Delete `main.py`
+- [x] Step 1 — Simplify `config.py`
+- [x] Step 2 — Implement `db.py`
+- [x] Step 3 — Rewrite `habits.py` storage layer
+- [x] Step 4 — Rewrite `app.py` as a Flask app
+- [x] Step 5 — Create `templates/base.html`
+- [x] Step 6 — Update tests
+- [x] Step 7 — Delete `main.py`
 
 ### Step 1 — Simplify `config.py`
 
@@ -91,10 +91,10 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** The app opens to a clock. During active hours it rotates to the habits page after `ROTATION_INTERVAL` seconds, stays there for `DWELL_TIME` seconds, then returns.
 
-- [ ] `templates/standby.html` — full-page clock and date. The time updates every second using `setInterval` in vanilla JS (the one JS exception in the project — everything else is server-rendered).
-- [ ] The `/` route calls `check_current_datetime()`. Outside active hours: show the clock with a quiet sleep message, no rotation. Inside active hours: pass `ROTATION_INTERVAL` to the template, which uses `setTimeout` to redirect to `/habits`.
-- [ ] The `/habits` route includes a `setTimeout` to redirect back to `/` after `DWELL_TIME` seconds. This creates the passive loop: clock → habits → clock → habits...
-- [ ] Add `ROTATION_INTERVAL` and `DWELL_TIME` to `config.py`.
+- [x] `templates/standby.html` — full-page clock and date. The time updates every second using `setInterval` in vanilla JS (the one JS exception in the project — everything else is server-rendered).
+- [x] The `/` route calls `check_current_datetime()`. Outside active hours: show the clock with a quiet sleep message, no rotation. Inside active hours: pass `ROTATION_INTERVAL` to the template, which uses `setTimeout` to redirect to `/habits`.
+- [x] The `/habits` route includes a `setTimeout` to redirect back to `/` after `DWELL_TIME` seconds. This creates the passive loop: clock → habits → clock → habits...
+- [x] Add `ROTATION_INTERVAL` and `DWELL_TIME` to `config.py`.
 
 **Phase 2 done when:** App opens to the clock, rotates to habits during active hours, goes quiet at night.
 
@@ -104,8 +104,8 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** Clean checklist of today's habits. Completing one persists across restarts. Streaks increment correctly.
 
-- [ ] `GET /habits` — checks today's day of week, filters `HABIT_ACTIVE_DAYS` to get today's habits, calls `daily_maintenance()`, queries SQLite for current state, passes a list of habit dicts to the template.
-- [ ] `POST /habits/<name>/done` — calls `mark_done()` for the named habit, then redirects back to `GET /habits`. The redirect (Post/Redirect/Get pattern) means refreshing the page won't resubmit the form.
+- [x] `GET /habits` — checks today's day of week, filters `HABIT_ACTIVE_DAYS` to get today's habits, calls `daily_maintenance()`, queries SQLite for current state, passes a list of habit dicts to the template.
+- [x] `POST /habits/<name>/done` — calls `mark_done()` for the named habit, then redirects back to `GET /habits`. The redirect (Post/Redirect/Get pattern) means refreshing the page won't resubmit the form.
 - [ ] `templates/habits.html` — extends `base.html`. Loops over today's habits and shows: name, streak count, and either a "Mark Done" form button or a done indicator depending on `done_today`.
 
 **Why `daily_maintenance()` runs on page load:** The app may be off overnight. Calling it on the first habits page visit of the day catches up correctly without needing a background scheduler.
