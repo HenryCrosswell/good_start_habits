@@ -46,16 +46,28 @@ maintenance_jsons: list[tuple[SeedRow, ExpectedRow, int]] = [
     (("SPF applied", 12, "2026-04-10", 1), (12, "2026-04-10", 0), 2),
 ]
 
-mark_done_rows: list[tuple[SeedRow, ExpectedRow]] = [
-    # (seed: name, streak, last_completed, done_today), (expected: streak, last_completed, done_today)
+mark_done_rows: list[tuple[SeedRow, ExpectedRow, bool]] = [
+    # (seed: name, streak, last_completed, done_today), (expected: streak, last_completed, done_today), undo
     (
         ("SPF applied", 12, "2026-04-02", 0),
         (13, "2026-04-03", 1),
-    ),  # not done yet — should complete
+        False,
+    ),  # not done — should complete
     (
         ("SPF applied", 8, "2026-04-02", 1),
         (8, "2026-04-02", 1),
+        False,
     ),  # already done — no change
+    (
+        ("SPF applied", 12, "2026-04-03", 1),
+        (11, "2026-04-03", 0),
+        True,
+    ),  # undo done habit — decrements streak
+    (
+        ("SPF applied", 5, "2026-04-03", 0),
+        (5, "2026-04-03", 0),
+        True,
+    ),  # undo not-done habit — no change
 ]
 
 list_of_datetime: list[tuple[Any, bool]] = [
@@ -88,8 +100,7 @@ def test_daily_maintenance(
     db.commit()
     mocker.patch("good_start_habits.habits.sqlite3").connect.return_value = db
     mocker.patch("good_start_habits.habits.day_diff", return_value=day_diff)
-
-    daily_maintenance()
+    daily_maintenance(db)
 
     row = db.execute(
         "SELECT streak, last_completed, done_today FROM habits WHERE name = 'SPF applied'"
@@ -97,9 +108,13 @@ def test_daily_maintenance(
     assert row == expected
 
 
-@pytest.mark.parametrize("seed, expected", mark_done_rows)
+@pytest.mark.parametrize("seed, expected, undo", mark_done_rows)
 def test_mark_done(
-    mocker: Any, db: sqlite3.Connection, seed: SeedRow, expected: ExpectedRow
+    mocker: Any,
+    db: sqlite3.Connection,
+    seed: SeedRow,
+    expected: ExpectedRow,
+    undo: bool,
 ):
     db.execute(
         "INSERT INTO habits (name, streak, last_completed, done_today) VALUES (?,?,?,?)",
@@ -110,7 +125,7 @@ def test_mark_done(
     mock_date = mocker.patch("good_start_habits.habits.date")
     mock_date.today.return_value = "2026-04-03"
 
-    mark_done("SPF applied")
+    mark_done(db, "SPF applied", undo)
 
     row = db.execute(
         "SELECT streak, last_completed, done_today FROM habits WHERE name = 'SPF applied'"

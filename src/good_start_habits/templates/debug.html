@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Transition Debug{% endblock %}
+
+{% block extra_styles %}
+<style>
+    #pt-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 3rem 2rem;
+        gap: 2.5rem;
+    }
+
+    h1 {
+        color: var(--orange);
+        font-size: 2.5vw;
+        letter-spacing: 0.05em;
+    }
+
+    .debug-section {
+        width: min(800px, 90vw);
+    }
+
+    .debug-section h2 {
+        color: var(--dim);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid var(--subtle);
+        padding-bottom: 0.4rem;
+    }
+
+    .btn-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .btn {
+        background: none;
+        border: 2px solid var(--orange);
+        color: var(--orange);
+        font-family: Georgia, serif;
+        font-size: 0.9rem;
+        padding: 0.4em 1em;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .btn:hover       { background: var(--orange); color: var(--bg); }
+    .btn.rare        { border-color: var(--blue); color: var(--blue); }
+    .btn.rare:hover  { background: var(--blue);   color: var(--bg); }
+    .btn.shiny       { border-color: #a855f7; color: #a855f7; }
+    .btn.shiny:hover { background: #a855f7;   color: var(--bg); }
+    .btn.nav         { border-color: var(--dim); color: var(--dim); }
+    .btn.nav:hover   { background: var(--dim);   color: var(--bg); }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Transition Debug</h1>
+
+<div class="debug-section">
+    <h2>Normal</h2>
+    <div class="btn-grid">
+        <button class="btn" onclick="ptNavigate('/debug','fade',0)">fade</button>
+        <button class="btn" onclick="ptNavigate('/debug','ease',0)">ease</button>
+        <button class="btn" onclick="ptNavigate('/debug','glue',0)">glue</button>
+        <button class="btn" onclick="ptNavigate('/debug','scale-down',0)">scale-down</button>
+        <button class="btn" onclick="ptNavigate('/debug','scale-up',0)">scale-up</button>
+        <button class="btn" onclick="ptNavigate('/debug','move-left',0)">move-left</button>
+        <button class="btn" onclick="ptNavigate('/debug','move-right',0)">move-right</button>
+        <button class="btn" onclick="ptNavigate('/debug','move-top',0)">move-top</button>
+        <button class="btn" onclick="ptNavigate('/debug','flip',0)">flip</button>
+    </div>
+</div>
+
+<div class="debug-section">
+    <h2>Rare</h2>
+    <div class="btn-grid">
+        <button class="btn rare" onclick="ptNavigate('/debug','fold',0)">fold</button>
+        <button class="btn rare" onclick="ptNavigate('/debug','slide',0)">slide</button>
+        <button class="btn rare" onclick="ptNavigate('/debug','room',0)">room</button>
+        <button class="btn rare" onclick="ptNavigate('/debug','carousel',0)">carousel</button>
+    </div>
+</div>
+
+<div class="debug-section">
+    <h2>Rarest</h2>
+    <div class="btn-grid">
+        <button class="btn rare" onclick="ptNavigate('/debug','newspaper',0)">newspaper</button>
+        <button class="btn rare" onclick="ptNavigate('/debug','cube',0)">cube</button>
+    </div>
+</div>
+
+<div class="debug-section">
+    <h2>Shiny variants</h2>
+    <div class="btn-grid">
+        <button class="btn shiny" onclick="ptNavigate('/debug','newspaper',0,true)">newspaper ✦</button>
+        <button class="btn shiny" onclick="ptNavigate('/debug','cube',0,true)">cube ✦</button>
+        <button class="btn shiny" onclick="ptNavigate('/debug','fold',0,true)">fold ✦</button>
+        <button class="btn shiny" onclick="ptNavigate('/debug','carousel',0,true)">carousel ✦</button>
+        <button class="btn shiny" onclick="ptNavigate('/debug','scale-down',0,true)">scale-down ✦</button>
+        <button class="btn shiny" onclick="ptNavigate('/debug','fade',0,true)">sparkle only (fade) ✦</button>
+    </div>
+</div>
+
+<div class="debug-section">
+    <h2>Special</h2>
+    <div class="btn-grid">
+        <button class="btn rare" onclick="ptNavigate('/debug','fall',0)">fall (clock return)</button>
+        <button class="btn" onclick="ptSparkle()">sparkle only</button>
+    </div>
+</div>
+
+<div class="debug-section">
+    <h2>Navigate</h2>
+    <div class="btn-grid">
+        <button class="btn nav" onclick="ptNavigate('/','fall',0)">→ clock</button>
+        <button class="btn nav" onclick="ptNavigate('/habits','random',0)">→ habits (random)</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}{% endblock %}

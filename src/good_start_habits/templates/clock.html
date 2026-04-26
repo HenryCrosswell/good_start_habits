@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Clock{% endblock %}
+
+{% block extra_styles %}
+<style>
+    #pt-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    #clock  { color: var(--orange); font-size: 28vw; font-weight: bold; }
+    #status { color: var(--blue);   font-size: 10vw; font-weight: normal; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 id="clock" data-rotation="{{ rotation_interval if active else 0 }}"></h1>
+<p id="status">{% if active %}☀️{% else %}🌛{% endif %}</p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function tick() {
+        var now = new Date();
+        document.getElementById('clock').textContent = now.toLocaleTimeString('en-GB', {
+            hour: '2-digit', minute: '2-digit', hour12: false
+        });
+    }
+    setInterval(tick, 1000);
+    tick();
+
+    var rotation = Number(document.getElementById('clock').dataset.rotation);
+    if (rotation > 0) ptNavigate('/habits', 'random', rotation);
+</script>
+{% endblock %}

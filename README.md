@@ -18,6 +18,14 @@ The core logic is complete and tested from a Streamlit prototype:
 
 **Goal:** Replace Streamlit with Flask. Move habit state from a JSON file into SQLite. All four page routes exist and respond. Tests still pass.
 
+- [x] Step 1 — Simplify `config.py`
+- [x] Step 2 — Implement `db.py`
+- [x] Step 3 — Rewrite `habits.py` storage layer
+- [x] Step 4 — Rewrite `app.py` as a Flask app
+- [x] Step 5 — Create `templates/base.html`
+- [x] Step 6 — Update tests
+- [x] Step 7 — Delete `main.py`
+
 ### Step 1 — Simplify `config.py`
 
 `HABIT_REMINDER_TIME` currently stores both which days a habit runs and what time to remind you. Since there's no time-based escalation, the times aren't needed. Replace it with `HABIT_ACTIVE_DAYS` — a dict mapping each habit to just a list of active days. This drives which habits show up today.
@@ -83,10 +91,10 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** The app opens to a clock. During active hours it rotates to the habits page after `ROTATION_INTERVAL` seconds, stays there for `DWELL_TIME` seconds, then returns.
 
-- `templates/standby.html` — full-page clock and date. The time updates every second using `setInterval` in vanilla JS (the one JS exception in the project — everything else is server-rendered).
-- The `/` route calls `check_current_datetime()`. Outside active hours: show the clock with a quiet sleep message, no rotation. Inside active hours: pass `ROTATION_INTERVAL` to the template, which uses `setTimeout` to redirect to `/habits`.
-- The `/habits` route includes a `setTimeout` to redirect back to `/` after `DWELL_TIME` seconds. This creates the passive loop: clock → habits → clock → habits...
-- Add `ROTATION_INTERVAL` and `DWELL_TIME` to `config.py`.
+- [x] `templates/standby.html` — full-page clock and date. The time updates every second using `setInterval` in vanilla JS (the one JS exception in the project — everything else is server-rendered).
+- [x] The `/` route calls `check_current_datetime()`. Outside active hours: show the clock with a quiet sleep message, no rotation. Inside active hours: pass `ROTATION_INTERVAL` to the template, which uses `setTimeout` to redirect to `/habits`.
+- [x] The `/habits` route includes a `setTimeout` to redirect back to `/` after `DWELL_TIME` seconds. This creates the passive loop: clock → habits → clock → habits...
+- [x] Add `ROTATION_INTERVAL` and `DWELL_TIME` to `config.py`.
 
 **Phase 2 done when:** App opens to the clock, rotates to habits during active hours, goes quiet at night.
 
@@ -96,9 +104,9 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** Clean checklist of today's habits. Completing one persists across restarts. Streaks increment correctly.
 
-- `GET /habits` — checks today's day of week, filters `HABIT_ACTIVE_DAYS` to get today's habits, calls `daily_maintenance()`, queries SQLite for current state, passes a list of habit dicts to the template.
-- `POST /habits/<name>/done` — calls `mark_done()` for the named habit, then redirects back to `GET /habits`. The redirect (Post/Redirect/Get pattern) means refreshing the page won't resubmit the form.
-- `templates/habits.html` — extends `base.html`. Loops over today's habits and shows: name, streak count, and either a "Mark Done" form button or a done indicator depending on `done_today`.
+- [x] `GET /habits` — checks today's day of week, filters `HABIT_ACTIVE_DAYS` to get today's habits, calls `daily_maintenance()`, queries SQLite for current state, passes a list of habit dicts to the template.
+- [x] `POST /habits/<name>/done` — calls `mark_done()` for the named habit, then redirects back to `GET /habits`. The redirect (Post/Redirect/Get pattern) means refreshing the page won't resubmit the form.
+- [ ] `templates/habits.html` — extends `base.html`. Loops over today's habits and shows: name, streak count, and either a "Mark Done" form button or a done indicator depending on `done_today`.
 
 **Why `daily_maintenance()` runs on page load:** The app may be off overnight. Calling it on the first habits page visit of the day catches up correctly without needing a background scheduler.
 
@@ -110,9 +118,9 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** "Run logged" auto-completes when Strava sees an activity. Fitness page shows running data.
 
-- New file `integrations/strava.py` with `did_i_run_today() -> bool` and `get_recent_runs() -> list[dict]`. OAuth tokens stored in `.env`, refreshed via APScheduler.
-- The habits route checks `did_i_run_today()` and auto-ticks "Run logged" if true.
-- `templates/fitness.html` — Plotly graph of distance/pace over time.
+- [ ] New file `integrations/strava.py` with `did_i_run_today() -> bool` and `get_recent_runs() -> list[dict]`. OAuth tokens stored in `.env`, refreshed via APScheduler.
+- [ ] The habits route checks `did_i_run_today()` and auto-ticks "Run logged" if true.
+- [ ] `templates/fitness.html` — Plotly graph of distance/pace over time.
 
 **Phase 4 done when:** Going for a run ticks the box without touching the app.
 
@@ -122,8 +130,8 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** "Workout logged" auto-completes when Hevy sees a session. Fitness page extended with weights data.
 
-- New file `integrations/hevy.py` with `did_i_lift_today() -> bool` and `get_recent_workouts() -> list[dict]`. API key in `.env`.
-- Hook into habits route; extend `templates/fitness.html` with volume and PR graphs.
+- [ ] New file `integrations/hevy.py` with `did_i_lift_today() -> bool` and `get_recent_workouts() -> list[dict]`. API key in `.env`.
+- [ ] Hook into habits route; extend `templates/fitness.html` with volume and PR graphs.
 
 **Phase 5 done when:** Logging a workout in Hevy ticks the box.
 
@@ -133,9 +141,9 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** Spending summary across Monzo, Nationwide, and Amex.
 
-- New file `integrations/truelayer.py`. OAuth for all three accounts; tokens stored in SQLite (not `.env` — they refresh too frequently).
-- APScheduler refreshes tokens in the background.
-- `templates/budget.html` — spend by category, budget vs actual (Plotly).
+- [ ] New file `integrations/truelayer.py`. OAuth for all three accounts; tokens stored in SQLite (not `.env` — they refresh too frequently).
+- [ ] APScheduler refreshes tokens in the background.
+- [ ] `templates/budget.html` — spend by category, budget vs actual (Plotly).
 
 **Phase 6 done when:** Budget page shows live data from all three accounts.
 *(Build this last — it has the most OAuth complexity.)*
@@ -146,9 +154,9 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** App runs headlessly on the Pi, launches on boot, displays in kiosk mode.
 
-- systemd service to start Flask on boot
-- Chromium in kiosk mode pointing at `localhost:5000`
-- No code changes — just deployment and hardware testing
+- [ ] systemd service to start Flask on boot
+- [ ] Chromium in kiosk mode pointing at `localhost:5000`
+- [ ] No code changes — just deployment and hardware testing
 
 **Phase 7 done when:** Pi boots straight into the dashboard, no keyboard needed.
 
