@@ -1,5 +1,7 @@
 """Globals are defined here"""
 
+from random import randint
+
 HABITS = [
     "SPF applied",
     "Vitamins & Omega-3",
@@ -81,3 +83,7 @@ ACTIVE_TIMES = {
     "Saturday": ("08:00:00", "21:00:00"),
     "Sunday": ("08:00:00", "21:00:00"),
 }
+
+
+ROTATION_INTERVAL = randint(5, 15)  # (1800,7200)
+DWELL_TIME = randint(5, 15)  # (1800,7200)

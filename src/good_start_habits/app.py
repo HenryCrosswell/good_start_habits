@@ -8,6 +8,7 @@ from good_start_habits.habits import (
     check_current_datetime,
     mark_done,
 )
+from good_start_habits.config import ROTATION_INTERVAL, DWELL_TIME
 
 app = Flask(__name__)
 
@@ -20,13 +21,13 @@ def fire_up_db():
 @app.route("/")
 def clock():
     if check_current_datetime():
-        active = "*"
         return render_template(
-            "clock.html", clock=datetime.now().strftime("%H:%M:%S"), active=active
+            "clock.html",
+            active=True,
+            rotation_interval=ROTATION_INTERVAL,
         )
-        # and functionality to switch to habits and budget
     else:
-        return render_template("clock.html", clock=datetime.now().strftime("%H:%M:%S"))
+        return render_template("clock.html", active=False)
 
 
 @app.route("/habits")
@@ -34,7 +35,10 @@ def habits():
     db = get_db()
     daily_maintenance(db)
     habits = db.execute("SELECT name, streak, done_today FROM habits").fetchall()
-    return render_template("habits.html", habits=habits)
+    today = datetime.now().strftime("%A, %d %B %Y")
+    return render_template(
+        "habits.html", habits=habits, today=today, dwell_time=DWELL_TIME
+    )
 
 
 @app.route("/habits/<name>/done", methods=["POST"])
@@ -49,21 +53,6 @@ def budget():
     return "<p>This my budget!</p>"
 
 
-# @st.fragment(run_every=1)  # reruns only this func every second
-# def clock():
-#     st.metric(
-
-# clock()
-
-# st.title("good-start-habits")
-
-# if check_current_datetime():
-#     state_json = load_state()
-#     state_init(state_json)
-#     daily_maintenance(state_json)
-
-#     for habit in HABITS:
-#         if st.checkbox(habit):
-#             mark_done(state_json, habit)
-# else:
-#     st.write("🌙 Outside Active Hours 🌙")
+@app.route("/debug")
+def debug():
+    return render_template("debug.html")

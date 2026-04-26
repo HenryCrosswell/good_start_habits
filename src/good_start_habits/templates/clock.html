@@ -1,49 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clock</title>
-    <style>
-        body {
-            margin: 0;
-            background: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: Georgia;
-        }
+{% extends "base.html" %}
 
-        #clock {
-            color: #EF820D;
-            font-size: 28vw;
-            font-weight: bold;
-        }
+{% block title %}Clock{% endblock %}
 
-        #active {
-            color: #0d7aef;
-            font-size: 5vw;
-            font-weight: normal;
-        }
-    </style>
-</head>
-<body>
-    <h1 id="clock">{{clock}}</h1>
-    <p1 id="active">{{active}}</p1>
+{% block extra_styles %}
+<style>
+    #pt-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
 
+    #clock  { color: var(--orange); font-size: 28vw; font-weight: bold; }
+    #status { color: var(--blue);   font-size: 10vw; font-weight: normal; }
+</style>
+{% endblock %}
 
-    <script>
-        function tick() {
-            const now = new Date();
-            document.getElementById("clock").textContent = now.toLocaleTimeString("en-GB", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false
-            });
-        }
-        setInterval(tick, 1000);
-        tick();
-    </script>
-</body>
-</html>
+{% block content %}
+<h1 id="clock"></h1>
+<p id="status">{% if active %}☀️{% else %}🌛{% endif %}</p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function tick() {
+        var now = new Date();
+        document.getElementById('clock').textContent = now.toLocaleTimeString('en-GB', {
+            hour: '2-digit', minute: '2-digit', hour12: false
+        });
+    }
+    setInterval(tick, 1000);
+    tick();
+
+    {% if active %}
+    ptNavigate('/habits', 'random', {{ rotation_interval }});
+    {% endif %}
+</script>
+{% endblock %}

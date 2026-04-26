@@ -1,0 +1,187 @@
+html, body {
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    min-height: 100vh;
+    perspective: 1200px;
+}
+
+#pt-container {
+    flex: 1;
+    width: 100%;
+    will-change: transform, opacity;
+}
+
+/* ── FADE ──────────────────────────────────────────────────── */
+@keyframes pt-fadeOut { to   { opacity: 0; } }
+@keyframes pt-fadeIn  { from { opacity: 0; } }
+
+html.pt-out-fade #pt-container { animation: pt-fadeOut 500ms ease forwards; }
+html.pt-in-fade  #pt-container { animation: pt-fadeIn  500ms ease forwards; }
+
+/* ── EASE (move with ease-in-out timing) ───────────────────── */
+@keyframes pt-easeOut { to   { transform: translateX(-100%); } }
+@keyframes pt-easeIn  { from { transform: translateX(100%);  } }
+
+html.pt-out-ease #pt-container { animation: pt-easeOut 700ms ease-in-out forwards; }
+html.pt-in-ease  #pt-container { animation: pt-easeIn  700ms ease-in-out forwards; }
+
+/* ── GLUE (hinge wobble then zoom back) ────────────────────── */
+@keyframes pt-glueOut {
+    0%   { }
+    40%  { transform: rotateY(15deg); opacity: .8; animation-timing-function: ease-out; }
+    100% { transform: scale(0.8) translateZ(-200px); opacity: 0; }
+}
+@keyframes pt-glueIn {
+    from { transform: scale(0.8) translateZ(-200px); opacity: 0; }
+}
+
+html.pt-out-glue #pt-container { transform-origin: 0% 50%; animation: pt-glueOut 800ms ease-in  forwards; }
+html.pt-in-glue  #pt-container {                            animation: pt-glueIn  700ms ease-out forwards; }
+
+/* ── SCALE DOWN ────────────────────────────────────────────── */
+@keyframes pt-scaleDownOut { to   { transform: scale(.8); opacity: 0; } }
+@keyframes pt-scaleDownIn  { from { transform: scale(.8); opacity: 0; } }
+
+html.pt-out-scale-down #pt-container { animation: pt-scaleDownOut 700ms ease forwards; }
+html.pt-in-scale-down  #pt-container { animation: pt-scaleDownIn  700ms ease forwards; }
+
+/* ── SCALE UP ──────────────────────────────────────────────── */
+@keyframes pt-scaleUpOut { to   { transform: scale(1.2); opacity: 0; } }
+@keyframes pt-scaleUpIn  { from { transform: scale(1.2); opacity: 0; } }
+
+html.pt-out-scale-up #pt-container { animation: pt-scaleUpOut 500ms ease forwards; }
+html.pt-in-scale-up  #pt-container { animation: pt-scaleUpIn  500ms ease forwards; }
+
+/* ── MOVE LEFT ─────────────────────────────────────────────── */
+@keyframes pt-moveOutLeft { to   { transform: translateX(-100%); } }
+@keyframes pt-moveInLeft  { from { transform: translateX(100%);  } }
+
+html.pt-out-move-left #pt-container { animation: pt-moveOutLeft 600ms ease forwards; }
+html.pt-in-move-left  #pt-container { animation: pt-moveInLeft  600ms ease forwards; }
+
+/* ── MOVE RIGHT ────────────────────────────────────────────── */
+@keyframes pt-moveOutRight { to   { transform: translateX(100%);  } }
+@keyframes pt-moveInRight  { from { transform: translateX(-100%); } }
+
+html.pt-out-move-right #pt-container { animation: pt-moveOutRight 600ms ease forwards; }
+html.pt-in-move-right  #pt-container { animation: pt-moveInRight  600ms ease forwards; }
+
+/* ── MOVE TOP ──────────────────────────────────────────────── */
+@keyframes pt-moveOutTop { to   { transform: translateY(-100%); } }
+@keyframes pt-moveInTop  { from { transform: translateY(100%);  } }
+
+html.pt-out-move-top #pt-container { animation: pt-moveOutTop 600ms ease forwards; }
+html.pt-in-move-top  #pt-container { animation: pt-moveInTop  600ms ease forwards; }
+
+/* ── SLIDE (zoom back, slide sideways, zoom forward) ───────── */
+@keyframes pt-slideOut {
+    0%   { }
+    25%  { opacity: .5; transform: translateZ(-500px); }
+    75%  { opacity: .5; transform: translateZ(-500px) translateX(-200%); }
+    100% { opacity: .5; transform: translateZ(-500px) translateX(-200%); }
+}
+@keyframes pt-slideIn {
+    0%, 25% { opacity: .5; transform: translateZ(-500px) translateX(200%); }
+    75%     { opacity: .5; transform: translateZ(-500px); }
+    100%    { opacity: 1;  transform: translateZ(0) translateX(0); }
+}
+
+html.pt-out-slide #pt-container { animation: pt-slideOut 1000ms ease forwards; }
+html.pt-in-slide  #pt-container { animation: pt-slideIn  1000ms ease forwards; }
+
+/* ── FOLD / UNFOLD ─────────────────────────────────────────── */
+@keyframes pt-foldOut  { to   { opacity: 0; transform: translateX(-100%) rotateY(-90deg); } }
+@keyframes pt-unfoldIn { from { opacity: 0; transform: translateX(100%)  rotateY(90deg);  } }
+
+html.pt-out-fold #pt-container { transform-origin: 100% 50%; animation: pt-foldOut  700ms ease forwards; }
+html.pt-in-fold  #pt-container { transform-origin: 0%   50%; animation: pt-unfoldIn 700ms ease forwards; }
+
+/* ── FLIP (3D page flip through Z-space) ───────────────────── */
+@keyframes pt-flipOut { to   { opacity: 0.2; transform: translateZ(-1000px) rotateY(90deg);  } }
+@keyframes pt-flipIn  { from { opacity: 0.2; transform: translateZ(-1000px) rotateY(-90deg); } }
+
+html.pt-out-flip #pt-container { animation: pt-flipOut 500ms ease-in  forwards; }
+html.pt-in-flip  #pt-container { animation: pt-flipIn  500ms ease-out forwards; }
+
+/* ── ROOM (rotate around shared edge like a room corner) ────── */
+@keyframes pt-roomOut { to   { opacity: .3; transform: translateX(-100%) rotateY(90deg);  } }
+@keyframes pt-roomIn  { from { opacity: .3; transform: translateX(100%)  rotateY(-90deg); } }
+
+html.pt-out-room #pt-container { transform-origin: 100% 50%; animation: pt-roomOut 800ms ease forwards; }
+html.pt-in-room  #pt-container { transform-origin: 0%   50%; animation: pt-roomIn  800ms ease forwards; }
+
+/* ── CUBE (full 3D cube rotation with midpoint) ────────────── */
+@keyframes pt-cubeOut {
+    0%   { }
+    50%  { animation-timing-function: ease-out; transform: translateX(-50%) translateZ(-200px) rotateY(-45deg); }
+    100% { opacity: .3; transform: translateX(-100%) rotateY(-90deg); }
+}
+@keyframes pt-cubeIn {
+    0%   { opacity: .3; transform: translateX(100%) rotateY(90deg); }
+    50%  { animation-timing-function: ease-out; transform: translateX(50%) translateZ(-200px) rotateY(45deg); }
+    100% { }
+}
+
+html.pt-out-cube #pt-container { transform-origin: 100% 50%; animation: pt-cubeOut 600ms ease-in forwards; }
+html.pt-in-cube  #pt-container { transform-origin: 0%   50%; animation: pt-cubeIn  600ms ease-in forwards; }
+
+/* ── CAROUSEL (wide arc swing with scale) ───────────────────── */
+@keyframes pt-carouselOut { to   { opacity: .3; transform: translateX(-150%) scale(.4) rotateY(-65deg); } }
+@keyframes pt-carouselIn  { from { opacity: .3; transform: translateX(200%)  scale(.4) rotateY(65deg);  } }
+
+html.pt-out-carousel #pt-container { transform-origin: 100% 50%; animation: pt-carouselOut 800ms ease forwards; }
+html.pt-in-carousel  #pt-container { transform-origin: 0%   50%; animation: pt-carouselIn  800ms ease forwards; }
+
+/* ── NEWSPAPER (spin deep into Z-space) ────────────────────── */
+@keyframes pt-newspaperOut { to   { transform: translateZ(-3000px) rotateZ(360deg);  opacity: 0; } }
+@keyframes pt-newspaperIn  { from { transform: translateZ(-3000px) rotateZ(-360deg); opacity: 0; } }
+
+html.pt-out-newspaper #pt-container { animation: pt-newspaperOut 500ms ease-in  forwards; }
+html.pt-in-newspaper  #pt-container { animation: pt-newspaperIn  500ms ease-out forwards; }
+
+/* ── FALL (pivot from top-left, swing and drop) ────────────── */
+@keyframes pt-fallOut {
+    0%   { transform: rotateZ(0deg); }
+    20%  { transform: rotateZ(10deg); animation-timing-function: ease-out; }
+    40%  { transform: rotateZ(17deg); }
+    60%  { transform: rotateZ(16deg); }
+    100% { transform: translateY(100%) rotateZ(17deg); }
+}
+@keyframes pt-fallIn {
+    from { transform: scale(.8); opacity: 0; }
+}
+
+html.pt-out-fall #pt-container { transform-origin: 0% 0%; animation: pt-fallOut 1000ms ease-in forwards; }
+html.pt-in-fall  #pt-container {                           animation: pt-fallIn   500ms ease-out forwards; }
+
+/* ── SPARKLE OVERLAY ───────────────────────────────────────── */
+#pt-sparkles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.pt-sparkle {
+    position: absolute;
+    animation: pt-sparkleFly var(--dur, 0.85s) ease-out var(--delay, 0s) both;
+}
+
+.pt-sparkle.dot {
+    border-radius: 50%;
+    background: var(--color, gold);
+}
+
+.pt-sparkle.star {
+    background: var(--color, gold);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+@keyframes pt-sparkleFly {
+    0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--dx, 80px), var(--dy, 80px)) scale(0.1); }
+}
