@@ -67,7 +67,7 @@ src/good_start_habits/
 | Standby (clock) | `/` | Default view. Large clock + date. Rotates to habits during active hours. |
 | Habits | `/habits` | One button per habit, streak shown. Only shows habits relevant to today. |
 | Fitness | `/fitness` | Running (Strava) + weights (Hevy) graphs via Plotly |
-| Budget | `/budget` | Spending by category, Monzo/Nationwide/Amex via TrueLayer |
+| Budget | `/budget` | Category budgets vs actual spend, burn-rate line graph, Monzo/Nationwide/Amex via TrueLayer |
 
 ---
 
@@ -113,43 +113,18 @@ Things still TBD / to explore:
 
 ---
 
-### Phase 1 — Flask scaffold + SQLite migration
-**Goal:** Replace Streamlit with Flask. Migrate JSON state → SQLite.
-
-- [ ] Update `pyproject.toml`: remove `streamlit`/`streamlit-autorefresh`, add `flask`, `apscheduler`, `plotly`, `python-dotenv`
-- [ ] Simplify `config.py`: replace `HABIT_REMINDER_TIME` (times + days) with `HABIT_ACTIVE_DAYS` (days only)
-- [ ] Create `db.py` — SQLite connection + `habits` table schema
-- [ ] Rewrite `habits.py` storage layer: replace `load_state`/`save_state` (JSON) with SQLite reads/writes — keep all streak logic unchanged
-- [ ] Rewrite `app.py` as Flask entry point with stubbed routes: `/`, `/habits`, `/fitness`, `/budget`
-- [ ] Create `templates/base.html` — shared layout + nav
-- [ ] Update tests: mock SQLite layer instead of `save_state`
-- [ ] Delete `main.py` (dead code)
-
-**Done when:** Flask server runs, all routes respond, streak logic tests pass.
+### ✅ Phase 1 — Flask scaffold + SQLite migration
+**Goal:** Replace Streamlit with Flask. Migrate JSON state → SQLite. **Complete.**
 
 ---
 
-### Phase 2 — Standby clock + active hours
-**Goal:** Standby is the default view. Clock displays. During active hours it rotates to habits.
-
-- [ ] `templates/standby.html` — large clock + date, CSS-styled (no framework)
-- [ ] Vanilla JS clock tick (one `<script>` block — the only JS exception)
-- [ ] Active hours check on `/` route — sleep message outside hours
-- [ ] During active hours: page rotates to `/habits` on a timer, returns after 30s
-- [ ] Add `ROTATION_INTERVAL` to `config.py`
-
-**Done when:** App opens to clock, rotates to habits during active hours, goes quiet at night.
+### ✅ Phase 2 — Standby clock + active hours
+**Goal:** Standby is the default view. Clock displays. During active hours it rotates to habits. **Complete.**
 
 ---
 
-### Phase 3 — Habits page
-**Goal:** Clean habits checklist. Button per habit, streak shown. Only today's habits visible.
-
-- [ ] `GET /habits` — render habits active today (filter by `HABIT_ACTIVE_DAYS`)
-- [ ] `POST /habits/<name>/done` — mark habit complete, redirect
-- [ ] `templates/habits.html` — habit name, streak count, done button or ✓
-
-**Done when:** Today's habits show up, completing one persists across restarts, streaks increment correctly.
+### ✅ Phase 3 — Habits page
+**Goal:** Clean habits checklist. Button per habit, streak shown. Only today's habits visible. **Complete.**
 
 ---
 
@@ -184,21 +159,29 @@ New file: `hevy.py`
 ---
 
 ### Phase 6 — Budget page (TrueLayer)
-**Goal:** Spending summary across Monzo, Nationwide, Amex.
+**Goal:** Category budgets vs actual spend, with burn-rate visualisation.
 
-New file: `truelayer.py`
+#### ✅ Infrastructure complete
+- TrueLayer OAuth (PKCE + CSRF state) for Monzo, Nationwide, Amex
+- Tokens in SQLite with `expires_at`; per-request refresh, APScheduler backstop
+- `get_transactions(provider) -> list[dict]` — last 30 days
+- Sandbox mode via `TRUELAYER_SANDBOX=true` in `.env`; switch to production by setting `false` and updating credentials
 
-**Before starting:**
-- Verify Amex and Nationwide are on TrueLayer's supported bank list — do not assume coverage
-- Build and test fully in TrueLayer sandbox mode before touching real accounts
+#### Remaining — budget UI
+The current charts (spend-by-category bar, daily total line) are placeholder. The real page design:
 
-- [ ] TrueLayer OAuth for all three accounts; tokens in SQLite
-- [ ] Token schema includes `expires_at`; refresh logic checks expiry per-request (APScheduler job is a backstop, not the primary mechanism)
-- [ ] `get_transactions(account) -> list[dict]`
-- [ ] `templates/budget.html` — spend by category, budget vs actual (Plotly)
+**What the user wants to see:**
+- Per-category budget limits set by the user, compared against actual spend for the month
+- A line graph showing cumulative spend per category over the month — the slope reveals burn rate
+- Toggles: month view (default), year view, projection to end of period
 
-**Done when:** Budget page shows live data from all three accounts.
-**Note:** Build this last — most OAuth complexity.
+**Design decisions:**
+- **Budget limits live in `config.py`** — simple dict mapping category name → monthly limit. No UI editor needed yet; editing the file is fine.
+- **Category mapping layer** — TrueLayer returns its own taxonomy (`transaction_classification`, e.g. `["Food", "Groceries"]`). A mapping layer in `truelayer.py` or a new `budget.py` translates these to the user's personal categories (travel, food, restaurants, rent, subscriptions, etc.). Some will be 1:1; a catch-all "Other" handles the rest.
+- **Projection** — extrapolate current daily spend rate to end of month/year. Only meaningful after a few days of data; show a dashed line.
+- **Line graph is the primary visualisation** — one line per category, x-axis is days of month, y-axis is cumulative spend, horizontal dotted line marks the budget limit.
+
+**Done when:** Budget page shows each category's spend vs limit, burn-rate line graph, with month/year/projection toggle.
 
 ---
 

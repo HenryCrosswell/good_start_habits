@@ -1,0 +1,438 @@
+{% extends "base.html" %}
+
+{% block title %}Budget{% endblock %}
+
+{% block extra_styles %}
+<style>
+    #pt-container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0.8rem 1rem 2rem;
+    }
+
+    .flash {
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        margin-bottom: 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .flash.ok  { background: #eafaf1; border-left: 3px solid #2ecc71; color: #1a7a40; }
+    .flash.err { background: #fdf0f0; border-left: 3px solid #e74c3c; color: #7a1a1a; }
+
+    /* Provider strip */
+    .provider-strip {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .provider-item {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+    }
+
+    .provider-item .name { text-transform: capitalize; }
+
+    .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .dot.connected    { background: #2ecc71; }
+    .dot.disconnected { background: var(--subtle); border: 1px solid var(--dim); }
+
+    .btn-mini {
+        font-family: Georgia, serif;
+        font-size: 0.68rem;
+        padding: 0.1em 0.55em;
+        border: 1px solid var(--orange);
+        color: var(--orange);
+        background: none;
+        border-radius: 3px;
+        text-decoration: none;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: background 0.15s, color 0.15s;
+        display: inline-block;
+    }
+
+    .btn-mini:hover { background: var(--orange); color: var(--bg); }
+
+    .btn-mini.disconnect { border-color: var(--subtle); color: var(--dim); }
+    .btn-mini.disconnect:hover { background: var(--dim); color: var(--bg); }
+
+    /* View toggles */
+    .controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+    .toggle-group {
+        display: flex;
+        border: 1px solid var(--subtle);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .toggle-group a {
+        padding: 0.28em 0.9em;
+        text-decoration: none;
+        color: var(--dim);
+        font-size: 0.78rem;
+        letter-spacing: 0.05em;
+        border-right: 1px solid var(--subtle);
+        transition: background 0.12s, color 0.12s;
+    }
+
+    .toggle-group a:last-child { border-right: none; }
+    .toggle-group a:hover { background: var(--subtle); color: var(--text); }
+    .toggle-group a.active { background: var(--orange); color: #fff; }
+
+    .projection-toggle a {
+        font-size: 0.78rem;
+        color: var(--dim);
+        text-decoration: none;
+        letter-spacing: 0.04em;
+        padding: 0.28em 0.85em;
+        border: 1px solid var(--subtle);
+        border-radius: 4px;
+        transition: background 0.12s, color 0.12s;
+    }
+
+    .projection-toggle a:hover { background: var(--subtle); color: var(--text); }
+    .projection-toggle a.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+    /* Summary bar */
+    .summary-bar {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 0.9rem;
+        padding: 0.55rem 0.9rem;
+        background: #fff;
+        border: 1px solid var(--subtle);
+        border-radius: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .summary-stat { display: flex; flex-direction: column; gap: 0.1em; }
+
+    .summary-stat .label {
+        font-size: 0.68rem;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+    }
+
+    .summary-stat .value { font-size: 1.1rem; color: var(--text); }
+    .summary-stat .value.over { color: #e74c3c; }
+
+    .progress-wrap {
+        flex: 1;
+        min-width: 130px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.2em;
+    }
+
+    .progress-track {
+        height: 4px;
+        background: var(--subtle);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-fill { height: 100%; background: var(--orange); border-radius: 3px; }
+    .progress-fill.over { background: #e74c3c; }
+
+    /* Category card: cycler header + embedded chart */
+    .category-card {
+        background: #fff;
+        border: 1px solid var(--subtle);
+        border-radius: 6px;
+        padding: 0.8rem 1rem 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .cycler-inner { transition: opacity 0.2s ease; }
+
+    .cycler-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 0.1rem;
+    }
+
+    .cycler-name {
+        font-size: 0.75rem;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--dim);
+    }
+
+    .cycler-amount { font-size: 1.45rem; color: var(--text); }
+    .cycler-amount.over { color: #e74c3c; }
+
+    .cycler-dots {
+        display: flex;
+        gap: 0.4rem;
+        margin-top: 0.35rem;
+        justify-content: center;
+    }
+
+    .cycler-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--subtle);
+        border: 1px solid #bbb;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+
+    .cycler-dot.active { background: var(--orange); border-color: var(--orange); }
+
+    .chart-section { margin-bottom: 1rem; }
+
+    .no-data {
+        text-align: center;
+        color: var(--dim);
+        padding: 2rem 0;
+        font-size: 0.95rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if flash %}
+    {% if flash.startswith('connected_') %}
+        <div class="flash ok">Connected {{ flash[10:] | title }} successfully.</div>
+    {% elif flash.startswith('disconnected_') %}
+        <div class="flash ok">Disconnected {{ flash[13:] | title }}.</div>
+    {% elif flash == 'auth_cancelled' %}
+        <div class="flash err">Authorisation cancelled.</div>
+    {% elif flash == 'connect_failed' %}
+        <div class="flash err">Connection failed — please try again.</div>
+    {% endif %}
+{% endif %}
+
+<div class="provider-strip">
+    {% for provider in providers %}
+    <div class="provider-item">
+        <span class="dot {{ status[provider] }}"></span>
+        <span class="name">{{ provider | title }}</span>
+        {% if status[provider] == 'connected' %}
+            <form method="post" action="/auth/disconnect/{{ provider }}" style="margin:0;">
+                <button type="submit" class="btn-mini disconnect">✕</button>
+            </form>
+        {% else %}
+            <a class="btn-mini" href="/auth/connect/{{ provider }}">Connect</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% if charts %}
+
+<div class="controls">
+    <div class="toggle-group">
+        <a href="/budget?view=month{% if projection %}&projection=on{% endif %}"
+           class="{% if view == 'month' %}active{% endif %}">Month</a>
+        <a href="/budget?view=year{% if projection %}&projection=on{% endif %}"
+           class="{% if view == 'year' %}active{% endif %}">Year</a>
+    </div>
+    <div class="projection-toggle">
+        {% if projection %}
+            <a href="/budget?view={{ view }}" class="active">Projection on</a>
+        {% else %}
+            <a href="/budget?view={{ view }}&projection=on">Show projection</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if summary %}
+<div class="summary-bar">
+    <div class="summary-stat">
+        <span class="label">Spent</span>
+        <span class="value {% if summary.pct_used > 100 %}over{% endif %}">
+            £{{ "%.0f"|format(summary.total_spent) }}
+        </span>
+    </div>
+    <div class="summary-stat">
+        <span class="label">Budget</span>
+        <span class="value">£{{ "%.0f"|format(summary.total_budget) }}</span>
+    </div>
+    <div class="summary-stat">
+        <span class="label">Remaining</span>
+        <span class="value {% if summary.total_spent > summary.total_budget %}over{% endif %}">
+            £{{ "%.0f"|format(summary.total_budget - summary.total_spent) }}
+        </span>
+    </div>
+    <div class="progress-wrap">
+        <span class="label" style="font-size:0.68rem;color:var(--dim);letter-spacing:0.07em;text-transform:uppercase;">
+            {{ summary.pct_used }}% used
+        </span>
+        <div class="progress-track">
+            <div class="progress-fill {% if summary.pct_used > 100 %}over{% endif %}"
+                 style="width: {{ [summary.pct_used, 100] | min }}%;"></div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if summary and summary.categories %}
+<div class="category-card">
+    <div class="cycler-inner" id="cycler-inner">
+        <div class="cycler-header">
+            <span class="cycler-name" id="cycler-name"></span>
+            <span class="cycler-amount" id="cycler-amount"></span>
+        </div>
+    </div>
+    <div id="chart-single" style="width:100%; height:195px;"></div>
+    <div class="cycler-dots" id="cycler-dots"></div>
+</div>
+{% endif %}
+
+{% if view == 'year' %}
+<div class="chart-section">
+    <div id="chart-cumulative" style="width:100%; height:260px;"></div>
+</div>
+{% endif %}
+
+{% if charts.vs_budget %}
+<div class="chart-section">
+    <div id="chart-budget" style="width:100%; height:260px;"></div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="controls">
+    <div class="toggle-group">
+        <a href="/budget?view=month" class="{% if view == 'month' %}active{% endif %}">Month</a>
+        <a href="/budget?view=year"  class="{% if view == 'year'  %}active{% endif %}">Year</a>
+    </div>
+</div>
+<div class="no-data">Connect a bank account above to see your spending.</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if charts %}
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+{% if summary and summary.categories %}
+(function () {
+    var cats   = {{ summary.categories | tojson }};
+    var perCat = {{ charts.per_category | safe }};
+    if (!cats.length) return;
+
+    var inner  = document.getElementById('cycler-inner');
+    var nameEl = document.getElementById('cycler-name');
+    var amtEl  = document.getElementById('cycler-amount');
+    var dotsEl = document.getElementById('cycler-dots');
+    var idx    = 0;
+    var timer;
+
+    cats.forEach(function (_, i) {
+        var dot = document.createElement('span');
+        dot.className = 'cycler-dot' + (i === 0 ? ' active' : '');
+        dot.addEventListener('click', function () { goTo(i); });
+        dotsEl.appendChild(dot);
+    });
+
+    function renderChart(pc) {
+        var traces = [
+            {
+                x: [1, pc.days_in_month], y: [0, 0],
+                mode: 'lines', line: { color: '#bbb', width: 1 },
+                hoverinfo: 'skip', showlegend: false,
+            },
+            {
+                x: pc.x, y: pc.y,
+                mode: 'lines', line: { color: '#EF820D', width: 2 },
+                showlegend: false,
+            },
+        ];
+        if (pc.proj) {
+            traces.push({
+                x: pc.proj.x, y: pc.proj.y,
+                mode: 'lines', line: { color: '#EF820D', dash: 'dash', width: 1 },
+                hoverinfo: 'skip', showlegend: false,
+            });
+        }
+        Plotly.react('chart-single', traces, {
+            paper_bgcolor: '#f8f5f0', plot_bgcolor: '#f8f5f0',
+            font: { family: 'Georgia, serif', color: '#1a1a1a', size: 10 },
+            margin: { l: 40, r: 8, t: 4, b: 28 },
+            xaxis: { range: [1, pc.days_in_month], title: { text: 'Day', standoff: 2 } },
+            yaxis: { title: { text: '£', standoff: 2 } },
+            showlegend: false,
+        }, { responsive: true, displayModeBar: false });
+    }
+
+    function render() {
+        var cat = cats[idx];
+        inner.style.opacity = '0';
+        setTimeout(function () {
+            nameEl.textContent = cat.name;
+            var rem = cat.remaining;
+            if (rem >= 0) {
+                amtEl.className = 'cycler-amount';
+                amtEl.textContent = '£' + rem.toFixed(0) + ' remaining';
+            } else {
+                amtEl.className = 'cycler-amount over';
+                amtEl.textContent = '£' + Math.abs(rem).toFixed(0) + ' over budget';
+            }
+            dotsEl.querySelectorAll('.cycler-dot').forEach(function (d, j) {
+                d.className = 'cycler-dot' + (j === idx ? ' active' : '');
+            });
+            inner.style.opacity = '1';
+        }, 200);
+        renderChart(perCat[idx]);
+    }
+
+    function goTo(i) {
+        clearInterval(timer);
+        idx = i;
+        render();
+        timer = setInterval(advance, 6000);
+    }
+
+    function advance() {
+        idx = (idx + 1) % cats.length;
+        render();
+    }
+
+    render();
+    timer = setInterval(advance, 6000);
+})();
+{% endif %}
+{% if view == 'year' %}
+(function () {
+    var cumFig = {{ charts.cumulative | safe }};
+    Plotly.newPlot('chart-cumulative', cumFig.data, cumFig.layout, { responsive: true, displayModeBar: false });
+})();
+{% endif %}
+{% if charts.vs_budget %}
+(function () {
+    var budFig = {{ charts.vs_budget | safe }};
+    Plotly.newPlot('chart-budget', budFig.data, budFig.layout, { responsive: true, displayModeBar: false });
+})();
+{% endif %}
+</script>
+{% endif %}
+{% endblock %}

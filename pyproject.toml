@@ -19,6 +19,9 @@ dependencies = [
     "requests>=2.33.1",
 ]
 
+[tool.pyright]
+reportMissingTypeStubs = false
+
 [dependency-groups]
 dev = [
     "mkdocs>=1.6.1",

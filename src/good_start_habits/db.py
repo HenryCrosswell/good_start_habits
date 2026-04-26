@@ -39,6 +39,31 @@ def populate_habits():
     con.commit()
 
 
+def init_tl_tables(db: sqlite3.Connection) -> None:
+    """Create TrueLayer token and OAuth state tables if they don't exist."""
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS tl_tokens (
+            provider      TEXT PRIMARY KEY,
+            access_token  TEXT NOT NULL,
+            refresh_token TEXT,
+            expires_at    TEXT NOT NULL,
+            created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """
+    )
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS oauth_state (
+            state         TEXT PRIMARY KEY,
+            provider_hint TEXT NOT NULL,
+            code_verifier TEXT NOT NULL,
+            expires_at    TEXT NOT NULL
+        )
+        """
+    )
+
+
 def init_db():
     """Create the ``habits`` table if it does not exist and seed habit rows.
 
@@ -57,5 +82,6 @@ def init_db():
         );
         """
     )
+    init_tl_tables(db)
     populate_habits()
     db.commit()
