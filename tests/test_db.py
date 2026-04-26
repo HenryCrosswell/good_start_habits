@@ -1,7 +1,7 @@
 import sqlite3
 from typing import Any
 from flask import Flask
-from good_start_habits.db import get_db, populate_habits  # , init_db
+from good_start_habits.db import get_db, populate_habits
 import pytest
 
 ### Variables init ###############################################################################
@@ -52,16 +52,3 @@ def test_populate_habits(mocker: Any, test_db: sqlite3.Connection):
     populate_habits()
     rows = test_db.execute("SELECT name FROM habits ORDER BY name").fetchall()
     assert rows == [(h,) for h in sorted(habits)]
-
-
-# def test_init_db(mocker:Any, test_db:sqlite3.Connection):
-
-#     # broken
-#     mocker.patch("good_start_habits.db.get_db").connect.return_value = sqlite3.connect(":memory:")
-#     mocker.patch("good_start_habits.db.HABITS", habits)
-
-#     init_db()
-#     rows = test_db.execute("SELECT name FROM habits ORDER BY name").fetchall()
-#     assert rows == [(h,) for h in sorted(habits)]
-
-#     mocker.patch("good_start_habits.db.get_db").connect.return_value = test_db
