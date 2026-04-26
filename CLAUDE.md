@@ -53,10 +53,9 @@ src/good_start_habits/
 │   └── budget.html
 ├── static/
 │   └── style.css
-└── integrations/
-    ├── strava.py
-    ├── hevy.py
-    └── truelayer.py
+├── strava.py
+├── hevy.py
+└── truelayer.py
 ```
 
 ---
@@ -157,7 +156,7 @@ Things still TBD / to explore:
 ### Phase 4 — Strava integration + Fitness page (running)
 **Goal:** Run days auto-complete. Fitness page shows running data.
 
-New file: `integrations/strava.py`
+New file: `strava.py`
 
 - [ ] Register Strava app, store tokens in `.env`, refresh via APScheduler
 - [ ] `did_i_run_today() -> bool`
@@ -172,7 +171,7 @@ New file: `integrations/strava.py`
 ### Phase 5 — Hevy integration (weights)
 **Goal:** Workout days auto-complete. Fitness page extended with weights data.
 
-New file: `integrations/hevy.py`
+New file: `hevy.py`
 
 - [ ] Hevy API key in `.env`
 - [ ] `did_i_lift_today() -> bool`
@@ -187,10 +186,14 @@ New file: `integrations/hevy.py`
 ### Phase 6 — Budget page (TrueLayer)
 **Goal:** Spending summary across Monzo, Nationwide, Amex.
 
-New file: `integrations/truelayer.py`
+New file: `truelayer.py`
+
+**Before starting:**
+- Verify Amex and Nationwide are on TrueLayer's supported bank list — do not assume coverage
+- Build and test fully in TrueLayer sandbox mode before touching real accounts
 
 - [ ] TrueLayer OAuth for all three accounts; tokens in SQLite
-- [ ] APScheduler job refreshes tokens
+- [ ] Token schema includes `expires_at`; refresh logic checks expiry per-request (APScheduler job is a backstop, not the primary mechanism)
 - [ ] `get_transactions(account) -> list[dict]`
 - [ ] `templates/budget.html` — spend by category, budget vs actual (Plotly)
 

@@ -106,7 +106,7 @@ Dead code. An infinite generator with no callers. Delete it.
 
 - [x] `GET /habits` — checks today's day of week, filters `HABIT_ACTIVE_DAYS` to get today's habits, calls `daily_maintenance()`, queries SQLite for current state, passes a list of habit dicts to the template.
 - [x] `POST /habits/<name>/done` — calls `mark_done()` for the named habit, then redirects back to `GET /habits`. The redirect (Post/Redirect/Get pattern) means refreshing the page won't resubmit the form.
-- [ ] `templates/habits.html` — extends `base.html`. Loops over today's habits and shows: name, streak count, and either a "Mark Done" form button or a done indicator depending on `done_today`.
+- [x] `templates/habits.html` — extends `base.html`. Loops over today's habits and shows: name, streak count, and either a "Mark Done" form button or a done indicator depending on `done_today`.
 
 **Why `daily_maintenance()` runs on page load:** The app may be off overnight. Calling it on the first habits page visit of the day catches up correctly without needing a background scheduler.
 
@@ -118,7 +118,7 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** "Run logged" auto-completes when Strava sees an activity. Fitness page shows running data.
 
-- [ ] New file `integrations/strava.py` with `did_i_run_today() -> bool` and `get_recent_runs() -> list[dict]`. OAuth tokens stored in `.env`, refreshed via APScheduler.
+- [ ] New file `strava.py` with `did_i_run_today() -> bool` and `get_recent_runs() -> list[dict]`. OAuth tokens stored in `.env`, refreshed via APScheduler.
 - [ ] The habits route checks `did_i_run_today()` and auto-ticks "Run logged" if true.
 - [ ] `templates/fitness.html` — Plotly graph of distance/pace over time.
 
@@ -130,7 +130,7 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** "Workout logged" auto-completes when Hevy sees a session. Fitness page extended with weights data.
 
-- [ ] New file `integrations/hevy.py` with `did_i_lift_today() -> bool` and `get_recent_workouts() -> list[dict]`. API key in `.env`.
+- [ ] New file `hevy.py` with `did_i_lift_today() -> bool` and `get_recent_workouts() -> list[dict]`. API key in `.env`.
 - [ ] Hook into habits route; extend `templates/fitness.html` with volume and PR graphs.
 
 **Phase 5 done when:** Logging a workout in Hevy ticks the box.
@@ -141,8 +141,10 @@ Dead code. An infinite generator with no callers. Delete it.
 
 **Goal:** Spending summary across Monzo, Nationwide, and Amex.
 
-- [ ] New file `integrations/truelayer.py`. OAuth for all three accounts; tokens stored in SQLite (not `.env` — they refresh too frequently).
-- [ ] APScheduler refreshes tokens in the background.
+**Before starting:** Verify that Amex and Nationwide are on TrueLayer's supported bank list — do not assume coverage. Build and test fully in TrueLayer sandbox mode before connecting real accounts.
+
+- [ ] New file `truelayer.py`. OAuth for all three accounts; tokens stored in SQLite (not `.env` — they refresh too frequently).
+- [ ] Token schema includes `expires_at`. Refresh logic checks expiry per-request; APScheduler is a backstop, not the primary mechanism.
 - [ ] `templates/budget.html` — spend by category, budget vs actual (Plotly).
 
 **Phase 6 done when:** Budget page shows live data from all three accounts.
