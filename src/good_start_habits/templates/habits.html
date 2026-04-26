@@ -88,7 +88,7 @@
 {% endblock %}
 
 {% block content %}
-<h1 id="page-title">Today</h1>
+<h1 id="page-title" data-dwell="{{ dwell_time }}">Today</h1>
 <p id="page-date">{{ today }}</p>
 
 <ul id="habit-list">
@@ -110,6 +110,7 @@
 
 {% block scripts %}
 <script>
-    ptNavigate('/', 'fall', {{ dwell_time }});
+    var dwell = Number(document.getElementById('page-title').dataset.dwell);
+    ptNavigate('/', 'fall', dwell);
 </script>
 {% endblock %}

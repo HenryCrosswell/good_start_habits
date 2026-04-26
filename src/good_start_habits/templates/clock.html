@@ -18,7 +18,7 @@
 {% endblock %}
 
 {% block content %}
-<h1 id="clock"></h1>
+<h1 id="clock" data-rotation="{{ rotation_interval if active else 0 }}"></h1>
 <p id="status">{% if active %}☀️{% else %}🌛{% endif %}</p>
 {% endblock %}
 
@@ -33,8 +33,7 @@
     setInterval(tick, 1000);
     tick();
 
-    {% if active %}
-    ptNavigate('/habits', 'random', {{ rotation_interval }});
-    {% endif %}
+    var rotation = Number(document.getElementById('clock').dataset.rotation);
+    if (rotation > 0) ptNavigate('/habits', 'random', rotation);
 </script>
 {% endblock %}
