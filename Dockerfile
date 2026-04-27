@@ -12,10 +12,8 @@ RUN uv sync --frozen --no-dev
 
 ENV FLASK_APP=src/good_start_habits/app.py
 ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=5000
 
 EXPOSE 5000
 
-# dashboard.db and .env are expected to be bind-mounted at runtime:
-#   docker run -v $(pwd)/dashboard.db:/app/dashboard.db --env-file .env ...
-CMD ["uv", "run", "flask", "run"]
+# Railway provides $PORT dynamically; default to 5000 for local development
+CMD ["sh", "-c", "uv run flask run --host=0.0.0.0 --port=${PORT:-5000}"]
