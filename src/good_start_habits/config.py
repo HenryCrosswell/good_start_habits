@@ -221,7 +221,7 @@ DESCRIPTION_PATTERNS: list[tuple[str, str | None]] = [
     ("bunches", "Other"),
     ("holland & barrett", "Personal Care"),
     ("jade pharmacy", "Personal Care"),
-    ("dropout", "Entertainment"),
+    ("dropout", "Subscriptions"),
     # ── Bills & Utilities (direct debits not matched above) ──────────────────
     ("dvla", "Transport"),  # car tax direct debit
     ("direct debit", "Bills & Utilities"),
@@ -283,7 +283,6 @@ DESCRIPTION_PATTERNS: list[tuple[str, str | None]] = [
     ("vue cinema", "Entertainment"),
     ("ticketmaster", "Entertainment"),
     # ── Subscriptions ─────────────────────────────────────────────────────────
-    ("garmin", "Subscriptions"),
     ("spotify", "Subscriptions"),
     ("netflix", "Subscriptions"),
     ("claude", "Subscriptions"),
@@ -292,4 +291,5 @@ DESCRIPTION_PATTERNS: list[tuple[str, str | None]] = [
     ("amazon", "Other"),
     ("paypal", "Other"),
     ("robert dyas", "Other"),
+    ("garmin", "Other"),
 ]
