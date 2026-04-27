@@ -4,11 +4,13 @@ WORKDIR /app
 
 RUN pip install 'uv>=0.5.0' --quiet
 
+ENV UV_SYSTEM_PYTHON=1
+
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --no-dev --no-install-project --system
+RUN uv sync --frozen --no-dev --no-install-project
 
 COPY src/ ./src/
-RUN uv sync --frozen --no-dev --system
+RUN uv sync --frozen --no-dev
 
 ENV FLASK_APP=src/good_start_habits/app.py
 ENV FLASK_RUN_HOST=0.0.0.0
@@ -16,4 +18,4 @@ ENV FLASK_RUN_HOST=0.0.0.0
 EXPOSE 5000
 
 # Railway provides $PORT dynamically; default to 5000 for local development
-CMD ["sh", "-c", "uv run --system flask run --host=0.0.0.0 --port=${PORT:-5000}"]
+CMD ["sh", "-c", "flask run --host=0.0.0.0 --port=${PORT:-5000}"]
