@@ -1,181 +1,258 @@
 # good-start-habits
 
-A personal dashboard that shows me my habits, fitness data, and budget in one place. It runs in a browser (Flask), sits on a Raspberry Pi screen, and rotates passively between a clock and the habits page during active hours — no nagging, just a glance when the screen changes.
+A personal dashboard that lives in a browser tab (or a Raspberry Pi screen). It shows your habits, budget, and a standby clock. During active hours the screen cycles between the clock and your habit checklist — no notifications, no nagging, just a passive glance when the display changes.
+
+Built with Flask, SQLite, and Plotly. No external CSS frameworks, no JavaScript build step.
 
 ---
 
-## What already exists (Phase 0 — prototype)
-
-The core logic is complete and tested from a Streamlit prototype:
-
-- `config.py` — habit list, active hours per day of week, reminder times per habit
-- `habits.py` — streak logic: `day_diff`, `daily_maintenance`, `mark_done`, `check_current_datetime`
-- Full test suite covering all streak scenarios
-
----
-
-## Phase 1 — Flask scaffold + SQLite migration
-
-**Goal:** Replace Streamlit with Flask. Move habit state from a JSON file into SQLite. All four page routes exist and respond. Tests still pass.
-
-- [x] Step 1 — Simplify `config.py`
-- [x] Step 2 — Implement `db.py`
-- [x] Step 3 — Rewrite `habits.py` storage layer
-- [x] Step 4 — Rewrite `app.py` as a Flask app
-- [x] Step 5 — Create `templates/base.html`
-- [x] Step 6 — Update tests
-- [x] Step 7 — Delete `main.py`
-
-### Step 1 — Simplify `config.py`
-
-`HABIT_REMINDER_TIME` currently stores both which days a habit runs and what time to remind you. Since there's no time-based escalation, the times aren't needed. Replace it with `HABIT_ACTIVE_DAYS` — a dict mapping each habit to just a list of active days. This drives which habits show up today.
-
-### Step 2 — Implement `db.py`
-
-SQLite stores everything in a single file (`dashboard.db`). `db.py` provides two functions:
-
-- **`get_db()`** — opens a connection to `dashboard.db` for the current request. Flask's `g` object (a request-scoped namespace) holds the connection so it's only opened once per request. A `teardown_appcontext` hook closes it automatically when the request ends.
-- **`init_db()`** — runs `CREATE TABLE IF NOT EXISTS habits (...)` once at app startup. Safe to call every time — it only creates the table if it doesn't already exist.
-
-The `habits` table has one row per habit, with four columns that map directly to what's currently in `state.json`:
-
-| Column | Type | Meaning |
-|---|---|---|
-| `name` | TEXT PRIMARY KEY | Habit name. PRIMARY KEY enforces uniqueness. |
-| `streak` | INTEGER NOT NULL DEFAULT 0 | Consecutive days completed. |
-| `last_completed` | TEXT | Last completion date as `YYYY-MM-DD`. NULL if never done. SQLite has no date type — text is standard. |
-| `done_today` | INTEGER NOT NULL DEFAULT 0 | 0 = not done, 1 = done. SQLite has no boolean type. |
-
-### Step 3 — Rewrite `habits.py` storage layer
-
-The streak logic (`day_diff`, `daily_maintenance`, `mark_done`, `check_current_datetime`) is correct and doesn't change. Only the I/O layer changes:
-
-- **`state_init()`** — runs `INSERT OR IGNORE INTO habits (name) VALUES (?)` for each habit. INSERT OR IGNORE skips silently if the row already exists — the SQLite equivalent of "add if missing".
-- **`load_state()`** — replaces the JSON file read with `SELECT name, streak, last_completed, done_today FROM habits`, building the same dict shape from the rows.
-- **`mark_done()`** — instead of loading/saving the whole state, issues a targeted `UPDATE habits SET streak=?, done_today=1, last_completed=? WHERE name=?` for just the habit being marked.
-- **`daily_maintenance()`** — reads all rows, computes what needs resetting, then issues UPDATE statements for affected habits.
-
-Targeted SQL updates replace the load-everything/save-everything JSON pattern. SQL is designed for this; the old approach was a workaround for the flat-file format.
-
-### Step 4 — Rewrite `app.py` as a Flask app
-
-Flask maps URLs to Python functions via route decorators. A function decorated with `@app.route('/habits')` is called when someone visits `/habits`, and whatever it returns becomes the HTTP response.
-
-`app.py` needs to:
-1. Create the Flask app instance
-2. Call `init_db()` at startup (before any requests)
-3. Register the teardown hook from `db.py` to close connections after each request
-4. Define four stubbed routes that return placeholder text: `/`, `/habits`, `/fitness`, `/budget`
-
-The stubs don't touch the database yet — their only job is to confirm the app boots and routing works.
-
-### Step 5 — Create `templates/base.html`
-
-Jinja2 supports template inheritance. `base.html` is the shared skeleton: HTML boilerplate, a `<head>` with the stylesheet link, and a `<nav>` with links to all four pages. It defines a `{% block content %}{% endblock %}` region where child templates inject their content. A child template starts with `{% extends "base.html" %}` and fills in that block.
-
-Also create `static/style.css` — minimal to start, just enough to confirm it's loading.
-
-### Step 6 — Update tests
-
-The current tests mock `load_state` and `save_state` to avoid touching `state.json`. After the migration the mocking targets change to the SQLite layer (`get_db()`). The test scenarios and assertions are identical — only the patch targets change.
-
-### Step 7 — Delete `main.py`
-
-Dead code. An infinite generator with no callers. Delete it.
-
-**Phase 1 done when:** `flask run` starts cleanly, all four routes return 200, the nav renders, and `pytest` passes without touching the filesystem.
-
----
-
-## Phase 2 — Standby clock + active hours
-
-**Goal:** The app opens to a clock. During active hours it rotates to the habits page after `ROTATION_INTERVAL` seconds, stays there for `DWELL_TIME` seconds, then returns.
-
-- [x] `templates/standby.html` — full-page clock and date. The time updates every second using `setInterval` in vanilla JS (the one JS exception in the project — everything else is server-rendered).
-- [x] The `/` route calls `check_current_datetime()`. Outside active hours: show the clock with a quiet sleep message, no rotation. Inside active hours: pass `ROTATION_INTERVAL` to the template, which uses `setTimeout` to redirect to `/habits`.
-- [x] The `/habits` route includes a `setTimeout` to redirect back to `/` after `DWELL_TIME` seconds. This creates the passive loop: clock → habits → clock → habits...
-- [x] Add `ROTATION_INTERVAL` and `DWELL_TIME` to `config.py`.
-
-**Phase 2 done when:** App opens to the clock, rotates to habits during active hours, goes quiet at night.
-
----
-
-## Phase 3 — Habits page
-
-**Goal:** Clean checklist of today's habits. Completing one persists across restarts. Streaks increment correctly.
-
-- [x] `GET /habits` — checks today's day of week, filters `HABIT_ACTIVE_DAYS` to get today's habits, calls `daily_maintenance()`, queries SQLite for current state, passes a list of habit dicts to the template.
-- [x] `POST /habits/<name>/done` — calls `mark_done()` for the named habit, then redirects back to `GET /habits`. The redirect (Post/Redirect/Get pattern) means refreshing the page won't resubmit the form.
-- [ ] `templates/habits.html` — extends `base.html`. Loops over today's habits and shows: name, streak count, and either a "Mark Done" form button or a done indicator depending on `done_today`.
-
-**Why `daily_maintenance()` runs on page load:** The app may be off overnight. Calling it on the first habits page visit of the day catches up correctly without needing a background scheduler.
-
-**Phase 3 done when:** Today's habits show up, completing one persists, streaks increment correctly, rotation from Phase 2 still works.
-
----
-
-## Phase 4 — Strava integration (running)
-
-**Goal:** "Run logged" auto-completes when Strava sees an activity. Fitness page shows running data.
-
-- [ ] New file `integrations/strava.py` with `did_i_run_today() -> bool` and `get_recent_runs() -> list[dict]`. OAuth tokens stored in `.env`, refreshed via APScheduler.
-- [ ] The habits route checks `did_i_run_today()` and auto-ticks "Run logged" if true.
-- [ ] `templates/fitness.html` — Plotly graph of distance/pace over time.
-
-**Phase 4 done when:** Going for a run ticks the box without touching the app.
-
----
-
-## Phase 5 — Hevy integration (weights)
-
-**Goal:** "Workout logged" auto-completes when Hevy sees a session. Fitness page extended with weights data.
-
-- [ ] New file `integrations/hevy.py` with `did_i_lift_today() -> bool` and `get_recent_workouts() -> list[dict]`. API key in `.env`.
-- [ ] Hook into habits route; extend `templates/fitness.html` with volume and PR graphs.
-
-**Phase 5 done when:** Logging a workout in Hevy ticks the box.
-
----
-
-## Phase 6 — Budget page (TrueLayer)
-
-**Goal:** Spending summary across Monzo, Nationwide, and Amex.
-
-- [ ] New file `integrations/truelayer.py`. OAuth for all three accounts; tokens stored in SQLite (not `.env` — they refresh too frequently).
-- [ ] APScheduler refreshes tokens in the background.
-- [ ] `templates/budget.html` — spend by category, budget vs actual (Plotly).
-
-**Phase 6 done when:** Budget page shows live data from all three accounts.
-*(Build this last — it has the most OAuth complexity.)*
-
----
-
-## Phase 7 — Raspberry Pi deployment
-
-**Goal:** App runs headlessly on the Pi, launches on boot, displays in kiosk mode.
-
-- [ ] systemd service to start Flask on boot
-- [ ] Chromium in kiosk mode pointing at `localhost:5000`
-- [ ] No code changes — just deployment and hardware testing
-
-**Phase 7 done when:** Pi boots straight into the dashboard, no keyboard needed.
-
----
-
-## Running the app
+## Quick start
 
 ```bash
+# Install dependencies
 uv sync
+
+# Create your .env file (see Configuration below)
+cp .env.example .env  # or create it manually
+
+# Run
 flask --app src/good_start_habits/app.py run
 ```
+
+The app will be at `http://localhost:5000`. The database (`dashboard.db`) is created automatically on first run.
+
+---
+
+## Project structure
+
+```
+src/good_start_habits/
+├── app.py          # Flask app and all route handlers
+├── config.py       # Everything you'll want to change — habits, hours, budgets
+├── habits.py       # Streak logic: daily maintenance, mark done, active hours check
+├── db.py           # SQLite connection management and schema creation
+├── budget.py       # Transaction categorisation and Plotly chart generation
+├── truelayer.py    # TrueLayer OAuth client and banking data API wrapper
+├── templates/
+│   ├── base.html   # Shared HTML skeleton, fonts, CSS variables
+│   ├── clock.html  # Standby page with animated clock
+│   ├── habits.html # Daily habit checklist with streaks
+│   ├── budget.html # Budget dashboard with charts
+│   └── debug.html  # Page transition tester (dev only)
+└── static/
+    ├── style.css
+    ├── transitions.css  # Keyframe animations for page transitions
+    └── transitions.js   # Navigation system with randomised transition effects
+tests/
+├── test_db.py
+├── test_habits.py
+├── test_budget.py
+└── test_truelayer.py
+```
+
+---
+
+## Configuration
+
+Almost everything you'd want to change lives in `config.py` and `.env`.
+
+### `.env` — secrets and environment flags
+
+```
+SECRET_KEY=<any long random string>        # Flask session signing key
+TRUELAYER_CLIENT_ID=<from TrueLayer app>
+TRUELAYER_CLIENT_SECRET=<from TrueLayer app>
+TRUELAYER_REDIRECT_URI=http://localhost:5000/auth/callback
+TRUELAYER_SANDBOX=true                     # Set to false to use real bank connections
+```
+
+`SECRET_KEY` is required even if you're not using the budget features. Generate one with `python -c "import secrets; print(secrets.token_hex(32))"`.
+
+`TRUELAYER_SANDBOX=true` keeps you in TrueLayer's test environment with fake data. Flip to `false` and update the credentials only when you're ready for real bank connections.
+
+---
+
+### `config.py` — the main control panel
+
+#### Habits
+
+**`HABITS`** — the list of habit names tracked by the app. Add, remove, or rename entries here. Each name must also appear in `HABIT_ACTIVE_DAYS`.
+
+**`HABIT_ACTIVE_DAYS`** — controls which days each habit appears. A habit won't show up on days it's not listed, so you can schedule habits to specific days of the week.
+
+```python
+# Example: make "Piano practice" weekdays only
+"Piano practice": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+```
+
+#### Active hours
+
+**`ACTIVE_TIMES`** — the window each day when the dashboard is "live". Outside this window the clock shows a quiet message and the habit page rotation stops. Times are 24-hour `HH:MM:SS` strings.
+
+```python
+ACTIVE_TIMES = {
+    "Monday": ("06:00:00", "21:00:00"),
+    ...
+    "Saturday": ("08:00:00", "21:00:00"),
+}
+```
+
+#### Clock rotation
+
+**`ROTATION_INTERVAL`** — seconds before the clock auto-navigates to the habits page (when active). Currently randomised between 5 and 15 on each app start. Replace `randint(5, 15)` with a fixed value like `1800` (30 min) once you've decided on an interval.
+
+**`DWELL_TIME`** — seconds the habits page stays visible before returning to the clock. Same deal — randomised now, fix it when you're happy.
+
+#### Budget limits
+
+**`BUDGET_LIMITS`** — your monthly spending limits per category, in pounds. This is what the budget page compares actual spend against.
+
+```python
+BUDGET_LIMITS = {
+    "Groceries": 200.0,
+    "Food & Coffee": 80.0,
+    "Eating Out & Social": 120.0,
+    "Transport": 480.0,
+    ...
+}
+```
+
+**`PROVIDER_BUDGET_LIMITS`** — per-bank category caps. Useful when a category is split across accounts (e.g. train tickets on Amex, parking on Nationwide). When you filter the budget page to a specific bank, these limits apply instead of the global ones.
+
+#### Transaction categorisation
+
+**`CATEGORY_MAP`** — maps TrueLayer's transaction classifications (their taxonomy) to your personal categories. Keys with a `|` match both the top-level and sub-level classification; plain keys match top-level only. A value of `None` excludes the transaction from all spending totals (used for transfers and income).
+
+**`DESCRIPTION_PATTERNS`** — fallback list for transactions TrueLayer can't classify, or where the classification isn't specific enough. Matched case-insensitively as substrings, first match wins. Add new entries here when you spot a recurring merchant landing in the wrong category.
+
+```python
+DESCRIPTION_PATTERNS = [
+    ("tesco", "Food & Coffee"),
+    ("zizzi", "Eating Out & Social"),
+    ("trainline", "Transport"),
+    ("transfer to", None),  # None = exclude entirely
+    ...
+]
+```
+
+---
+
+## Pages and routes
+
+| Route | Method | What it does |
+|---|---|---|
+| `/` | GET | Standby clock. Rotates to `/habits` during active hours. |
+| `/habits` | GET | Today's habit checklist. Calls `daily_maintenance()` on load. |
+| `/habits/<name>/done` | POST | Marks a habit done, increments streak. Redirects back. |
+| `/habits/<name>/undo` | POST | Undoes a same-day completion. Redirects back. |
+| `/budget` | GET | Budget dashboard. Accepts `?view=month\|year`, `?projection=1`, `?provider=monzo\|...` |
+| `/auth/connect/<provider>` | GET | Starts TrueLayer OAuth for `monzo`, `nationwide`, or `amex`. |
+| `/auth/callback` | GET | OAuth callback — exchanges code for tokens, saves to SQLite. |
+| `/auth/disconnect/<provider>` | POST | Removes stored tokens for a provider. |
+| `/debug` | GET | Page transition tester. |
+
+---
+
+## How habits work
+
+When you visit `/habits`, `daily_maintenance()` runs first. It checks when each habit was last completed and applies these rules:
+
+- **Same day** — no change.
+- **1 day ago** — resets `done_today` so the button is available again.
+- **2 days ago** — resets `done_today`, logs a warning. Streak is preserved (one missed day doesn't break it).
+- **3+ days ago** — resets both `done_today` and `streak` to zero.
+
+Clicking "DONE" increments the streak and records today's date. Clicking "UNDO" on the same day reverses it. Streaks are stored in SQLite so they survive restarts.
+
+---
+
+## How the budget works
+
+The budget page fetches the last 30 days of transactions from any connected bank accounts (TrueLayer Data API), then categorises each transaction using the logic in `budget.py`:
+
+1. Check `CATEGORY_MAP` for a match on TrueLayer's `transaction_classification` field.
+2. If no match, scan `DESCRIPTION_PATTERNS` for a substring match on the transaction description.
+3. Fall back to `"Other"`.
+4. If the result is `None` (transfer, income, internal payment) — exclude from totals.
+
+Charts are built with Plotly and rendered in the browser. The primary view is a burn-rate line graph — one line per category, x-axis is days of the month, y-axis is cumulative spend. A dotted horizontal line marks the budget limit. Toggle projection on to see a linear extrapolation to month-end.
+
+OAuth tokens are stored in SQLite (not `.env`) because they refresh frequently. An APScheduler background job refreshes tokens hourly. Tokens are also checked and refreshed on-demand before each API call.
+
+---
+
+## Database
+
+SQLite, stored in `dashboard.db` in the working directory. Created automatically — you never need to run migrations manually.
+
+| Table | Purpose |
+|---|---|
+| `habits` | One row per habit: name, streak, last_completed date, done_today flag |
+| `tl_tokens` | OAuth access/refresh tokens per provider, with expiry timestamp |
+| `oauth_state` | Single-use PKCE + CSRF state tokens during OAuth flow (10-minute TTL) |
+
+---
+
+## Running tests
+
+```bash
+pytest
+```
+
+Tests use in-memory SQLite — they don't touch `dashboard.db` or make network calls. The test suite covers streak logic, database initialisation, transaction categorisation, and TrueLayer OAuth helpers.
+
+```bash
+pytest -v              # verbose output
+pytest tests/test_budget.py   # single file
+pytest --cov=src       # with coverage
+```
+
+---
+
+## Linting and formatting
+
+```bash
+ruff check .           # lint
+ruff format .          # format
+mypy src/              # type check
+```
+
+---
+
+## Adding a new habit
+
+1. Add the name to `HABITS` in `config.py`.
+2. Add it to `HABIT_ACTIVE_DAYS` with the days you want it to appear.
+3. Restart the app — `db.py` uses `INSERT OR IGNORE`, so the new row is added automatically without touching existing data.
+
+## Adding a new spending category
+
+1. Add it to `BUDGET_LIMITS` in `config.py` with a monthly limit.
+2. Add classification mappings to `CATEGORY_MAP` (if TrueLayer's taxonomy covers it).
+3. Add description patterns to `DESCRIPTION_PATTERNS` for merchants that won't match by classification.
+4. Optionally add per-provider limits to `PROVIDER_BUDGET_LIMITS`.
+
+---
+
+## What's built and what's next
+
+| Phase | Status | What |
+|---|---|---|
+| Flask scaffold + SQLite | Done | Routes, DB, habit storage |
+| Standby clock + active hours | Done | Clock page, passive rotation |
+| Habits page | Done | Checklist, streaks, undo |
+| Budget page (TrueLayer) | Mostly done | OAuth, charts, categorisation — UI refinement ongoing |
+| Strava integration | Planned | Auto-tick "Track run" when a run is logged |
+| Hevy integration | Planned | Auto-tick "Track workout" when a session is logged |
+| Raspberry Pi deployment | Planned | systemd service, Chromium kiosk mode |
 
 ---
 
 ## Conventions
 
-- Secrets go in `.env` — never hardcode, never commit
-- `dashboard.db` and `.env` are gitignored
-- Each integration returns a bool or a list — no UI logic inside integrations
-- If an integration fails, log it and fall back to manual button — never crash the app
-- All business logic in Python — keep Jinja templates thin
-- No external CSS frameworks — plain CSS only
+- Credentials go in `.env` — never hardcoded, never committed.
+- `dashboard.db` and `.env` are gitignored.
+- Each integration returns a bool or a list — no UI logic inside integrations.
+- If an integration fails, log it and fall back to the manual button — never crash the app.
+- Business logic lives in Python — Jinja templates stay thin.
+- No external CSS frameworks — plain CSS only.

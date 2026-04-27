@@ -4,15 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Dashboard{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='transitions.css') }}">
     <style>
         :root {
-            --orange: #EF820D;
-            --blue:   #0d7aef;
-            --dim:    #888;
-            --subtle: #e0dcd6;
-            --text:   #1a1a1a;
-            --bg:     #f8f5f0;
+            --pink:    #FF1493;
+            --purple:  #9B30FF;
+            --orange:  #FF6B00;
+            --yellow:  #FFE600;
+            --teal:    #00B4D8;
+            --green:   #00C851;
+            --magenta: #FF00CC;
+            --text:    #111111;
+            --bg:      #FFF9F0;
+            --dim:     #666666;
+            --subtle:  #E0D8CC;
         }
 
         * {
@@ -23,7 +30,7 @@
 
         body {
             background: var(--bg);
-            font-family: Georgia, serif;
+            font-family: 'VT323', monospace;
             color: var(--text);
         }
     </style>

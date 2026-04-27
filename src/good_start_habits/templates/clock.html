@@ -4,22 +4,191 @@
 
 {% block extra_styles %}
 <style>
-    #pt-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
+html, body {
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
 
-    #clock  { color: var(--orange); font-size: 28vw; font-weight: bold; }
-    #status { color: var(--blue);   font-size: 10vw; font-weight: normal; }
+#pt-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    background: #FFFFFF;
+}
+
+/* TV test-card rainbow stripe at very top */
+#pt-container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    z-index: 20;
+    background: linear-gradient(90deg,
+        #FF1493  0%     14.28%,
+        #FF6B00  14.28% 28.57%,
+        #FFE600  28.57% 42.85%,
+        #00C851  42.85% 57.14%,
+        #00B4D8  57.14% 71.42%,
+        #9B30FF  71.42% 85.71%,
+        #FF00CC  85.71% 100%
+    );
+}
+
+/* Squiggle SVG sits behind everything */
+.squiggle-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.85;
+}
+
+/* Clock face */
+.clock-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+#clock {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 17vw;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #9B30FF;
+    text-shadow: 8px 8px 0 #111111;
+}
+
+#status {
+    font-size: 3vw;
+    line-height: 1;
+    background: #FFE600;
+    border: 3px solid #111111;
+    box-shadow: 4px 4px 0 #111111;
+    padding: 0.05em 0.6em;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<h1 id="clock" data-rotation="{{ rotation_interval if active else 0 }}"></h1>
-<p id="status">{% if active %}☀️{% else %}🌛{% endif %}</p>
+<!--
+    Pattern tile: 400×400, scrolls diagonally.
+    Style: scattered short squiggles + target circles + coloured dots/dashes,
+    matching the freepik "funky 90s" reference (white bg, black squiggles,
+    pink/teal/yellow accents).
+-->
+<svg class="squiggle-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+        <pattern id="sq-pattern" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
+            <!-- No background fill — white container shows through -->
+
+            <!-- ══ SQUIGGLES — black, short 2–3 bump waves ══════════════ -->
+
+            <!-- S1 horizontal 3-bump, upper-left -->
+            <path d="M 20,75  Q 28,63 35,75  Q 42,87 50,75  Q 58,63 65,75"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- S2 horizontal 2-bump, upper-centre -->
+            <path d="M 175,30 Q 183,18 190,30 Q 197,42 205,30"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- S3 horizontal 3-bump, right side -->
+            <path d="M 295,115 Q 303,103 310,115 Q 317,127 325,115 Q 333,103 340,115"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- S4 horizontal 3-bump, mid-left -->
+            <path d="M 75,195  Q 83,183 90,195  Q 97,207 105,195 Q 113,183 120,195"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- S5 horizontal 2-bump, centre -->
+            <path d="M 235,215 Q 243,203 250,215 Q 257,227 265,215"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- S6 horizontal 2-bump, lower-right -->
+            <path d="M 355,265 Q 363,253 370,265 Q 377,277 385,265"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- S7 horizontal 3-bump, lower-centre-left -->
+            <path d="M 125,345 Q 133,333 140,345 Q 147,357 155,345 Q 163,333 170,345"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- S8 horizontal 2-bump, lower-right -->
+            <path d="M 265,360 Q 273,348 280,360 Q 287,372 295,360"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- S9 vertical 3-bump (bumps left/right), upper-centre -->
+            <path d="M 255,35 Q 243,45 255,55 Q 267,65 255,75 Q 243,85 255,95"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- S10 diagonal 2-bump, right-centre -->
+            <path d="M 340,198 Q 330,212 344,222 Q 358,232 348,246"
+                  stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- ══ TARGET CIRCLES — black ring + black centre dot ════════ -->
+
+            <!-- TC1 -->
+            <circle cx="152" cy="152" r="18" stroke="#111111" stroke-width="2.5" fill="none"/>
+            <circle cx="152" cy="152" r="4"  fill="#111111"/>
+
+            <!-- TC2 -->
+            <circle cx="320" cy="65"  r="15" stroke="#111111" stroke-width="2.5" fill="none"/>
+            <circle cx="320" cy="65"  r="3.5" fill="#111111"/>
+
+            <!-- TC3 -->
+            <circle cx="63"  cy="328" r="20" stroke="#111111" stroke-width="2.5" fill="none"/>
+            <circle cx="63"  cy="328" r="4.5" fill="#111111"/>
+
+            <!-- ══ PLAIN BLACK HOLLOW CIRCLES ═══════════════════════════ -->
+            <circle cx="285" cy="282" r="13" stroke="#111111" stroke-width="2.5" fill="none"/>
+            <circle cx="158" cy="382" r="11" stroke="#111111" stroke-width="2.5" fill="none"/>
+
+            <!-- ══ PINK HOLLOW RINGS ══════════════════════════════════════ -->
+            <circle cx="205" cy="108" r="13" stroke="#FF1493" stroke-width="3" fill="none"/>
+            <circle cx="368" cy="345" r="11" stroke="#FF1493" stroke-width="3" fill="none"/>
+
+            <!-- ══ TEAL HOLLOW RINGS ══════════════════════════════════════ -->
+            <circle cx="98"  cy="172" r="12" stroke="#00B4D8" stroke-width="3" fill="none"/>
+            <circle cx="355" cy="170" r="10" stroke="#00B4D8" stroke-width="3" fill="none"/>
+
+            <!-- ══ PINK FILLED CIRCLES ════════════════════════════════════ -->
+            <circle cx="352" cy="155" r="8" fill="#FF1493"/>
+            <circle cx="285" cy="352" r="7" fill="#FF1493"/>
+
+            <!-- ══ TEAL FILLED CIRCLES ════════════════════════════════════ -->
+            <circle cx="28"  cy="148" r="7" fill="#00B4D8"/>
+            <circle cx="192" cy="248" r="6" fill="#00B4D8"/>
+
+            <!-- ══ YELLOW DASHES (short thick bars, slightly tilted) ══════ -->
+            <line x1="128" y1="252" x2="150" y2="240" stroke="#FFE600" stroke-width="5.5" stroke-linecap="round"/>
+            <line x1="368" y1="338" x2="390" y2="326" stroke="#FFE600" stroke-width="5.5" stroke-linecap="round"/>
+            <line x1="228" y1="162" x2="250" y2="150" stroke="#FFE600" stroke-width="5.5" stroke-linecap="round"/>
+
+            <!-- ══ SMALL BLACK DOTS ═══════════════════════════════════════ -->
+            <circle cx="382" cy="225" r="4"   fill="#111111"/>
+            <circle cx="48"  cy="40"  r="3.5" fill="#111111"/>
+            <circle cx="248" cy="72"  r="4"   fill="#111111"/>
+            <circle cx="138" cy="318" r="3"   fill="#111111"/>
+            <circle cx="392" cy="98"  r="3"   fill="#111111"/>
+            <circle cx="30"  cy="270" r="3.5" fill="#111111"/>
+        </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#sq-pattern)"/>
+</svg>
+
+<div class="clock-content">
+    <h1 id="clock" data-rotation="{{ rotation_interval if active else 0 }}"></h1>
+    <p id="status">{% if active %}☀{% else %}🌙{% endif %}</p>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -32,6 +201,17 @@
     }
     setInterval(tick, 1000);
     tick();
+
+    // Diagonal scroll: shift SVG pattern origin by 0.4px/frame, wrap at tile size
+    var sqOffset = 0;
+    var sqPattern = document.getElementById('sq-pattern');
+    function scrollSquiggles() {
+        sqOffset = (sqOffset + 0.4) % 400;
+        sqPattern.setAttribute('x', sqOffset);
+        sqPattern.setAttribute('y', sqOffset);
+        requestAnimationFrame(scrollSquiggles);
+    }
+    requestAnimationFrame(scrollSquiggles);
 
     var rotation = Number(document.getElementById('clock').dataset.rotation);
     if (rotation > 0) ptNavigate('/habits', 'random', rotation);

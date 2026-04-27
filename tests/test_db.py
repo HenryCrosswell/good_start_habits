@@ -1,7 +1,7 @@
 import sqlite3
 from typing import Any
 from flask import Flask
-from good_start_habits.db import get_db, populate_habits
+from good_start_habits.db import get_db, init_db, init_tl_tables, populate_habits
 import pytest
 
 ### Variables init ###############################################################################
@@ -49,6 +49,54 @@ def test_populate_habits(mocker: Any, test_db: sqlite3.Connection):
     rows = test_db.execute("SELECT name FROM habits ORDER BY name").fetchall()
     assert rows == [(h,) for h in sorted(habits)]
 
+    # second call must be idempotent
     populate_habits()
     rows = test_db.execute("SELECT name FROM habits ORDER BY name").fetchall()
     assert rows == [(h,) for h in sorted(habits)]
+
+
+# ---------------------------------------------------------------------------
+# init_tl_tables
+# ---------------------------------------------------------------------------
+
+
+def test_init_tl_tables_creates_both_tables():
+    db = sqlite3.connect(":memory:")
+    init_tl_tables(db)
+    tables = {
+        row[0]
+        for row in db.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()
+    }
+    assert "tl_tokens" in tables
+    assert "oauth_state" in tables
+
+
+def test_init_tl_tables_is_idempotent():
+    db = sqlite3.connect(":memory:")
+    init_tl_tables(db)
+    init_tl_tables(db)  # second call must not raise
+
+
+# ---------------------------------------------------------------------------
+# init_db
+# ---------------------------------------------------------------------------
+
+
+def test_init_db_creates_all_tables(mocker: Any):
+    app = Flask(__name__)
+    db = sqlite3.connect(":memory:")
+    mocker.patch("good_start_habits.db.sqlite3").connect.return_value = db
+    mocker.patch("good_start_habits.db.HABITS", ["SPF applied"])
+    with app.app_context():
+        init_db()
+    tables = {
+        row[0]
+        for row in db.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()
+    }
+    assert "habits" in tables
+    assert "tl_tokens" in tables
+    assert "oauth_state" in tables
