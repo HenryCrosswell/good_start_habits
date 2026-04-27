@@ -5,10 +5,10 @@ WORKDIR /app
 RUN pip install uv --quiet
 
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev --no-install-project --no-venv
 
 COPY src/ ./src/
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-venv
 
 ENV FLASK_APP=src/good_start_habits/app.py
 ENV FLASK_RUN_HOST=0.0.0.0
