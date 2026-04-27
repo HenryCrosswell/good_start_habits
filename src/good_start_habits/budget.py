@@ -27,6 +27,57 @@ _CATEGORY_COLOURS = [
     "#e67e22",
 ]
 
+_BURN_COLOURS = [
+    "#FF6B6B",  # coral
+    "#FFA500",  # orange
+    "#FFD700",  # gold
+    "#4ECDC4",  # teal
+    "#45B7D1",  # sky blue
+    "#96CEB4",  # mint
+    "#DDA0DD",  # plum
+    "#F7DC6F",  # yellow
+    "#BB8FCE",  # lavender
+    "#98D8C8",  # seafoam
+]
+
+_CHART_LAYOUT = {
+    "paper_bgcolor": "#FFFFFF",
+    "plot_bgcolor": "#FFFFFF",
+    "font": {"family": "VT323, monospace", "color": "#888888", "size": 13},
+    "margin": {"l": 55, "r": 20, "t": 16, "b": 65},
+    "xaxis": {
+        "gridcolor": "#F0F0F0",
+        "tickcolor": "#DDDDDD",
+        "linecolor": "#CCCCCC",
+        "tickfont": {"size": 13, "color": "#888888"},
+    },
+    "yaxis": {
+        "gridcolor": "#F0F0F0",
+        "tickcolor": "#DDDDDD",
+        "linecolor": "#CCCCCC",
+        "zeroline": True,
+        "zerolinecolor": "#FF1493",
+        "zerolinewidth": 2,
+        "tickfont": {"size": 13, "color": "#888888"},
+        "tickprefix": "£",
+    },
+    "legend": {
+        "orientation": "h",
+        "y": -0.24,
+        "font": {"size": 13},
+        "bgcolor": "rgba(0,0,0,0)",
+    },
+    "hovermode": "x unified",
+    "hoverlabel": {"bgcolor": "#111111", "font_color": "#FFE600", "font_size": 14},
+}
+
+
+def _clean_desc(raw: str) -> str:
+    s = raw.strip()
+    if s == s.upper() and len(s) > 3:
+        return s.title()
+    return s
+
 
 def map_category(classification: Any, description: str = "") -> str | None:
     """Return personal category string, or None for transfers/income to exclude."""
@@ -64,6 +115,72 @@ def _spending(transactions: list[dict]) -> list[dict]:
     return result
 
 
+def _add_burn_rate_monthly(
+    fig: go.Figure,
+    cat_day: dict[str, dict[int, float]],
+    days_axis: list[int],
+    days_in_month: int,
+    days_so_far: int,
+    is_current_month: bool,
+    projection: bool,
+    cat_limits: dict[str, float],
+) -> None:
+    """Add cumulative-spend burn-rate traces to fig (monthly view)."""
+    for idx, (cat, day_totals) in enumerate(sorted(cat_day.items())):
+        colour = _BURN_COLOURS[idx % len(_BURN_COLOURS)]
+        budget_for_cat = cat_limits.get(cat, 0.0)
+        running_spend = 0.0
+        cumulative: list[float] = []
+        for d in days_axis:
+            running_spend += day_totals.get(d, 0.0)
+            cumulative.append(round(running_spend, 2))
+
+        fig.add_trace(
+            go.Scatter(
+                x=days_axis,
+                y=cumulative,
+                name=cat,
+                mode="lines",
+                line={
+                    "color": colour,
+                    "width": 2.5,
+                    "shape": "spline",
+                    "smoothing": 0.7,
+                },
+                hovertemplate=f"<b>{cat}</b>: £%{{y:.0f}}<extra></extra>",
+            )
+        )
+
+        if budget_for_cat > 0:
+            fig.add_shape(
+                type="line",
+                x0=1,
+                x1=days_in_month,
+                y0=budget_for_cat,
+                y1=budget_for_cat,
+                line={"color": colour, "width": 1, "dash": "dot"},
+                opacity=0.35,
+            )
+
+        if (
+            projection
+            and is_current_month
+            and 0 < days_so_far < days_in_month
+            and running_spend > 0
+        ):
+            projected_end = round(running_spend * days_in_month / days_so_far, 2)
+            fig.add_trace(
+                go.Scatter(
+                    x=[days_so_far, days_in_month],
+                    y=[running_spend, projected_end],
+                    mode="lines",
+                    line={"color": colour, "dash": "dash", "width": 1.5},
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
+            )
+
+
 def build_monthly_charts(
     transactions: list[dict],
     year: int,
@@ -92,6 +209,8 @@ def build_monthly_charts(
         cat = map_category(
             txn.get("transaction_classification", []), txn.get("description", "")
         )
+        if cat is None:
+            continue
         cat_day.setdefault(cat, {})
         cat_day[cat][day] = cat_day[cat].get(day, 0.0) + abs(txn["amount"])
 
@@ -101,7 +220,27 @@ def build_monthly_charts(
     charts: dict[str, str] = {}
     days_axis = list(range(1, days_so_far + 1))
 
-    # ── Primary: remaining budget per category ──────────────────────────────
+    # ── Burn rate (primary) ─────────────────────────────────────────────────
+    burn_fig = go.Figure()
+    _add_burn_rate_monthly(
+        burn_fig,
+        cat_day,
+        days_axis,
+        days_in_month,
+        days_so_far,
+        is_current_month,
+        projection,
+        cat_limits,
+    )
+    burn_fig.update_layout(
+        **_CHART_LAYOUT,
+        xaxis_title="Day",
+        yaxis_title="£ spent",
+    )
+    burn_fig.update_xaxes(range=[1, days_in_month])
+    charts["burn_rate"] = json.dumps(burn_fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    # ── Remaining budget per category (kept for year-compat) ────────────────
     fig = go.Figure()
     fig.add_shape(
         type="line",
@@ -120,7 +259,6 @@ def build_monthly_charts(
         for d in days_axis:
             running_spend += day_totals.get(d, 0.0)
             remaining.append(round(budget_for_cat - running_spend, 2))
-
         fig.add_trace(
             go.Scatter(
                 x=days_axis,
@@ -130,7 +268,6 @@ def build_monthly_charts(
                 line={"color": colour, "width": 2},
             )
         )
-
         if projection and is_current_month and 0 < days_so_far < days_in_month:
             projected_remaining = round(
                 budget_for_cat - (running_spend * days_in_month / days_so_far), 2
@@ -145,7 +282,6 @@ def build_monthly_charts(
                     hoverinfo="skip",
                 )
             )
-
     fig.update_layout(
         paper_bgcolor="#f8f5f0",
         plot_bgcolor="#f8f5f0",
@@ -159,7 +295,7 @@ def build_monthly_charts(
     )
     charts["cumulative"] = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-    # ── Secondary: budget vs actual ─────────────────────────────────────────
+    # ── Budget vs actual bar ─────────────────────────────────────────────────
     all_cats = sorted(set(cat_day) | set(cat_limits))
     actuals = [round(sum(cat_day.get(c, {}).values()), 2) for c in all_cats]
     lim_vals = [cat_limits.get(c, 0.0) for c in all_cats]
@@ -168,25 +304,21 @@ def build_monthly_charts(
         for c, act, lim in zip(all_cats, actuals, lim_vals)
         if act > 0 or lim > 0
     ]
-
     if pairs:
-        cats, act_vals, lim_vals = zip(*pairs)
+        bar_cats = [p[0] for p in pairs]
+        bar_acts = [p[1] for p in pairs]
+        bar_lims = [p[2] for p in pairs]
         bar_fig = go.Figure()
         bar_fig.add_trace(
             go.Bar(
-                x=list(cats),
-                y=list(lim_vals),
+                x=bar_cats,
+                y=bar_lims,
                 name="Budget",
                 marker_color="rgba(200,200,200,0.7)",
             )
         )
         bar_fig.add_trace(
-            go.Bar(
-                x=list(cats),
-                y=list(act_vals),
-                name="Spent",
-                marker_color="#EF820D",
-            )
+            go.Bar(x=bar_cats, y=bar_acts, name="Spent", marker_color="#EF820D")
         )
         bar_fig.update_layout(
             paper_bgcolor="#f8f5f0",
@@ -200,7 +332,7 @@ def build_monthly_charts(
         )
         charts["vs_budget"] = json.dumps(bar_fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-    # ── Per-category data for the linked single-category JS chart ───────────
+    # ── Per-category JS data ─────────────────────────────────────────────────
     all_cats_js = sorted(set(cat_day) | set(cat_limits))
     per_cat_list = []
     for cat in all_cats_js:
@@ -266,6 +398,8 @@ def build_yearly_charts(
         cat = map_category(
             txn.get("transaction_classification", []), txn.get("description", "")
         )
+        if cat is None:
+            continue
         cat_month.setdefault(cat, {})
         cat_month[cat][m] = cat_month[cat].get(m, 0.0) + abs(txn["amount"])
 
@@ -278,7 +412,63 @@ def build_yearly_charts(
 
     charts: dict[str, str] = {}
 
-    # ── Primary: remaining budget per category ──────────────────────────────
+    # ── Yearly burn rate (primary) ───────────────────────────────────────────
+    burn_fig = go.Figure()
+    for idx, (cat, month_totals) in enumerate(sorted(cat_month.items())):
+        colour = _BURN_COLOURS[idx % len(_BURN_COLOURS)]
+        annual_budget = cat_limits.get(cat, 0.0) * 12
+        running_spend = 0.0
+        cumulative: list[float] = []
+        for m in months_axis:
+            running_spend += month_totals.get(m, 0.0)
+            cumulative.append(round(running_spend, 2))
+
+        burn_fig.add_trace(
+            go.Scatter(
+                x=month_labels,
+                y=cumulative,
+                name=cat,
+                mode="lines+markers",
+                line={"color": colour, "width": 2.5},
+                marker={"size": 5},
+                hovertemplate=f"<b>{cat}</b>: £%{{y:.0f}}<extra></extra>",
+            )
+        )
+        if annual_budget > 0:
+            burn_fig.add_shape(
+                type="line",
+                x0=month_labels[0],
+                x1=all_month_labels[11],
+                y0=annual_budget,
+                y1=annual_budget,
+                line={"color": colour, "width": 1, "dash": "dot"},
+                opacity=0.35,
+            )
+        if (
+            projection
+            and is_current_year
+            and 0 < months_so_far < 12
+            and running_spend > 0
+        ):
+            projected_end = round(running_spend * 12 / months_so_far, 2)
+            burn_fig.add_trace(
+                go.Scatter(
+                    x=[month_labels[-1], all_month_labels[11]],
+                    y=[running_spend, projected_end],
+                    mode="lines",
+                    line={"color": colour, "dash": "dash", "width": 1.5},
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
+            )
+    burn_fig.update_layout(
+        **_CHART_LAYOUT,
+        xaxis_title="Month",
+        yaxis_title="£ spent",
+    )
+    charts["burn_rate"] = json.dumps(burn_fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    # ── Remaining budget per category ────────────────────────────────────────
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
@@ -299,7 +489,6 @@ def build_yearly_charts(
         for m in months_axis:
             running_spend += month_totals.get(m, 0.0)
             remaining.append(round(annual_budget - running_spend, 2))
-
         fig.add_trace(
             go.Scatter(
                 x=month_labels,
@@ -310,7 +499,6 @@ def build_yearly_charts(
                 marker={"size": 5},
             )
         )
-
         if projection and is_current_year and 0 < months_so_far < 12:
             projected_remaining = round(
                 annual_budget - (running_spend * 12 / months_so_far), 2
@@ -325,7 +513,6 @@ def build_yearly_charts(
                     hoverinfo="skip",
                 )
             )
-
     fig.update_layout(
         paper_bgcolor="#f8f5f0",
         plot_bgcolor="#f8f5f0",
@@ -338,7 +525,7 @@ def build_yearly_charts(
     )
     charts["cumulative"] = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-    # ── Secondary: budget vs actual ─────────────────────────────────────────
+    # ── Budget vs actual bar ─────────────────────────────────────────────────
     all_cats = sorted(set(cat_month) | set(cat_limits))
     actuals = [round(sum(cat_month.get(c, {}).values()), 2) for c in all_cats]
     annual_limits = [cat_limits.get(c, 0.0) * 12 for c in all_cats]
@@ -347,7 +534,6 @@ def build_yearly_charts(
         for c, act, lim in zip(all_cats, actuals, annual_limits)
         if act > 0 or lim > 0
     ]
-
     if pairs:
         cats, act_vals, lim_vals = zip(*pairs)
         bar_fig = go.Figure()
@@ -360,12 +546,7 @@ def build_yearly_charts(
             )
         )
         bar_fig.add_trace(
-            go.Bar(
-                x=list(cats),
-                y=list(act_vals),
-                name="Spent",
-                marker_color="#EF820D",
-            )
+            go.Bar(x=list(cats), y=list(act_vals), name="Spent", marker_color="#EF820D")
         )
         bar_fig.update_layout(
             paper_bgcolor="#f8f5f0",
@@ -388,9 +569,16 @@ def monthly_summary(
     month: int,
     cat_limits: dict[str, float] | None = None,
 ) -> dict:
-    """Return total spent, total budget, and per-category actuals for the month."""
+    """Return total spent, total budget, daily average, and per-category actuals."""
     if cat_limits is None:
         cat_limits = BUDGET_LIMITS
+    today = date.today()
+    days_so_far = (
+        today.day
+        if (today.year == year and today.month == month)
+        else monthrange(year, month)[1]
+    )
+
     month_prefix = f"{year:04d}-{month:02d}"
     spending = [
         t for t in _spending(transactions) if t.get("timestamp", "")[:7] == month_prefix
@@ -400,13 +588,16 @@ def monthly_summary(
         cat = map_category(
             txn.get("transaction_classification", []), txn.get("description", "")
         )
+        if cat is None:
+            continue
         cat_totals[cat] = cat_totals.get(cat, 0.0) + abs(txn["amount"])
 
     total_spent = round(sum(cat_totals.values()), 2)
     total_budget = sum(cat_limits.values())
+    daily_average = round(total_spent / max(days_so_far, 1), 2)
 
     all_cats = sorted(set(cat_totals) | set(cat_limits))
-    categories = []
+    categories: list[dict[str, float | str]] = []
     for cat in all_cats:
         spent = round(cat_totals.get(cat, 0.0), 2)
         budget_limit = cat_limits.get(cat, 0.0)
@@ -423,10 +614,67 @@ def monthly_summary(
                 }
             )
 
+    categories.sort(key=lambda c: float(c["spent"]), reverse=True)
+
     return {
         "total_spent": total_spent,
         "total_budget": total_budget,
         "pct_used": round(total_spent / total_budget * 100, 1) if total_budget else 0,
+        "daily_average": daily_average,
         "by_category": cat_totals,
         "categories": categories,
     }
+
+
+def get_recent_transactions(
+    provider_transactions: dict[str, list[dict]],
+    limit: int = 15,
+) -> list[dict]:
+    """Return the most recent spending transactions across providers, annotated."""
+    annotated = []
+    for provider, txns in provider_transactions.items():
+        for t in txns:
+            if t.get("amount", 0) >= 0:
+                continue
+            cat = map_category(
+                t.get("transaction_classification", []), t.get("description", "")
+            )
+            if cat is None:
+                continue
+            annotated.append(
+                {
+                    "description": _clean_desc(t.get("description", "Unknown")),
+                    "amount": round(abs(t.get("amount", 0)), 2),
+                    "date": t.get("timestamp", "")[:10],
+                    "provider": provider,
+                    "category": cat,
+                }
+            )
+    annotated.sort(key=lambda x: x["date"], reverse=True)
+    return annotated[:limit]
+
+
+def get_all_transactions_by_category(
+    provider_transactions: dict[str, list[dict]],
+) -> dict[str, list[dict]]:
+    """Return all spending transactions grouped by personal category, date descending."""
+    by_cat: dict[str, list[dict]] = {}
+    for provider, txns in provider_transactions.items():
+        for t in txns:
+            if t.get("amount", 0) >= 0:
+                continue
+            cat = map_category(
+                t.get("transaction_classification", []), t.get("description", "")
+            )
+            if cat is None:
+                continue
+            entry = {
+                "description": _clean_desc(t.get("description", "Unknown")),
+                "amount": round(abs(t.get("amount", 0)), 2),
+                "date": t.get("timestamp", "")[:10],
+                "provider": provider,
+            }
+            by_cat.setdefault(cat, []).append(entry)
+    for cat in by_cat:
+        by_cat[cat].sort(key=lambda x: x["date"], reverse=True)
+    return by_cat

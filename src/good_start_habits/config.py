@@ -1,6 +1,7 @@
 """Globals are defined here"""
 
 from random import randint
+from typing import Any
 
 HABITS = [
     "SPF applied",
@@ -112,18 +113,19 @@ BUDGET_LIMITS: dict[str, float] = {
     "Groceries": 200.0,  # big food shop
     "Food & Coffee": 80.0,  # misc food, coffees, snacks
     "Eating Out & Social": 120.0,  # restaurants, bars, nights out
-    "Rent": 660.0,  # £760 less £100 partner contribution
+    "Rent": 1460.0,  # £760 plus £700 partner contribution
     "Bills & Utilities": 85.0,  # £185 less £100 partner contribution
-    "Transport": 430.0,  # trains (330) + parking (100)
-    "Subscriptions": 80.0,  # gym (50) + phone (10) + other (20)
-    "Personal Care": 50.0,  # haircut + skincare + house products
-    "Entertainment": 15.0,  # gigs + games
-    "Other": 55.0,  # gifts + clothing + random
+    "Transport": 480.0,  # trains (330) + parking (100) + trainline (30) + petrol (20)
+    "Subscriptions": 89.0,  # gym (50) + phone (10) + claude (18) + lastpass (3) + proton (6)
+    "Personal Care": 50.84,  # haircut (22.50) + skin/haircare (13.34) + house products (15)
+    "Entertainment": 15.0,  # gigs (10) + steam games (5)
+    "Other": 51.67,  # gifts (15) + clothing (16.67) + random (20)
 }
+
 
 # Maps TrueLayer classification strings to personal categories.
 # Keys with a "|" are matched on "top|sub"; plain keys on top-level only.
-CATEGORY_MAP: dict[str, str] = {
+CATEGORY_MAP: dict[str, Any] = {
     # Groceries
     "Food|Groceries": "Groceries",
     "Groceries": "Groceries",

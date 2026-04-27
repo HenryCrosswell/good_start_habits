@@ -4,237 +4,590 @@
 
 {% block extra_styles %}
 <style>
-    #pt-container {
-        max-width: 960px;
-        margin: 0 auto;
-        padding: 0.8rem 1rem 2rem;
-    }
+/* ── Reset for full-screen layout ─────────────────────────── */
+html, body {
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    background: #FFF9F0;
+    color: #111111;
+    font-family: 'VT323', monospace;
+}
 
-    .flash {
-        padding: 0.4rem 0.8rem;
-        border-radius: 4px;
-        margin-bottom: 0.8rem;
-        font-size: 0.85rem;
-    }
+#pt-container {
+    height: 100vh;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
 
-    .flash.ok  { background: #eafaf1; border-left: 3px solid #2ecc71; color: #1a7a40; }
-    .flash.err { background: #fdf0f0; border-left: 3px solid #e74c3c; color: #7a1a1a; }
+/* ── Root grid ───────────────────────────────────────────── */
+.budget-app {
+    display: grid;
+    grid-template-rows: 56px 1fr;
+    grid-template-columns: 270px 1fr;
+    height: 100vh;
+    overflow: hidden;
+    /* Memphis-style dot-grid background */
+    background-color: #FFF9F0;
+    background-image: radial-gradient(#00000012 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+}
 
-    /* Provider strip */
-    .provider-strip {
-        display: flex;
-        align-items: center;
-        gap: 1.2rem;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-    }
+/* ── Header ──────────────────────────────────────────────── */
+.budget-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 1rem;
+    background: #FFE600;
+    border-bottom: 3px solid #111111;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    box-shadow: 0 3px 0 #111111;
+}
 
-    .provider-item {
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-        font-size: 0.78rem;
-        letter-spacing: 0.04em;
-    }
+/* Test-card rainbow stripe at very top */
+.budget-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg,
+        #FF1493  0%     14.28%,
+        #FF6B00  14.28% 28.57%,
+        #FFE600  28.57% 42.85%,
+        #00C851  42.85% 57.14%,
+        #00B4D8  57.14% 71.42%,
+        #9B30FF  71.42% 85.71%,
+        #FF00CC  85.71% 100%
+    );
+}
 
-    .provider-item .name { text-transform: capitalize; }
+.provider-group {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-shrink: 0;
+    padding-top: 3px;
+}
+.provider-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: 'VT323', monospace;
+    font-size: 1.05rem;
+    letter-spacing: 0.05em;
+    color: #333333;
+}
+.status-dot {
+    width: 9px; height: 9px;
+    border-radius: 0;
+    flex-shrink: 0;
+    border: 1.5px solid #111111;
+}
+.status-dot.connected    { background: #00C851; }
+.status-dot.disconnected { background: #CCCCCC; }
 
-    .dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
+.btn-link {
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    padding: 0.1em 0.55em;
+    border: 2px solid #111111;
+    border-radius: 0;
+    text-decoration: none;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    background: #FFFFFF;
+    display: inline-block;
+    transition: background 0.08s, color 0.08s;
+    box-shadow: 2px 2px 0 #111111;
+    color: #111111;
+}
+.btn-link:hover { background: #111111; color: #FFE600; }
 
-    .dot.connected    { background: #2ecc71; }
-    .dot.disconnected { background: var(--subtle); border: 1px solid var(--dim); }
+.header-sep {
+    width: 2px;
+    height: 28px;
+    background: #111111;
+    flex-shrink: 0;
+    opacity: 0.3;
+}
 
-    .btn-mini {
-        font-family: Georgia, serif;
-        font-size: 0.68rem;
-        padding: 0.1em 0.55em;
-        border: 1px solid var(--orange);
-        color: var(--orange);
-        background: none;
-        border-radius: 3px;
-        text-decoration: none;
-        cursor: pointer;
-        letter-spacing: 0.04em;
-        transition: background 0.15s, color 0.15s;
-        display: inline-block;
-    }
+.nav-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    padding-top: 3px;
+}
+.tab-group {
+    display: flex;
+    border: 2px solid #111111;
+    border-radius: 0;
+    overflow: hidden;
+    box-shadow: 3px 3px 0 #111111;
+}
+.tab-group a {
+    padding: 0.15em 0.9em;
+    text-decoration: none;
+    color: #333333;
+    font-family: 'VT323', monospace;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    border-right: 2px solid #111111;
+    transition: background 0.08s, color 0.08s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+}
+.tab-group a:last-child { border-right: none; }
+.tab-group a:hover  { background: #111111; color: #FFE600; }
+.tab-group a.active { background: #FF1493; color: #FFFFFF; }
 
-    .btn-mini:hover { background: var(--orange); color: var(--bg); }
+.proj-btn {
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    padding: 0.12em 0.8em;
+    border: 2px solid #111111;
+    border-radius: 0;
+    text-decoration: none;
+    letter-spacing: 0.06em;
+    transition: background 0.08s, color 0.08s;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    background: #FFFFFF;
+    color: #333333;
+    box-shadow: 3px 3px 0 #111111;
+}
+.proj-btn:hover { background: #111111; color: #FFE600; }
+.proj-btn.on    { background: #9B30FF; color: #FFFFFF; border-color: #111111; }
 
-    .btn-mini.disconnect { border-color: var(--subtle); color: var(--dim); }
-    .btn-mini.disconnect:hover { background: var(--dim); color: var(--bg); }
+.provider-pills { display: flex; gap: 0.4rem; }
+.ppill {
+    font-family: 'VT323', monospace;
+    font-size: 0.95rem;
+    padding: 0.12em 0.75em;
+    border: 2px solid #111111;
+    border-radius: 0;
+    text-decoration: none;
+    color: #333333;
+    letter-spacing: 0.06em;
+    transition: background 0.08s, color 0.08s;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    background: #FFFFFF;
+    box-shadow: 2px 2px 0 #111111;
+}
+.ppill:hover { background: #111111; color: #FFE600; }
+.ppill.active-all        { background: #111111; color: #FFE600; }
+.ppill.active-monzo      { background: #FF1493; color: #FFFFFF; }
+.ppill.active-nationwide { background: #00B4D8; color: #111111; }
+.ppill.active-amex       { background: #9B30FF; color: #FFFFFF; }
 
-    /* Provider tabs */
-    .provider-tabs {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-    }
+/* ── Left panel ──────────────────────────────────────────── */
+.left-panel {
+    display: flex;
+    flex-direction: column;
+    background: #FFFFFF;
+    border-right: 3px solid #111111;
+    overflow: hidden;
+}
 
-    .provider-tab {
-        font-family: Georgia, serif;
-        font-size: 0.78rem;
-        padding: 0.28em 0.9em;
-        border: 1px solid var(--subtle);
-        border-radius: 4px;
-        text-decoration: none;
-        color: var(--dim);
-        letter-spacing: 0.04em;
-        transition: background 0.12s, color 0.12s;
-    }
+/* Summary stats */
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-bottom: 3px solid #111111;
+    flex-shrink: 0;
+}
+.stat-cell {
+    background: #FFFFFF;
+    padding: 0.6rem 0.8rem 0.5rem;
+    border-right: 2px solid #111111;
+    border-bottom: 0;
+}
+.stat-cell:nth-child(even) { border-right: none; }
+.stat-cell:nth-child(3),
+.stat-cell:nth-child(4) { border-top: 2px solid #111111; }
 
-    .provider-tab:hover { background: var(--subtle); color: var(--text); }
-    .provider-tab.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+.stat-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.36rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888888;
+    line-height: 2;
+}
+.stat-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    margin-top: 0.2em;
+    color: #111111;
+}
+.stat-value.over { color: #FF1493; }
+.stat-value.good { color: #00A840; }
+.stat-sub {
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    color: #888888;
+    margin-top: 0.1em;
+    letter-spacing: 0.04em;
+}
 
-    /* View toggles */
-    .controls {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 0.9rem;
-        flex-wrap: wrap;
-    }
+/* Category list header */
+.cat-list-header {
+    padding: 0.4rem 0.8rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.36rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888888;
+    border-bottom: 2px solid #EEEEEE;
+    flex-shrink: 0;
+    line-height: 2;
+    background: #FAFAFA;
+}
+.cat-list {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #DDDDDD transparent;
+}
+.cat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid #EEEEEE;
+    cursor: pointer;
+    transition: background 0.08s;
+    border-left: 4px solid transparent;
+}
+.cat-item:hover  { background: #FAFAFA; }
+.cat-item.active { background: #FAFAFA; }
 
-    .toggle-group {
-        display: flex;
-        border: 1px solid var(--subtle);
-        border-radius: 4px;
-        overflow: hidden;
-    }
+.cat-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.cat-dot-name {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: 'VT323', monospace;
+    font-size: 1.05rem;
+    color: #111111;
+    letter-spacing: 0.04em;
+    font-weight: bold;
+}
+.cat-dot {
+    width: 10px; height: 10px;
+    border-radius: 0;
+    flex-shrink: 0;
+    border: 1.5px solid #111111;
+}
+.cat-amounts {
+    font-family: 'VT323', monospace;
+    font-size: 0.95rem;
+    color: #888888;
+    white-space: nowrap;
+}
+.cat-amounts .spent { color: #111111; font-weight: bold; }
 
-    .toggle-group a {
-        padding: 0.28em 0.9em;
-        text-decoration: none;
-        color: var(--dim);
-        font-size: 0.78rem;
-        letter-spacing: 0.05em;
-        border-right: 1px solid var(--subtle);
-        transition: background 0.12s, color 0.12s;
-    }
+/* Chunky 8-bit progress bar */
+.cat-track {
+    height: 7px;
+    background: #EEEEEE;
+    border: 1.5px solid #CCCCCC;
+    overflow: hidden;
+}
+.cat-fill {
+    height: 100%;
+    transition: width 0.4s steps(16, end);
+    border-right: 1px solid rgba(0,0,0,0.2);
+}
+.cat-fill.over { background: #FF1493 !important; }
 
-    .toggle-group a:last-child { border-right: none; }
-    .toggle-group a:hover { background: var(--subtle); color: var(--text); }
-    .toggle-group a.active { background: var(--orange); color: #fff; }
+.cat-rem {
+    font-family: 'VT323', monospace;
+    font-size: 0.88rem;
+    color: #888888;
+    text-align: right;
+    letter-spacing: 0.03em;
+}
+.cat-rem.over { color: #FF1493; font-weight: bold; }
 
-    .projection-toggle a {
-        font-size: 0.78rem;
-        color: var(--dim);
-        text-decoration: none;
-        letter-spacing: 0.04em;
-        padding: 0.28em 0.85em;
-        border: 1px solid var(--subtle);
-        border-radius: 4px;
-        transition: background 0.12s, color 0.12s;
-    }
+/* ── Right panel ─────────────────────────────────────────── */
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 
-    .projection-toggle a:hover { background: var(--subtle); color: var(--text); }
-    .projection-toggle a.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+/* Chart section */
+.chart-section {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0.7rem 0.9rem 0.3rem;
+    overflow: hidden;
+}
+.chart-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex-shrink: 0;
+}
+.nav-arrow {
+    background: #FFE600;
+    border: 2px solid #111111;
+    border-radius: 0;
+    color: #111111;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+    width: 34px; height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.08s, color 0.08s;
+    flex-shrink: 0;
+    box-shadow: 3px 3px 0 #111111;
+}
+.nav-arrow:hover { background: #111111; color: #FFE600; box-shadow: 1px 1px 0 #111111; transform: translate(2px, 2px); }
 
-    /* Summary bar */
-    .summary-bar {
-        display: flex;
-        gap: 1.5rem;
-        margin-bottom: 0.9rem;
-        padding: 0.55rem 0.9rem;
-        background: #fff;
-        border: 1px solid var(--subtle);
-        border-radius: 6px;
-        flex-wrap: wrap;
-        align-items: center;
-    }
+.chart-cat-name {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    color: #111111;
+    letter-spacing: 0.06em;
+    flex: 1;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+.chart-remaining {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
+    padding: 0.3em 0.6em;
+    border: 2px solid #111111;
+    box-shadow: 3px 3px 0 #111111;
+}
+.chart-remaining.good { background: #00C851; color: #FFFFFF; }
+.chart-remaining.over { background: #FF1493; color: #FFFFFF; }
 
-    .summary-stat { display: flex; flex-direction: column; gap: 0.1em; }
+/* Auto-switch progress bar */
+.auto-bar {
+    height: 5px;
+    background: #EEEEEE;
+    border: 1px solid #CCCCCC;
+    margin: 0.35rem 0 0.2rem;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+#auto-fill {
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+    transform: scaleX(0);
+}
+@keyframes fillBar {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+#auto-fill.running {
+    animation: fillBar 10s linear forwards;
+}
 
-    .summary-stat .label {
-        font-size: 0.68rem;
-        color: var(--dim);
-        text-transform: uppercase;
-        letter-spacing: 0.07em;
-    }
+.chart-wrap {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    border: 2px solid #111111;
+    box-shadow: 4px 4px 0 #111111;
+    background: #FFFFFF;
+}
+#cat-chart {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+}
 
-    .summary-stat .value { font-size: 1.1rem; color: var(--text); }
-    .summary-stat .value.over { color: #e74c3c; }
+/* Year-view multi-line chart */
+.burn-chart-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.burn-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-shrink: 0;
+    margin-bottom: 0.4rem;
+}
+.burn-chart-title {
+    font-family: 'VT323', monospace;
+    font-size: 1.35rem;
+    color: #111111;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: bold;
+}
+.burn-chart-meta {
+    font-family: 'VT323', monospace;
+    font-size: 0.95rem;
+    color: #888888;
+}
+#burn-chart {
+    flex: 1;
+    min-height: 0;
+    border: 2px solid #111111;
+    box-shadow: 4px 4px 0 #111111;
+}
 
-    .progress-wrap {
-        flex: 1;
-        min-width: 130px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 0.2em;
-    }
+/* ── Transactions section ────────────────────────────────── */
+.txn-section {
+    height: 212px;
+    flex-shrink: 0;
+    border-top: 3px solid #111111;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #FFFFFF;
+}
+.txn-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.9rem;
+    border-bottom: 2px solid #EEEEEE;
+    flex-shrink: 0;
+    background: #FAFAFA;
+}
+.txn-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.36rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888888;
+    line-height: 2;
+}
+.txn-cat-badge {
+    font-family: 'VT323', monospace;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    padding: 0.1em 0.55em;
+    border: 2px solid #111111;
+    box-shadow: 2px 2px 0 #111111;
+    color: #111111;
+    text-transform: uppercase;
+    background: #FFE600;
+}
+.txn-list {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #DDDDDD transparent;
+}
+.txn-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.9rem;
+    border-bottom: 1px solid #F0F0F0;
+}
+.txn-row:last-child { border-bottom: none; }
 
-    .progress-track {
-        height: 4px;
-        background: var(--subtle);
-        border-radius: 3px;
-        overflow: hidden;
-    }
+.txn-chip {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.28rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 2px solid #111111;
+    box-shadow: 2px 2px 0 #111111;
+}
+.txn-chip.monzo      { background: #FF1493; color: #FFFFFF; }
+.txn-chip.nationwide { background: #00B4D8; color: #111111; }
+.txn-chip.amex       { background: #9B30FF; color: #FFFFFF; }
 
-    .progress-fill { height: 100%; background: var(--orange); border-radius: 3px; }
-    .progress-fill.over { background: #e74c3c; }
+.txn-desc {
+    flex: 1;
+    font-family: 'VT323', monospace;
+    font-size: 1.05rem;
+    color: #111111;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.txn-date {
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    color: #888888;
+    white-space: nowrap;
+}
+.txn-amount {
+    font-family: 'VT323', monospace;
+    font-size: 1.05rem;
+    color: #111111;
+    white-space: nowrap;
+    font-weight: bold;
+}
 
-    /* Category card: cycler header + embedded chart */
-    .category-card {
-        background: #fff;
-        border: 1px solid var(--subtle);
-        border-radius: 6px;
-        padding: 0.8rem 1rem 0.5rem;
-        margin-bottom: 1rem;
-    }
+/* ── Empty state ─────────────────────────────────────────── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #AAAAAA;
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    line-height: 2;
+    text-align: center;
+    letter-spacing: 0.06em;
+}
+.empty-state a { color: #9B30FF; text-decoration: underline; text-underline-offset: 3px; }
 
-    .cycler-inner { transition: opacity 0.2s ease; }
-
-    .cycler-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        margin-bottom: 0.1rem;
-    }
-
-    .cycler-name {
-        font-size: 0.75rem;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
-        color: var(--dim);
-    }
-
-    .cycler-amount { font-size: 1.45rem; color: var(--text); }
-    .cycler-amount.over { color: #e74c3c; }
-
-    .cycler-dots {
-        display: flex;
-        gap: 0.4rem;
-        margin-top: 0.35rem;
-        justify-content: center;
-    }
-
-    .cycler-dot {
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        background: var(--subtle);
-        border: 1px solid #bbb;
-        cursor: pointer;
-        transition: background 0.15s, border-color 0.15s;
-    }
-
-    .cycler-dot.active { background: var(--orange); border-color: var(--orange); }
-
-    .chart-section { margin-bottom: 1rem; }
-
-    .no-data {
-        text-align: center;
-        color: var(--dim);
-        padding: 2rem 0;
-        font-size: 0.95rem;
-    }
+/* ── Flash ───────────────────────────────────────────────── */
+.flash {
+    position: fixed;
+    top: 60px; left: 50%;
+    transform: translateX(-50%);
+    padding: 0.4rem 1.2rem;
+    font-family: 'VT323', monospace;
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+    z-index: 100;
+    border: 2px solid #111111;
+    box-shadow: 4px 4px 0 #111111;
+}
+.flash.ok  { background: #00C851; color: #FFFFFF; }
+.flash.err { background: #FF1493; color: #FFFFFF; }
 </style>
 {% endblock %}
 
@@ -242,231 +595,434 @@
 
 {% if flash %}
     {% if flash.startswith('connected_') %}
-        <div class="flash ok">Connected {{ flash[10:] | title }} successfully.</div>
+        <div class="flash ok">CONNECTED: {{ flash[10:] | upper }}</div>
     {% elif flash.startswith('disconnected_') %}
-        <div class="flash ok">Disconnected {{ flash[13:] | title }}.</div>
+        <div class="flash ok">DISCONNECTED: {{ flash[13:] | upper }}</div>
     {% elif flash == 'auth_cancelled' %}
-        <div class="flash err">Authorisation cancelled.</div>
+        <div class="flash err">AUTH CANCELLED.</div>
     {% elif flash == 'connect_failed' %}
-        <div class="flash err">Connection failed — please try again.</div>
+        <div class="flash err">CONNECTION FAILED. TRY AGAIN.</div>
     {% endif %}
 {% endif %}
 
-<div class="provider-strip">
-    {% for provider in providers %}
-    <div class="provider-item">
-        <span class="dot {{ status[provider] }}"></span>
-        <span class="name">{{ provider | title }}</span>
-        {% if status[provider] == 'connected' %}
-            <form method="post" action="/auth/disconnect/{{ provider }}" style="margin:0;">
-                <button type="submit" class="btn-mini disconnect">✕</button>
-            </form>
-        {% else %}
-            <a class="btn-mini" href="/auth/connect/{{ provider }}">Connect</a>
+<div class="budget-app">
+
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <header class="budget-header">
+        <div class="provider-group">
+            {% for provider in providers %}
+            <div class="provider-item">
+                <span class="status-dot {{ status[provider] }}"></span>
+                <span>{{ provider | upper }}</span>
+                {% if status[provider] == 'connected' %}
+                    <form method="post" action="/auth/disconnect/{{ provider }}" style="margin:0;">
+                        <button type="submit" class="btn-link">X</button>
+                    </form>
+                {% else %}
+                    <a class="btn-link" href="/auth/connect/{{ provider }}">LINK</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="header-sep"></div>
+
+        <div class="nav-group">
+            <div class="tab-group">
+                <a href="/budget?view=month&provider={{ active_provider }}{% if projection %}&projection=on{% endif %}"
+                   class="{% if view == 'month' %}active{% endif %}">MONTH</a>
+                <a href="/budget?view=year&provider={{ active_provider }}{% if projection %}&projection=on{% endif %}"
+                   class="{% if view == 'year' %}active{% endif %}">YEAR</a>
+            </div>
+
+            {% if view == 'month' %}
+            <a href="{{ '/budget?view=' ~ view ~ '&provider=' ~ active_provider if projection else '/budget?view=' ~ view ~ '&provider=' ~ active_provider ~ '&projection=on' }}"
+               class="proj-btn {{ 'on' if projection else '' }}">
+                {{ '>> PROJ ON' if projection else '>> PROJECT' }}
+            </a>
+            {% endif %}
+
+            {% if connected_providers | length > 1 %}
+            <div class="provider-pills">
+                <a href="/budget?view={{ view }}&provider=all{% if projection %}&projection=on{% endif %}"
+                   class="ppill {% if active_provider == 'all' %}active-all{% endif %}">ALL</a>
+                {% for p in connected_providers %}
+                <a href="/budget?view={{ view }}&provider={{ p }}{% if projection %}&projection=on{% endif %}"
+                   class="ppill {% if active_provider == p %}active-{{ p }}{% endif %}">{{ p | upper }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if charts %}
+
+    <!-- ── Left panel ─────────────────────────────────────── -->
+    <div class="left-panel">
+
+        {% if summary %}
+        {% set pct = summary.pct_used %}
+        {% set remaining = summary.total_budget - summary.total_spent %}
+        <div class="summary-grid">
+            <div class="stat-cell">
+                <div class="stat-label">Spent</div>
+                <div class="stat-value {% if pct > 100 %}over{% endif %}">£{{ "%.0f"|format(summary.total_spent) }}</div>
+                <div class="stat-sub">{{ pct }}% USED</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-label">Left</div>
+                <div class="stat-value {% if remaining < 0 %}over{% else %}good{% endif %}">
+                    {% if remaining < 0 %}-{% endif %}£{{ "%.0f"|format(remaining | abs) }}
+                </div>
+                <div class="stat-sub">OF £{{ "%.0f"|format(summary.total_budget) }}</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-label">Daily</div>
+                <div class="stat-value">£{{ "%.0f"|format(summary.daily_average) }}</div>
+                <div class="stat-sub">PER DAY</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-label">Cats</div>
+                <div class="stat-value">{{ summary.categories | length }}</div>
+                <div class="stat-sub">TRACKED</div>
+            </div>
+        </div>
         {% endif %}
-    </div>
-    {% endfor %}
-</div>
 
-{% if connected_providers | length > 1 %}
-<div class="provider-tabs">
-    <a href="/budget?view={{ view }}&provider=all{% if projection %}&projection=on{% endif %}"
-       class="provider-tab {% if active_provider == 'all' %}active{% endif %}">All</a>
-    {% for p in connected_providers %}
-    <a href="/budget?view={{ view }}&provider={{ p }}{% if projection %}&projection=on{% endif %}"
-       class="provider-tab {% if active_provider == p %}active{% endif %}">{{ p | title }}</a>
-    {% endfor %}
-</div>
-{% endif %}
+        <div class="cat-list-header">// Categories</div>
 
-{% if charts %}
-
-<div class="controls">
-    <div class="toggle-group">
-        <a href="/budget?view=month&provider={{ active_provider }}{% if projection %}&projection=on{% endif %}"
-           class="{% if view == 'month' %}active{% endif %}">Month</a>
-        <a href="/budget?view=year&provider={{ active_provider }}{% if projection %}&projection=on{% endif %}"
-           class="{% if view == 'year' %}active{% endif %}">Year</a>
-    </div>
-    <div class="projection-toggle">
-        {% if projection %}
-            <a href="/budget?view={{ view }}&provider={{ active_provider }}" class="active">Projection on</a>
+        {% set cat_colours = ['#FF1493','#9B30FF','#FF6B00','#00B4D8','#00C851','#E01A5A','#0077DD','#FF00CC','#FF8C00','#00C8A0'] %}
+        {% if summary and summary.categories %}
+        <div class="cat-list" id="cat-list">
+            {% for cat in summary.categories %}
+            {% if cat.spent > 0 or cat.budget > 0 %}
+            {% set colour = cat_colours[loop.index0 % 10] %}
+            <div class="cat-item" data-cat="{{ cat.name }}"
+                 onclick="selectCatByName('{{ cat.name }}')"
+                 style="--cat-colour: {{ colour }};">
+                <div class="cat-top-row">
+                    <div class="cat-dot-name">
+                        <span class="cat-dot" style="background:{{ colour }};"></span>
+                        {{ cat.name | upper }}
+                    </div>
+                    <div class="cat-amounts">
+                        <span class="spent">£{{ "%.0f"|format(cat.spent) }}</span>
+                        {% if cat.budget %}/£{{ "%.0f"|format(cat.budget) }}{% endif %}
+                    </div>
+                </div>
+                {% if cat.budget %}
+                <div class="cat-track">
+                    <div class="cat-fill {% if cat.pct_used > 100 %}over{% endif %}"
+                         style="width:{{ [cat.pct_used, 100]|min }}%; background:{{ colour }};"></div>
+                </div>
+                <div class="cat-rem {% if cat.remaining < 0 %}over{% endif %}">
+                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT
+                    {% else %}£{{ "%.0f"|format(cat.remaining | abs) }} OVER{% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
         {% else %}
-            <a href="/budget?view={{ view }}&provider={{ active_provider }}&projection=on">Show projection</a>
+        <div class="empty-state">NO DATA YET.</div>
         {% endif %}
-    </div>
-</div>
 
-{% if summary %}
-<div class="summary-bar">
-    <div class="summary-stat">
-        <span class="label">Spent</span>
-        <span class="value {% if summary.pct_used > 100 %}over{% endif %}">
-            £{{ "%.0f"|format(summary.total_spent) }}
-        </span>
     </div>
-    <div class="summary-stat">
-        <span class="label">Budget</span>
-        <span class="value">£{{ "%.0f"|format(summary.total_budget) }}</span>
+
+    <!-- ── Right panel ─────────────────────────────────────── -->
+    <div class="right-panel">
+
+        {% if view == 'month' and charts.per_category %}
+        <div class="chart-section">
+            <div class="chart-nav">
+                <button class="nav-arrow" onclick="prevCat()">&#9664;</button>
+                <span class="chart-cat-name" id="chart-cat-name">---</span>
+                <span class="chart-remaining good" id="chart-remaining">---</span>
+                <button class="nav-arrow" onclick="nextCat()">&#9654;</button>
+            </div>
+            <div class="auto-bar"><div id="auto-fill"></div></div>
+            <div class="chart-wrap">
+                <div id="cat-chart"></div>
+            </div>
+        </div>
+
+        {% elif charts.burn_rate %}
+        <div class="chart-section burn-chart-wrap">
+            <div class="burn-chart-header">
+                <span class="burn-chart-title">// BURN RATE</span>
+                <span class="burn-chart-meta">{{ view | upper }} · {{ active_provider | upper }}{% if projection %} · PROJ{% endif %}</span>
+            </div>
+            <div id="burn-chart"></div>
+        </div>
+        {% endif %}
+
+        <!-- Transactions -->
+        <div class="txn-section">
+            <div class="txn-header">
+                <span class="txn-title">// Transactions</span>
+                <span class="txn-cat-badge" id="txn-cat-badge" style="display:none;"></span>
+            </div>
+            <div class="txn-list" id="txn-list">
+                {% if recent_transactions %}
+                {% for txn in recent_transactions %}
+                <div class="txn-row">
+                    <div class="txn-chip {{ txn.provider }}">{{ txn.provider[:3] | upper }}</div>
+                    <div class="txn-desc">{{ txn.description | upper }}</div>
+                    <div class="txn-date">{{ txn.date }}</div>
+                    <div class="txn-amount">£{{ "%.2f"|format(txn.amount) }}</div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state">NO TRANSACTIONS FOUND.</div>
+                {% endif %}
+            </div>
+        </div>
+
     </div>
-    <div class="summary-stat">
-        <span class="label">Remaining</span>
-        <span class="value {% if summary.total_spent > summary.total_budget %}over{% endif %}">
-            £{{ "%.0f"|format(summary.total_budget - summary.total_spent) }}
-        </span>
-    </div>
-    <div class="progress-wrap">
-        <span class="label" style="font-size:0.68rem;color:var(--dim);letter-spacing:0.07em;text-transform:uppercase;">
-            {{ summary.pct_used }}% used
-        </span>
-        <div class="progress-track">
-            <div class="progress-fill {% if summary.pct_used > 100 %}over{% endif %}"
-                 style="width: {{ [summary.pct_used, 100] | min }}%;"></div>
+
+    {% else %}
+    <div class="left-panel"><div class="empty-state">CONNECT A BANK ABOVE.</div></div>
+    <div class="right-panel">
+        <div class="empty-state">
+            <p>CONNECT A BANK ACCOUNT TO SEE SPENDING.</p>
+            {% for provider in providers %}
+            {% if status[provider] != 'connected' %}
+            <p><a href="/auth/connect/{{ provider }}">CONNECT {{ provider | upper }}</a></p>
+            {% endif %}
+            {% endfor %}
         </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
 
-{% if summary and summary.categories %}
-<div class="category-card">
-    <div class="cycler-inner" id="cycler-inner">
-        <div class="cycler-header">
-            <span class="cycler-name" id="cycler-name"></span>
-            <span class="cycler-amount" id="cycler-amount"></span>
-        </div>
-    </div>
-    <div id="chart-single" style="width:100%; height:195px;"></div>
-    <div class="cycler-dots" id="cycler-dots"></div>
-</div>
-{% endif %}
-
-{% if view == 'year' %}
-<div class="chart-section">
-    <div id="chart-cumulative" style="width:100%; height:260px;"></div>
-</div>
-{% endif %}
-
-{% if charts.vs_budget %}
-<div class="chart-section">
-    <div id="chart-budget" style="width:100%; height:260px;"></div>
-</div>
-{% endif %}
-
-{% else %}
-<div class="controls">
-    <div class="toggle-group">
-        <a href="/budget?view=month&provider={{ active_provider }}" class="{% if view == 'month' %}active{% endif %}">Month</a>
-        <a href="/budget?view=year&provider={{ active_provider }}"  class="{% if view == 'year'  %}active{% endif %}">Year</a>
-    </div>
-</div>
-<div class="no-data">Connect a bank account above to see your spending.</div>
-{% endif %}
+</div><!-- /.budget-app -->
 
 {% endblock %}
 
 {% block scripts %}
-{% if charts %}
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script>
-{% if summary and summary.categories %}
 (function () {
-    var cats   = {{ summary.categories | tojson }};
-    var perCat = {{ charts.per_category | safe }};
-    if (!cats.length) return;
 
-    var inner  = document.getElementById('cycler-inner');
-    var nameEl = document.getElementById('cycler-name');
-    var amtEl  = document.getElementById('cycler-amount');
-    var dotsEl = document.getElementById('cycler-dots');
-    var idx    = 0;
-    var timer;
+    var CAT_COLOURS = [
+        '#FF1493','#9B30FF','#FF6B00','#00B4D8','#00C851',
+        '#E01A5A','#0077DD','#FF00CC','#FF8C00','#00C8A0'
+    ];
 
-    cats.forEach(function (_, i) {
-        var dot = document.createElement('span');
-        dot.className = 'cycler-dot' + (i === 0 ? ' active' : '');
-        dot.addEventListener('click', function () { goTo(i); });
-        dotsEl.appendChild(dot);
-    });
+    var AUTO_MS = 10000;
 
-    function renderChart(pc) {
-        var traces = [
-            {
-                x: [1, pc.days_in_month], y: [0, 0],
-                mode: 'lines', line: { color: '#bbb', width: 1 },
-                hoverinfo: 'skip', showlegend: false,
-            },
-            {
-                x: pc.x, y: pc.y,
-                mode: 'lines', line: { color: '#EF820D', width: 2 },
-                showlegend: false,
-            },
-        ];
-        if (pc.proj) {
+    var CHART_LAYOUT = {
+        paper_bgcolor: '#FFFFFF',
+        plot_bgcolor:  '#FFFFFF',
+        font: { family: "'VT323', monospace", color: '#888888', size: 14 },
+        margin: { l: 55, r: 14, t: 6, b: 44 },
+        xaxis: {
+            gridcolor: '#F0F0F0',
+            tickcolor: '#DDDDDD',
+            linecolor: '#CCCCCC',
+            tickfont:  { size: 13, color: '#888888', family: "'VT323', monospace" },
+            title: { text: 'DAY', font: { size: 13, color: '#AAAAAA', family: "'VT323', monospace" } },
+            zerolinecolor: '#DDDDDD',
+        },
+        yaxis: {
+            gridcolor: '#F0F0F0',
+            tickcolor: '#DDDDDD',
+            linecolor: '#CCCCCC',
+            tickfont:  { size: 13, color: '#888888', family: "'VT323', monospace" },
+            title: { text: '£ REMAINING', font: { size: 13, color: '#AAAAAA', family: "'VT323', monospace" } },
+            zeroline: true,
+            zerolinecolor: '#FF1493',
+            zerolinewidth: 2,
+            tickprefix: '£',
+        },
+        hovermode: 'x unified',
+        hoverlabel: {
+            bgcolor: '#111111',
+            font_color: '#FFE600',
+            font_size: 14,
+            font_family: "'VT323', monospace",
+            bordercolor: '#111111',
+        },
+        showlegend: false,
+    };
+
+{% if charts and view == 'month' and charts.per_category %}
+
+    var perCatData = {{ charts.per_category | safe }};
+    var catTxns    = {{ category_transactions | tojson | safe }};
+
+    var activeCatIdx  = 0;
+    var chartRendered = false;
+    var autoTimer     = null;
+
+    function splitAtZero(xs, ys) {
+        var posX = [], posY = [], negX = [], negY = [];
+        for (var i = 0; i < ys.length; i++) {
+            if (ys[i] >= 0) { posX.push(xs[i]); posY.push(ys[i]); }
+            else             { negX.push(xs[i]); negY.push(ys[i]); }
+            if (i < ys.length - 1) {
+                var p2n = ys[i] >= 0 && ys[i+1] < 0;
+                var n2p = ys[i] <  0 && ys[i+1] >= 0;
+                if (p2n || n2p) {
+                    var t = Math.abs(ys[i]) / (Math.abs(ys[i]) + Math.abs(ys[i+1]));
+                    var xc = xs[i] + t * (xs[i+1] - xs[i]);
+                    posX.push(xc); posY.push(0);
+                    negX.push(xc); negY.push(0);
+                }
+            }
+        }
+        return { posX: posX, posY: posY, negX: negX, negY: negY };
+    }
+
+    function startProgress(colour) {
+        var fill = document.getElementById('auto-fill');
+        fill.style.background = colour;
+        fill.classList.remove('running');
+        void fill.offsetWidth;
+        fill.classList.add('running');
+    }
+
+    function startAutoSwitch() {
+        clearInterval(autoTimer);
+        startProgress(CAT_COLOURS[activeCatIdx % CAT_COLOURS.length]);
+        autoTimer = setInterval(function () {
+            renderCat((activeCatIdx + 1) % perCatData.length);
+        }, AUTO_MS);
+    }
+
+    function renderCat(idx) {
+        activeCatIdx = idx;
+        var cat    = perCatData[idx];
+        var colour = CAT_COLOURS[idx % CAT_COLOURS.length];
+        var lastY  = cat.y.length ? cat.y[cat.y.length - 1] : 0;
+        var rem    = Math.round(lastY);
+
+        document.getElementById('chart-cat-name').textContent = cat.name.toUpperCase();
+
+        var remEl = document.getElementById('chart-remaining');
+        if (rem >= 0) {
+            remEl.textContent = '£' + rem + ' LEFT';
+            remEl.className   = 'chart-remaining good';
+        } else {
+            remEl.textContent = '£' + Math.abs(rem) + ' OVER';
+            remEl.className   = 'chart-remaining over';
+        }
+
+        var split  = splitAtZero(cat.x, cat.y);
+        var traces = [];
+        if (split.posX.length) traces.push({
+            x: split.posX, y: split.posY,
+            type: 'scatter', mode: 'lines',
+            line: { color: '#00C851', width: 3.5, shape: 'spline', smoothing: 0.6 },
+            hovertemplate: '£%{y:.0f} left<extra></extra>',
+        });
+        if (split.negX.length) traces.push({
+            x: split.negX, y: split.negY,
+            type: 'scatter', mode: 'lines',
+            line: { color: '#FF1493', width: 3.5, shape: 'spline', smoothing: 0.6 },
+            hovertemplate: '£%{y:.0f}<extra></extra>',
+        });
+        if (cat.proj) {
+            var pColour = cat.proj.y[cat.proj.y.length-1] >= 0 ? '#00C851' : '#FF1493';
             traces.push({
-                x: pc.proj.x, y: pc.proj.y,
-                mode: 'lines', line: { color: '#EF820D', dash: 'dash', width: 1 },
+                x: cat.proj.x, y: cat.proj.y,
+                type: 'scatter', mode: 'lines',
+                line: { color: pColour, dash: 'dot', width: 2 },
                 hoverinfo: 'skip', showlegend: false,
             });
         }
-        Plotly.react('chart-single', traces, {
-            paper_bgcolor: '#f8f5f0', plot_bgcolor: '#f8f5f0',
-            font: { family: 'Georgia, serif', color: '#1a1a1a', size: 10 },
-            margin: { l: 40, r: 8, t: 4, b: 28 },
-            xaxis: { range: [1, pc.days_in_month], title: { text: 'Day', standoff: 2 } },
-            yaxis: { title: { text: '£', standoff: 2 } },
-            showlegend: false,
-        }, { responsive: true, displayModeBar: false });
+
+        var layout = Object.assign({}, CHART_LAYOUT, {
+            xaxis: Object.assign({}, CHART_LAYOUT.xaxis, { range: [1, cat.days_in_month] }),
+        });
+
+        var el = document.getElementById('cat-chart');
+        if (!chartRendered) {
+            Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false });
+            chartRendered = true;
+        } else {
+            Plotly.react(el, traces, layout);
+        }
+
+        /* Highlight active category */
+        document.querySelectorAll('.cat-item').forEach(function (item) {
+            var active = item.dataset.cat === cat.name;
+            item.classList.toggle('active', active);
+            item.style.borderLeftColor = active ? colour : 'transparent';
+            item.style.background      = active ? colour + '18' : '';
+        });
+
+        /* Transactions panel */
+        var badge = document.getElementById('txn-cat-badge');
+        badge.textContent   = cat.name.toUpperCase();
+        badge.style.display = '';
+        badge.style.background = colour;
+        /* Ensure text readable on any colour */
+        var r = parseInt(colour.slice(1,3),16),
+            g = parseInt(colour.slice(3,5),16),
+            b = parseInt(colour.slice(5,7),16);
+        badge.style.color = (r*0.299 + g*0.587 + b*0.114) > 140 ? '#111111' : '#FFFFFF';
+
+        var txns = catTxns[cat.name] || [];
+        var list = document.getElementById('txn-list');
+        if (!txns.length) {
+            list.innerHTML = '<div class="empty-state">NO TRANSACTIONS FOR THIS CATEGORY.</div>';
+        } else {
+            list.innerHTML = txns.map(function (t) {
+                var p   = (t.provider || 'monzo').slice(0,3).toUpperCase();
+                var cls = t.provider || 'monzo';
+                return '<div class="txn-row">' +
+                    '<div class="txn-chip ' + cls + '">' + p + '</div>' +
+                    '<div class="txn-desc">' + esc(t.description).toUpperCase() + '</div>' +
+                    '<div class="txn-date">' + t.date + '</div>' +
+                    '<div class="txn-amount">£' + t.amount.toFixed(2) + '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        startAutoSwitch();
     }
 
-    function render() {
-        var cat = cats[idx];
-        inner.style.opacity = '0';
-        setTimeout(function () {
-            nameEl.textContent = cat.name;
-            var rem = cat.remaining;
-            if (rem >= 0) {
-                amtEl.className = 'cycler-amount';
-                amtEl.textContent = '£' + rem.toFixed(0) + ' remaining';
-            } else {
-                amtEl.className = 'cycler-amount over';
-                amtEl.textContent = '£' + Math.abs(rem).toFixed(0) + ' over budget';
-            }
-            dotsEl.querySelectorAll('.cycler-dot').forEach(function (d, j) {
-                d.className = 'cycler-dot' + (j === idx ? ' active' : '');
-            });
-            inner.style.opacity = '1';
-        }, 200);
-        renderChart(perCat[idx]);
+    function esc(s) {
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    function goTo(i) {
-        clearInterval(timer);
-        idx = i;
-        render();
-        timer = setInterval(advance, 6000);
+    function idxForName(name) {
+        for (var i = 0; i < perCatData.length; i++) {
+            if (perCatData[i].name === name) return i;
+        }
+        return 0;
     }
 
-    function advance() {
-        idx = (idx + 1) % cats.length;
-        render();
-    }
+    window.prevCat        = function () { renderCat((activeCatIdx - 1 + perCatData.length) % perCatData.length); };
+    window.nextCat        = function () { renderCat((activeCatIdx + 1) % perCatData.length); };
+    window.selectCatByName = function (name) { renderCat(idxForName(name)); };
 
-    render();
-    timer = setInterval(advance, 6000);
-})();
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft')  prevCat();
+        if (e.key === 'ArrowRight') nextCat();
+    });
+
+    renderCat(0);
+
+{% elif charts and charts.burn_rate %}
+
+    var fig = {{ charts.burn_rate | safe }};
+    var yearLayout = Object.assign({}, CHART_LAYOUT, {
+        xaxis: Object.assign({}, CHART_LAYOUT.xaxis, fig.layout.xaxis || {}),
+        yaxis: Object.assign({}, CHART_LAYOUT.yaxis, fig.layout.yaxis || {}),
+        showlegend: true,
+        legend: {
+            orientation: 'h',
+            y: -0.22,
+            font: { size: 13, color: '#888888', family: "'VT323', monospace" },
+            bgcolor: 'rgba(0,0,0,0)',
+        },
+    });
+    Plotly.newPlot('burn-chart', fig.data, yearLayout, { responsive: true, displayModeBar: false });
+
 {% endif %}
-{% if view == 'year' %}
-(function () {
-    var cumFig = {{ charts.cumulative | safe }};
-    Plotly.newPlot('chart-cumulative', cumFig.data, cumFig.layout, { responsive: true, displayModeBar: false });
+
 })();
-{% endif %}
-{% if charts.vs_budget %}
-(function () {
-    var budFig = {{ charts.vs_budget | safe }};
-    Plotly.newPlot('chart-budget', budFig.data, budFig.layout, { responsive: true, displayModeBar: false });
-})();
-{% endif %}
 </script>
-{% endif %}
 {% endblock %}

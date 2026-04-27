@@ -209,6 +209,17 @@ def budget():
     summary = views[active_provider]["summary"]
     flash = request.args.get("flash", "")
 
+    if active_provider == "all":
+        recent_txn_source = provider_transactions
+    else:
+        recent_txn_source = {
+            active_provider: provider_transactions.get(active_provider, [])
+        }
+    recent_transactions = budget_module.get_recent_transactions(recent_txn_source)
+    category_transactions = budget_module.get_all_transactions_by_category(
+        recent_txn_source
+    )
+
     return render_template(
         "budget.html",
         status=status,
@@ -220,6 +231,8 @@ def budget():
         projection=projection,
         summary=summary,
         active_provider=active_provider,
+        recent_transactions=recent_transactions,
+        category_transactions=category_transactions,
     )
 
 
