@@ -256,3 +256,144 @@ mypy src/              # type check
 - If an integration fails, log it and fall back to the manual button — never crash the app.
 - Business logic lives in Python — Jinja templates stay thin.
 - No external CSS frameworks — plain CSS only.
+
+
+---
+
+## Budget review & financial planning notes
+
+> Last reviewed: 2026-04-27. Based on **real transaction data** from Monzo, Nationwide, and Amex
+> via TrueLayer — 4 months of history (2026-01 through 2026-04). Averages below are monthly means
+> across all captured months. Some months have incomplete data (see caveats).
+
+### Measured spending averages (Jan–Apr 2026, 4 months)
+
+| Category | Budget | Measured avg/mo | vs budget | Notes |
+|---|---|---|---|---|
+| Rent | £1,460 | £738 | −£722 | Only 2 standing orders captured (March only in window) — not meaningful yet |
+| Bills & Utilities | £242 | £142 | −£100 | Jan had no data; Feb–Apr average is ~£189 — likely correct once full months land |
+| Transport | £480 | £176 | −£304 | Historic Amex train data was lost before the card sign-convention fix (2026-04-27) — recheck next month |
+| Groceries | £200 | £119 | −£81 | Jan had no Amex data; Apr alone was £221 (over budget) — monitor |
+| Food & Coffee | £80 | £98 | **+£18** | Consistently over; Tesco small shops and coffees adding up |
+| Eating Out & Social | £120 | £118 | −£2 | Essentially on budget, but see "Other" caveats below |
+| Subscriptions | £89 | £26 | −£63 | Anthropic/Claude (~£18) on Amex is missing provider limit — triggers WRONG CARD |
+| Personal Care | £51 | £39 | −£12 | Reasonable; no provider assigned so appears as WRONG CARD |
+| Entertainment | £15 | £11 | −£4 | Underbudgeted — March alone was £34 |
+| Other | £52 | **£345** | **+£293** | Severely inflated — see miscategorisation notes below |
+
+**Data caveats:**
+- Rent: TrueLayer only returned the March 30 standing order — Jan/Feb payments pre-date the connection window. Will normalise once a full quarter is connected.
+- Transport: Amex transactions had reversed sign convention until 2026-04-27 fix. Historic Amex train spending was silently dropped. Recheck after a full month post-fix.
+- Amex: no data at all in January (connection not yet established).
+
+**"Other" is inflated by miscategorised spending (~£200+/month):**
+The following Amex merchants are landing in "Other" and should be "Eating Out & Social". Add them to `DESCRIPTION_PATTERNS` above "paypal":
+- `LS NOBLE ROT MAYFAIR` → Eating Out & Social (£210 dinner)
+- `PRIME STEAK & GRILL` → Eating Out & Social (£102)
+- `BAR TERMINI` → Eating Out & Social (£43)
+- `AMZNMKTPLACE` / `AMZNMktplace` → already covered by "amazon" but Amex format differs — check
+
+**PayPal → amrit.kaur fix needed:**
+`("paypal", "Other")` sits before `("amrit.kaur", "Bills & Utilities")` in `DESCRIPTION_PATTERNS`, so PayPal payments to her go to Other. Move the `amrit.kaur` pattern above the generic `paypal` line.
+
+---
+
+### The extra_income problem
+
+The default `extra_income = £100` in `config.py` is wrong. Total configured outgoings are
+**£2,789/month**. Against a base salary of £2,440 that's already £349 in the red before GF
+contribution. The realistic GF contribution is ~£851/month (roughly half of rent £1,460 + bills
+£242). Until that number is set correctly the "Income Left" figure on the budget page is
+meaningless.
+
+**Recommended default**: set `DEFAULT_EXTRA_INCOME = 851.0` in `config.py`. This gives a
+realistic surplus of ~£502/month before savings, which is the number that should drive savings
+decisions. Update this each month via the settings panel if it varies.
+
+### Realistic monthly budget (£/month)
+
+| Category | Current limit | Assessment |
+|---|---|---|
+| Rent | £1,460 | Fixed — correct |
+| Bills & Utilities | £242 | Fixed — correct |
+| Transport | £480 | £350 Amex (trains/petrol) + £100 Nationwide (parking) = £450 configured in providers. The £30 gap is uncovered — TFL/Uber on Monzo. Add £30 to Monzo provider limits, or raise Amex to £380. |
+| Subscriptions | £89 | Nationwide carries £80. Claude/Anthropic (~£18) is on Amex but Amex has no Subscriptions limit → triggers WRONG CARD every month. Add `"Subscriptions": 20.0` to `amex` in `PROVIDER_BUDGET_LIMITS` and reduce `nationwide` to £69 (gym + phone + lastpass + proton). |
+| Groceries | £200 | Amex carries £200 — appears correct. |
+| Food & Coffee | £80 | Monzo carries £80 — reasonable for misc coffees/snacks. |
+| Eating Out & Social | £120 | Monzo carries £120 — possibly low if you're going out regularly; consider £150. |
+| Personal Care | £51 | No provider assigned — will appear as WRONG CARD on whichever card you use. Assign to Amex or Monzo in `PROVIDER_BUDGET_LIMITS`. |
+| Entertainment | £15 | No provider assigned — same issue. Likely underbudgeted (gigs, Steam, etc.). Consider £30. |
+| Other | £52 | No provider assigned. Gifts and clothing are lumpy — this will exceed in some months, be zero in others. |
+| **Total outgoings** | **£2,789** | With £851 GF contribution: effective personal outgoings = **£1,938** |
+
+### BUDGET_LIMITS vs PROVIDER_BUDGET_LIMITS — the duplication problem
+
+These two dicts are supposed to represent the same thing at different granularities but are
+maintained independently and have already drifted (Transport, Subscriptions). The correct model:
+
+- `PROVIDER_BUDGET_LIMITS` is the **source of truth** for any category tied to a specific card.
+- `BUDGET_LIMITS` (used in the "all" view) should be derived by summing provider limits across
+  all providers, then adding limits for unassigned categories (Personal Care, Entertainment, Other).
+
+Until the code does this automatically, keep both dicts in sync manually. Every time you change
+a provider limit, check whether the corresponding `BUDGET_LIMITS` entry needs updating. Add a
+comment to each `BUDGET_LIMITS` entry showing how the number was calculated.
+
+Categories not assigned to any provider (Personal Care, Entertainment, Other) will show as
+WRONG CARD on every provider view. Assign them to the card you actually use for those purchases
+to suppress the warnings.
+
+### LISA — priority contribution
+
+LISA balance: **£24,434.88**. Government bonus: 25% on up to £4,000/year = **£1,000 free per
+year**. To max this, contribute **£333/month**. This is effectively a guaranteed 25% return —
+nothing else competes with it. Treat it as a fixed expense, not discretionary savings. Track it
+via the Atom sinking fund pattern or as a direct outgoing in extra_income if Moneybox auto-debits.
+
+### AJ Bell ISA
+
+Balance: **£7,119.36** in an adventurous (higher-risk) account. At 7% blended return: ~£498/year
+passive growth. Annual ISA allowance is £20,000; once the LISA is maxed, surplus savings should
+flow here. No action needed unless you want to increase monthly contributions.
+
+### Premium Bonds
+
+Balance: **£1,025** at 4.4% average prize rate (~£45/year, tax-free). Prize equivalent is decent
+but below AJ Bell expected return. Keep at current level; don't grow this over ISA contributions.
+
+### Atom — sinking fund, not long-term savings
+
+Atom is a sinking fund for emergency, holiday, car, and other lumpy planned costs. 5% fixed rate.
+**Do not count it as investment savings.** The key accounting rule:
+
+> When a large purchase is **covered by a prior Atom transfer** (holiday hotel, car service, etc.),
+> use the **reclassify feature** on that transaction to mark it as `Transfer` (excluded from spend
+> totals). You already saved for it; counting it as spending double-charges your budget.
+
+Categories you're pre-funding via Atom (holiday, car repair) should not have budget limits in
+`BUDGET_LIMITS` unless you want to track them separately. If they appear in transactions and you
+haven't reclassified them, they'll land in `Other` and make your discretionary spend look high.
+
+### Nationwide savings (£1,000 at 6.5%)
+
+Easy-access at 6.5% is excellent. This appears in transactions as transfers (already excluded).
+The savings baseline feature tracks the balance — keep that updated monthly.
+
+---
+
+## TO-DO (engineering backlog)
+
+- add Noble Rot, Prime Steak & Grill, Bar Termini to DESCRIPTION_PATTERNS as Eating Out & Social (currently landing in Other)
+- move amrit.kaur pattern above paypal in DESCRIPTION_PATTERNS (paypal matches first → Other instead of Bills & Utilities)
+- add budget to rotation alongside habits and clock
+- graph y-axis should always show 0 (rangemode: tozero)
+- add check: if Amrit Paypal is £80–£115 → Bills & Utilities, else → Other
+- graph swap timer: 2 minutes after interaction, 25 seconds idle
+- interactive transactions: inline edit button with "just this time" vs "always" reclassify
+- track one month in the past — active month selector in the header
+- remove daily spend chart — not useful when categories are tracked
+- personalised income panel: preload previous month's settings as defaults each new month
+- add vector images to habit card edges (90s/gaming theme)
+- make sparkle transition more common in rotation
+- PROVIDER_BUDGET_LIMITS: add Subscriptions to Amex (Claude/Anthropic), assign Personal Care and Entertainment to a provider to stop WRONG CARD false positives
+- Fix Transport gap: £480 total but only £450 across provider limits — add ~£30 Monzo transport for TFL/Uber
