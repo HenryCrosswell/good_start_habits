@@ -19,7 +19,7 @@ import requests
 
 log = logging.getLogger(__name__)
 
-_SCOPES = "info accounts transactions balance offline_access"
+_SCOPES = "info accounts cards transactions balance offline_access"
 
 
 def _is_sandbox() -> bool:
@@ -300,6 +300,11 @@ def get_transactions(
             txn_resp.raise_for_status()
             for txn in txn_resp.json().get("results", []):
                 txn["_provider"] = provider
+                # TrueLayer cards API uses reversed sign convention:
+                # positive = charge, negative = payment. Negate to match
+                # the current-account convention (negative = spending).
+                if provider in _CARD_PROVIDERS and "amount" in txn:
+                    txn["amount"] = -txn["amount"]
                 transactions.append(txn)
         except requests.RequestException as exc:
             log.warning(

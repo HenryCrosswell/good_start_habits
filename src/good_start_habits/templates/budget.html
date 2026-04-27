@@ -220,7 +220,7 @@ html, body {
 .stat-cell:nth-child(4) { border-top: 2px solid #111111; }
 
 .stat-label {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Cherry Cream Soda', monospace;
     font-size: 0.36rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -228,7 +228,7 @@ html, body {
     line-height: 2;
 }
 .stat-value {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Cherry Cream Soda', monospace;
     font-size: 0.88rem;
     line-height: 1.3;
     margin-top: 0.2em;
@@ -247,7 +247,7 @@ html, body {
 /* Category list header */
 .cat-list-header {
     padding: 0.4rem 0.8rem;
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Cherry Cream Soda', monospace;
     font-size: 0.36rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -355,7 +355,7 @@ html, body {
     border: 2px solid #111111;
     border-radius: 0;
     color: #111111;
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Cherry Cream Soda', monospace;
     font-size: 0.5rem;
     width: 34px; height: 34px;
     display: flex;
@@ -378,7 +378,7 @@ html, body {
     font-weight: bold;
 }
 .chart-remaining {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Cherry Cream Soda', monospace;
     font-size: 1rem;
     line-height: 1;
     letter-spacing: -0.01em;
@@ -482,7 +482,7 @@ html, body {
     background: #FAFAFA;
 }
 .txn-title {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Cherry Cream Soda', monospace;
     font-size: 0.36rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -522,7 +522,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'Cherry Cream Soda', monospace;
     font-size: 0.28rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -573,6 +573,200 @@ html, body {
 }
 .empty-state a { color: #9B30FF; text-decoration: underline; text-underline-offset: 3px; }
 
+/* ── Month navigation ────────────────────────────────────── */
+.month-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    padding-top: 3px;
+}
+.mnav-btn {
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    padding: 0.1em 0.55em;
+    border: 2px solid #111111;
+    text-decoration: none;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    background: #FFFFFF;
+    display: inline-block;
+    transition: background 0.08s, color 0.08s;
+    box-shadow: 2px 2px 0 #111111;
+    color: #111111;
+}
+.mnav-btn:hover { background: #111111; color: #FFE600; }
+.mnav-btn.active { background: #00B4D8; color: #111111; }
+.mnav-label {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.45rem;
+    letter-spacing: 0.06em;
+    color: #111111;
+    padding: 0 0.3em;
+}
+.mnav-now {
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    color: #00C851;
+    letter-spacing: 0.06em;
+}
+
+/* ── Settings panel ──────────────────────────────────────── */
+.settings-panel {
+    position: fixed;
+    top: 59px;
+    left: 0; right: 0;
+    z-index: 50;
+    background: #111111;
+    border-bottom: 3px solid #FFE600;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+}
+.settings-form {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.sf-label {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.36rem;
+    color: #FFE600;
+    letter-spacing: 0.08em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+}
+.sf-input {
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    background: #222222;
+    color: #FFE600;
+    border: 2px solid #FFE600;
+    padding: 0.1em 0.4em;
+    width: 90px;
+}
+.sf-notes { width: 180px; }
+
+/* ── Category group headers ──────────────────────────────── */
+.cat-group-hdr {
+    padding: 0.4rem 0.8rem;
+    font-family: 'VT323', monospace;
+    font-size: 1.15rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888888;
+    background: #F2F2F2;
+    border-bottom: 2px solid #E0E0E0;
+    border-top: 2px solid #E0E0E0;
+    font-weight: bold;
+}
+
+/* ── Edit / reclassify modal ────────────────────────────── */
+.edit-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.edit-overlay.open { display: flex; }
+
+.edit-panel {
+    background: #111111;
+    border: 3px solid #FFE600;
+    box-shadow: 6px 6px 0 #FFE600;
+    padding: 1.2rem 1.5rem;
+    min-width: 300px;
+    max-width: 460px;
+    width: 90vw;
+}
+.edit-panel-title {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.45rem;
+    color: #FFE600;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.9rem;
+}
+.edit-panel-desc {
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    color: #BBBBBB;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.8rem;
+    padding: 0.3em 0.5em;
+    background: #222222;
+    border: 1px solid #333333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.edit-panel-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 1rem;
+}
+.edit-panel-lbl {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.33rem;
+    color: #888888;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+}
+.edit-cat-select {
+    font-family: 'VT323', monospace;
+    font-size: 1.05rem;
+    background: #222222;
+    color: #FFE600;
+    border: 2px solid #FFE600;
+    padding: 0.12em 0.5em;
+    flex: 1;
+    cursor: pointer;
+}
+.edit-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.edit-btn {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.33rem;
+    padding: 0.45em 0.8em;
+    border: 2px solid transparent;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    transition: transform 0.07s, box-shadow 0.07s;
+}
+.edit-btn:hover { transform: translate(2px,2px); }
+.edit-btn.once   { background: #00B4D8; color: #111111; border-color: #007AA0; box-shadow: 3px 3px 0 #007AA0; }
+.edit-btn.save   { background: #00C851; color: #FFFFFF; border-color: #007830; box-shadow: 3px 3px 0 #007830; }
+.edit-btn.cancel { background: #333333; color: #CCCCCC; border-color: #555555; box-shadow: 3px 3px 0 #555555; }
+.edit-btn.once:hover  { box-shadow: 1px 1px 0 #007AA0; }
+.edit-btn.save:hover  { box-shadow: 1px 1px 0 #007830; }
+.edit-btn.cancel:hover{ box-shadow: 1px 1px 0 #555555; }
+
+/* Edit button on transaction rows (appears on hover) */
+.txn-edit-btn {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.27rem;
+    padding: 0.25em 0.5em;
+    border: 1.5px solid #CCCCCC;
+    background: #FFFFFF;
+    color: #555555;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    box-shadow: 2px 2px 0 #CCCCCC;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.08s, color 0.08s;
+}
+.txn-row:hover .txn-edit-btn { opacity: 1; }
+.txn-edit-btn:hover { background: #FFE600; color: #111111; border-color: #111111; box-shadow: 2px 2px 0 #111111; }
+
 /* ── Flash ───────────────────────────────────────────────── */
 .flash {
     position: fixed;
@@ -602,6 +796,8 @@ html, body {
         <div class="flash err">AUTH CANCELLED.</div>
     {% elif flash == 'connect_failed' %}
         <div class="flash err">CONNECTION FAILED. TRY AGAIN.</div>
+    {% elif flash == 'recategorized' %}
+        <div class="flash ok">CATEGORY RULE SAVED.</div>
     {% endif %}
 {% endif %}
 
@@ -628,32 +824,63 @@ html, body {
         <div class="header-sep"></div>
 
         <div class="nav-group">
-            <div class="tab-group">
-                <a href="/budget?view=month&provider={{ active_provider }}{% if projection %}&projection=on{% endif %}"
-                   class="{% if view == 'month' %}active{% endif %}">MONTH</a>
-                <a href="/budget?view=year&provider={{ active_provider }}{% if projection %}&projection=on{% endif %}"
-                   class="{% if view == 'year' %}active{% endif %}">YEAR</a>
-            </div>
+        </div>
 
-            {% if view == 'month' %}
-            <a href="{{ '/budget?view=' ~ view ~ '&provider=' ~ active_provider if projection else '/budget?view=' ~ view ~ '&provider=' ~ active_provider ~ '&projection=on' }}"
-               class="proj-btn {{ 'on' if projection else '' }}">
-                {{ '>> PROJ ON' if projection else '>> PROJECT' }}
-            </a>
-            {% endif %}
-
-            {% if connected_providers | length > 1 %}
-            <div class="provider-pills">
-                <a href="/budget?view={{ view }}&provider=all{% if projection %}&projection=on{% endif %}"
-                   class="ppill {% if active_provider == 'all' %}active-all{% endif %}">ALL</a>
-                {% for p in connected_providers %}
-                <a href="/budget?view={{ view }}&provider={{ p }}{% if projection %}&projection=on{% endif %}"
-                   class="ppill {% if active_provider == p %}active-{{ p }}{% endif %}">{{ p | upper }}</a>
-                {% endfor %}
-            </div>
+        <div class="month-nav">
+            <a href="/budget?view={{ view }}&provider={{ active_provider }}&offset=-1{% if projection %}&projection=on{% endif %}"
+               class="mnav-btn {% if offset == -1 %}active{% endif %}">&#9664; PREV</a>
+            <span class="mnav-label">{{ display_month }}</span>
+            {% if offset < 0 %}
+            <a href="/budget?view={{ view }}&provider={{ active_provider }}&offset=0{% if projection %}&projection=on{% endif %}"
+               class="mnav-btn">NOW &#9654;</a>
+            {% else %}
+            <span class="mnav-now">&#9679; LIVE</span>
             {% endif %}
         </div>
+
+        <button class="btn-link" onclick="toggleSettings()" id="settings-btn">&#9881; SET</button>
     </header>
+
+    <!-- ── Settings panel ────────────────────────────────── -->
+    <div class="settings-panel" id="settings-panel" style="display:none;">
+        <form method="post" action="/budget/settings" class="settings-form">
+            <input type="hidden" name="year"     value="{{ disp_year }}">
+            <input type="hidden" name="month"    value="{{ disp_month }}">
+            <input type="hidden" name="view"     value="{{ view }}">
+            <input type="hidden" name="provider" value="{{ active_provider }}">
+            <input type="hidden" name="offset"   value="{{ offset }}">
+            <label class="sf-label">BASE PAY
+                <input class="sf-input" type="number" name="base_income" step="0.01"
+                       value="{{ settings.base_income }}">
+            </label>
+            <label class="sf-label">EXTRA
+                <input class="sf-input" type="number" name="extra_income" step="0.01"
+                       value="{{ settings.extra_income }}">
+            </label>
+            <label class="sf-label">NOTES
+                <input class="sf-input sf-notes" type="text" name="notes"
+                       value="{{ settings.notes or '' }}" placeholder="e.g. LISA bonus">
+            </label>
+            <button type="submit" class="btn-link">SAVE</button>
+        </form>
+        <form method="post" action="/budget/savings-baseline" class="settings-form" style="border-top:1px solid #333333;padding-top:0.4rem;margin-top:0.25rem;">
+            <input type="hidden" name="year"     value="{{ disp_year }}">
+            <input type="hidden" name="month"    value="{{ disp_month }}">
+            <input type="hidden" name="view"     value="{{ view }}">
+            <input type="hidden" name="provider" value="{{ active_provider }}">
+            <input type="hidden" name="offset"   value="{{ offset }}">
+            <span class="sf-label" style="color:#00C851;flex-shrink:0;">// SAVINGS</span>
+            {% for acc in savings_accounts %}
+            <label class="sf-label">{{ acc.name | upper }}
+                <input class="sf-input" type="number"
+                       name="baseline_{{ acc.name | replace(' ', '_') | lower }}"
+                       step="0.01" min="0"
+                       value="{{ '%.2f' | format(acc.baseline) }}">
+            </label>
+            {% endfor %}
+            <button type="submit" class="btn-link" style="background:#00C851;color:#111111;border-color:#007830;">SAVE</button>
+        </form>
+    </div>
 
     {% if charts %}
 
@@ -661,8 +888,9 @@ html, body {
     <div class="left-panel">
 
         {% if summary %}
+        {% set income = summary.income %}
+        {% set balance = summary.usable_balance %}
         {% set pct = summary.pct_used %}
-        {% set remaining = summary.total_budget - summary.total_spent %}
         <div class="summary-grid">
             <div class="stat-cell">
                 <div class="stat-label">Spent</div>
@@ -670,16 +898,28 @@ html, body {
                 <div class="stat-sub">{{ pct }}% USED</div>
             </div>
             <div class="stat-cell">
-                <div class="stat-label">Left</div>
+                <div class="stat-label">{% if income %}Income Left{% else %}Left{% endif %}</div>
+                {% if income %}
+                <div class="stat-value {% if balance < 0 %}over{% else %}good{% endif %}">
+                    {% if balance < 0 %}-{% endif %}£{{ "%.0f"|format(balance | abs) }}
+                </div>
+                <div class="stat-sub">OF £{{ "%.0f"|format(income) }}</div>
+                {% else %}
+                {% set remaining = summary.total_budget - summary.total_spent %}
                 <div class="stat-value {% if remaining < 0 %}over{% else %}good{% endif %}">
                     {% if remaining < 0 %}-{% endif %}£{{ "%.0f"|format(remaining | abs) }}
                 </div>
                 <div class="stat-sub">OF £{{ "%.0f"|format(summary.total_budget) }}</div>
+                {% endif %}
             </div>
             <div class="stat-cell">
-                <div class="stat-label">Daily</div>
-                <div class="stat-value">£{{ "%.0f"|format(summary.daily_average) }}</div>
-                <div class="stat-sub">PER DAY</div>
+                <div class="stat-label">Saved</div>
+                <div class="stat-value good">£{{ "%.0f"|format(summary.total_savings) }}</div>
+                {% if summary.projected_savings %}
+                <div class="stat-sub">→ £{{ "%.0f"|format(summary.projected_savings) }}</div>
+                {% else %}
+                <div class="stat-sub">THIS MONTH</div>
+                {% endif %}
             </div>
             <div class="stat-cell">
                 <div class="stat-label">Cats</div>
@@ -692,13 +932,20 @@ html, body {
         <div class="cat-list-header">// Categories</div>
 
         {% set cat_colours = ['#FF1493','#9B30FF','#FF6B00','#00B4D8','#00C851','#E01A5A','#0077DD','#FF00CC','#FF8C00','#00C8A0'] %}
-        {% if summary and summary.categories %}
+        {% set provider_colours = {'nationwide': '#00B4D8', 'amex': '#9B30FF', 'monzo': '#FF1493'} %}
+        {% if connected_providers %}
         <div class="cat-list" id="cat-list">
-            {% for cat in summary.categories %}
+            {% set ns = namespace(colour_idx=0) %}
+            {% for provider in connected_providers %}
+            {% set pdata = provider_breakdowns.get(provider, {}) %}
+            {% set pcol = provider_colours.get(provider, '#888888') %}
+            <div class="cat-group-hdr" style="color:{{ pcol }};">// {{ provider | upper }}</div>
+            {% for cat in pdata.get('categories', []) %}
             {% if cat.spent > 0 or cat.budget > 0 %}
-            {% set colour = cat_colours[loop.index0 % 10] %}
+            {% set colour = cat_colours[ns.colour_idx % 10] %}
+            {% set ns.colour_idx = ns.colour_idx + 1 %}
             <div class="cat-item" data-cat="{{ cat.name }}"
-                 onclick="selectCatByName('{{ cat.name }}')"
+                 onclick="selectCatForProvider('{{ provider }}', '{{ cat.name }}')"
                  style="--cat-colour: {{ colour }};">
                 <div class="cat-top-row">
                     <div class="cat-dot-name">
@@ -723,6 +970,48 @@ html, body {
             </div>
             {% endif %}
             {% endfor %}
+            {% if pdata.error_total > 0 %}
+            <div class="cat-item" data-cat="wrong_card_{{ provider }}"
+                 onclick="selectWrongCard('{{ provider }}')"
+                 style="--cat-colour:#FF6B00; border-left:4px solid #FF6B00; background:#FF6B0010;">
+                <div class="cat-top-row">
+                    <div class="cat-dot-name">
+                        <span class="cat-dot" style="background:#FF6B00;"></span>
+                        WRONG CARD
+                    </div>
+                    <div class="cat-amounts">
+                        <span class="spent" style="color:#FF6B00;">£{{ "%.0f"|format(pdata.error_total) }}</span>
+                    </div>
+                </div>
+                <div class="cat-rem" style="color:#FF6B00;">
+                    {% for ec in pdata.error_cats %}{{ ec.name | upper }}{% if not loop.last %} · {% endif %}{% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% if summary and summary.total_savings is defined %}
+            <div class="cat-group-hdr" style="color:#00C851;">// SAVINGS</div>
+            <div class="cat-item" data-cat="Savings"
+                 onclick="selectCatByName('Savings')"
+                 style="--cat-colour:#00C851; border-left:4px solid #00C851;">
+                <div class="cat-top-row">
+                    <div class="cat-dot-name">
+                        <span class="cat-dot" style="background:#00C851;"></span>
+                        SAVINGS
+                    </div>
+                    <div class="cat-amounts">
+                        <span class="spent" style="color:#00C851;">£{{ "%.0f"|format(summary.total_savings) }}</span>
+                    </div>
+                </div>
+                <div class="cat-rem" style="color:#00C851;">
+                    {% if summary.projected_savings %}
+                        → £{{ "%.0f"|format(summary.projected_savings) }} PROJECTED
+                    {% else %}
+                        THIS MONTH
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% else %}
         <div class="empty-state">NO DATA YET.</div>
@@ -797,6 +1086,32 @@ html, body {
 
 </div><!-- /.budget-app -->
 
+<!-- ── Edit / reclassify overlay ─────────────────────── -->
+<div id="edit-overlay" class="edit-overlay" onclick="if(event.target===this)closeEdit()">
+    <div class="edit-panel">
+        <div class="edit-panel-title">// RE-CATEGORIZE</div>
+        <div class="edit-panel-desc" id="edit-desc"></div>
+        <div class="edit-panel-row">
+            <span class="edit-panel-lbl">MOVE TO</span>
+            <select class="edit-cat-select" id="edit-cat-select"></select>
+        </div>
+        <div class="edit-actions">
+            <button class="edit-btn once"   onclick="applyEditOnce()">JUST THIS TIME</button>
+            <button class="edit-btn save"   onclick="applyEditSave()">SAVE RULE</button>
+            <button class="edit-btn cancel" onclick="closeEdit()">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form for permanent reclassify POST -->
+<form id="reclassify-form" method="post" action="/budget/reclassify" style="display:none;">
+    <input type="hidden" name="description" id="rc-desc">
+    <input type="hidden" name="category"    id="rc-cat">
+    <input type="hidden" name="view"     value="{{ view }}">
+    <input type="hidden" name="provider" value="{{ active_provider }}">
+    <input type="hidden" name="offset"   value="{{ offset }}">
+</form>
+
 {% endblock %}
 
 {% block scripts %}
@@ -834,6 +1149,7 @@ html, body {
             zerolinecolor: '#FF1493',
             zerolinewidth: 2,
             tickprefix: '£',
+            rangemode: 'tozero',
         },
         hovermode: 'x unified',
         hoverlabel: {
@@ -848,12 +1164,26 @@ html, body {
 
 {% if charts and view == 'month' and charts.per_category %}
 
-    var perCatData = {{ charts.per_category | safe }};
-    var catTxns    = {{ category_transactions | tojson | safe }};
+    var ALL_CATEGORIES = {{ all_categories | tojson }};
+
+    var perCatData   = {{ charts.per_category | safe }};
+    var catTxns      = {{ category_transactions | tojson | safe }};
+    var SAVINGS_CHART = {% if charts.savings %}{{ charts.savings | safe }}{% else %}null{% endif %};
+    var WRONG_CARD_CHARTS = {
+        {% for p, wc_json in wrong_card_charts.items() %}
+        "{{ p }}": {{ wc_json | safe }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    };
 
     var activeCatIdx  = 0;
+    var activeCatName = '';
     var chartRendered = false;
     var autoTimer     = null;
+
+    /* edit state */
+    var _editTxnBank = [];
+    var _editTxnIdx  = -1;
+    var _editOrigCat = '';
 
     function splitAtZero(xs, ys) {
         var posX = [], posY = [], negX = [], negY = [];
@@ -891,16 +1221,20 @@ html, body {
     }
 
     function renderCat(idx) {
-        activeCatIdx = idx;
+        activeCatIdx  = idx;
         var cat    = perCatData[idx];
-        var colour = CAT_COLOURS[idx % CAT_COLOURS.length];
+        activeCatName = cat.name;
+        var colour = cat.is_savings ? '#00C851' : CAT_COLOURS[idx % CAT_COLOURS.length];
         var lastY  = cat.y.length ? cat.y[cat.y.length - 1] : 0;
         var rem    = Math.round(lastY);
 
         document.getElementById('chart-cat-name').textContent = cat.name.toUpperCase();
 
         var remEl = document.getElementById('chart-remaining');
-        if (rem >= 0) {
+        if (cat.is_savings) {
+            remEl.textContent = '£' + rem + ' SAVED';
+            remEl.className   = 'chart-remaining good';
+        } else if (rem >= 0) {
             remEl.textContent = '£' + rem + ' LEFT';
             remEl.className   = 'chart-remaining good';
         } else {
@@ -908,40 +1242,79 @@ html, body {
             remEl.className   = 'chart-remaining over';
         }
 
-        var split  = splitAtZero(cat.x, cat.y);
-        var traces = [];
-        if (split.posX.length) traces.push({
-            x: split.posX, y: split.posY,
-            type: 'scatter', mode: 'lines',
-            line: { color: '#00C851', width: 3.5, shape: 'spline', smoothing: 0.6 },
-            hovertemplate: '£%{y:.0f} left<extra></extra>',
-        });
-        if (split.negX.length) traces.push({
-            x: split.negX, y: split.negY,
-            type: 'scatter', mode: 'lines',
-            line: { color: '#FF1493', width: 3.5, shape: 'spline', smoothing: 0.6 },
-            hovertemplate: '£%{y:.0f}<extra></extra>',
-        });
-        if (cat.proj) {
-            var pColour = cat.proj.y[cat.proj.y.length-1] >= 0 ? '#00C851' : '#FF1493';
-            traces.push({
-                x: cat.proj.x, y: cat.proj.y,
-                type: 'scatter', mode: 'lines',
-                line: { color: pColour, dash: 'dot', width: 2 },
-                hoverinfo: 'skip', showlegend: false,
-            });
-        }
-
-        var layout = Object.assign({}, CHART_LAYOUT, {
-            xaxis: Object.assign({}, CHART_LAYOUT.xaxis, { range: [1, cat.days_in_month] }),
-        });
-
         var el = document.getElementById('cat-chart');
-        if (!chartRendered) {
-            Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false });
-            chartRendered = true;
+        if (cat.is_savings && SAVINGS_CHART && SAVINGS_CHART.data) {
+            var savLayout = Object.assign({}, CHART_LAYOUT, {
+                margin: Object.assign({}, CHART_LAYOUT.margin, { l: 70 }),
+                xaxis: Object.assign({}, CHART_LAYOUT.xaxis, { range: [1, cat.days_in_month] }),
+                yaxis: Object.assign({}, CHART_LAYOUT.yaxis, {
+                    title: { text: '£ BALANCE', font: { size: 13, color: '#AAAAAA', family: "'VT323', monospace" } },
+                    tickformat: ',d',
+                    rangemode: 'tozero',
+                }),
+                showlegend: true,
+                legend: {
+                    orientation: 'v', x: 0.02, y: 0.98,
+                    xanchor: 'left', yanchor: 'top',
+                    font: { size: 12, color: '#888888', family: "'VT323', monospace" },
+                    bgcolor: 'rgba(255,255,255,0.88)',
+                    bordercolor: '#DDDDDD', borderwidth: 1,
+                },
+            });
+            if (!chartRendered) {
+                Plotly.newPlot(el, SAVINGS_CHART.data, savLayout, { responsive: true, displayModeBar: false });
+                chartRendered = true;
+            } else {
+                Plotly.react(el, SAVINGS_CHART.data, savLayout);
+            }
         } else {
-            Plotly.react(el, traces, layout);
+            var traces = [];
+            if (cat.is_savings) {
+                traces.push({
+                    x: cat.x, y: cat.y,
+                    type: 'scatter', mode: 'lines',
+                    line: { color: '#00C851', width: 3.5, shape: 'spline', smoothing: 0.6 },
+                    hovertemplate: '£%{y:.0f} saved<extra></extra>',
+                });
+            } else {
+                var split = splitAtZero(cat.x, cat.y);
+                if (split.posX.length) traces.push({
+                    x: split.posX, y: split.posY,
+                    type: 'scatter', mode: 'lines',
+                    line: { color: '#00C851', width: 3.5, shape: 'spline', smoothing: 0.6 },
+                    hovertemplate: '£%{y:.0f} left<extra></extra>',
+                });
+                if (split.negX.length) traces.push({
+                    x: split.negX, y: split.negY,
+                    type: 'scatter', mode: 'lines',
+                    line: { color: '#FF1493', width: 3.5, shape: 'spline', smoothing: 0.6 },
+                    hovertemplate: '£%{y:.0f}<extra></extra>',
+                });
+            }
+            if (cat.proj) {
+                var pColour = cat.is_savings ? '#00C851' : (cat.proj.y[cat.proj.y.length-1] >= 0 ? '#00C851' : '#FF1493');
+                traces.push({
+                    x: cat.proj.x, y: cat.proj.y,
+                    type: 'scatter', mode: 'lines',
+                    line: { color: pColour, dash: 'dot', width: 2 },
+                    hoverinfo: 'skip', showlegend: false,
+                });
+            }
+
+            var yAxisOverride = cat.is_savings
+                ? { title: { text: '£ SAVED', font: { size: 13, color: '#AAAAAA', family: "'VT323', monospace" } } }
+                : {};
+            var layout = Object.assign({}, CHART_LAYOUT, {
+                xaxis: Object.assign({}, CHART_LAYOUT.xaxis, { range: [1, cat.days_in_month] }),
+                yaxis: Object.assign({}, CHART_LAYOUT.yaxis, yAxisOverride),
+            });
+
+            if (!chartRendered) {
+                Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false });
+                chartRendered = true;
+            } else {
+                Plotly.react(el, traces, layout);
+            }
         }
 
         /* Highlight active category */
@@ -964,11 +1337,12 @@ html, body {
         badge.style.color = (r*0.299 + g*0.587 + b*0.114) > 140 ? '#111111' : '#FFFFFF';
 
         var txns = catTxns[cat.name] || [];
+        _editTxnBank = txns;
         var list = document.getElementById('txn-list');
         if (!txns.length) {
             list.innerHTML = '<div class="empty-state">NO TRANSACTIONS FOR THIS CATEGORY.</div>';
         } else {
-            list.innerHTML = txns.map(function (t) {
+            list.innerHTML = txns.map(function (t, i) {
                 var p   = (t.provider || 'monzo').slice(0,3).toUpperCase();
                 var cls = t.provider || 'monzo';
                 return '<div class="txn-row">' +
@@ -976,6 +1350,7 @@ html, body {
                     '<div class="txn-desc">' + esc(t.description).toUpperCase() + '</div>' +
                     '<div class="txn-date">' + t.date + '</div>' +
                     '<div class="txn-amount">£' + t.amount.toFixed(2) + '</div>' +
+                    '<button class="txn-edit-btn" onclick="openEdit(' + i + ',\'' + escAttr(cat.name) + '\')">EDIT</button>' +
                     '</div>';
             }).join('');
         }
@@ -987,6 +1362,53 @@ html, body {
         return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
+    function escAttr(s) {
+        return s.replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+    }
+
+    window.openEdit = function (idx, origCat) {
+        _editTxnIdx  = idx;
+        _editOrigCat = origCat;
+        var t = _editTxnBank[idx];
+        document.getElementById('edit-desc').textContent = t.description.toUpperCase();
+        var sel = document.getElementById('edit-cat-select');
+        sel.innerHTML = ALL_CATEGORIES.map(function (c) {
+            return '<option value="' + escAttr(c) + '"' + (c === origCat ? ' selected' : '') + '>' + c.toUpperCase() + '</option>';
+        }).join('');
+        document.getElementById('edit-overlay').classList.add('open');
+    };
+
+    window.closeEdit = function () {
+        document.getElementById('edit-overlay').classList.remove('open');
+        _editTxnIdx = -1;
+    };
+
+    window.applyEditOnce = function () {
+        var newCat = document.getElementById('edit-cat-select').value;
+        if (_editTxnIdx < 0) return;
+        var t = _editTxnBank[_editTxnIdx];
+        /* remove from original category list */
+        if (catTxns[_editOrigCat]) {
+            catTxns[_editOrigCat] = catTxns[_editOrigCat].filter(function (_, i) {
+                return i !== _editTxnIdx;
+            });
+        }
+        /* add to new category */
+        if (!catTxns[newCat]) catTxns[newCat] = [];
+        catTxns[newCat].unshift(t);
+        closeEdit();
+        renderCat(activeCatIdx);
+    };
+
+    window.applyEditSave = function () {
+        var newCat = document.getElementById('edit-cat-select').value;
+        if (_editTxnIdx < 0) return;
+        var t = _editTxnBank[_editTxnIdx];
+        document.getElementById('rc-desc').value = t.description.toLowerCase();
+        document.getElementById('rc-cat').value  = newCat;
+        document.getElementById('reclassify-form').submit();
+    };
+
     function idxForName(name) {
         for (var i = 0; i < perCatData.length; i++) {
             if (perCatData[i].name === name) return i;
@@ -997,6 +1419,107 @@ html, body {
     window.prevCat        = function () { renderCat((activeCatIdx - 1 + perCatData.length) % perCatData.length); };
     window.nextCat        = function () { renderCat((activeCatIdx + 1) % perCatData.length); };
     window.selectCatByName = function (name) { renderCat(idxForName(name)); };
+
+    window.selectCatForProvider = function (provider, catName) {
+        renderCat(idxForName(catName));
+        // Override transaction list to show only this provider's transactions
+        var allTxns = catTxns[catName] || [];
+        var filtered = allTxns.filter(function (t) { return t.provider === provider; });
+        _editTxnBank = filtered;
+        var list = document.getElementById('txn-list');
+        if (!filtered.length) {
+            list.innerHTML = '<div class="empty-state">NO TRANSACTIONS FOR THIS CATEGORY.</div>';
+        } else {
+            list.innerHTML = filtered.map(function (t, i) {
+                var p   = (t.provider || 'monzo').slice(0, 3).toUpperCase();
+                var cls = t.provider || 'monzo';
+                return '<div class="txn-row">' +
+                    '<div class="txn-chip ' + cls + '">' + p + '</div>' +
+                    '<div class="txn-desc">' + esc(t.description).toUpperCase() + '</div>' +
+                    '<div class="txn-date">' + t.date + '</div>' +
+                    '<div class="txn-amount">£' + t.amount.toFixed(2) + '</div>' +
+                    '<button class="txn-edit-btn" onclick="openEdit(' + i + ',\'' + escAttr(catName) + '\')">EDIT</button>' +
+                    '</div>';
+            }).join('');
+        }
+    };
+
+    window.selectWrongCard = function (provider) {
+        clearInterval(autoTimer);
+        var fig = WRONG_CARD_CHARTS[provider];
+        if (!fig) return;
+        var el = document.getElementById('cat-chart');
+        var daysInMonth = (fig.layout && fig.layout.xaxis && fig.layout.xaxis.range)
+            ? fig.layout.xaxis.range[1] : 31;
+        var wLayout = Object.assign({}, CHART_LAYOUT, {
+            xaxis: Object.assign({}, CHART_LAYOUT.xaxis, {
+                range: [1, daysInMonth],
+                title: { text: 'DAY', font: { size: 13, color: '#AAAAAA', family: "'VT323', monospace" } },
+            }),
+            yaxis: Object.assign({}, CHART_LAYOUT.yaxis, {
+                title: { text: '£ SPENT', font: { size: 13, color: '#AAAAAA', family: "'VT323', monospace" } },
+                rangemode: 'tozero',
+                zerolinecolor: '#FF6B00',
+            }),
+            showlegend: true,
+            legend: {
+                orientation: 'h', y: -0.22,
+                font: { size: 12, color: '#888888', family: "'VT323', monospace" },
+                bgcolor: 'rgba(0,0,0,0)',
+            },
+        });
+        if (!chartRendered) {
+            Plotly.newPlot(el, fig.data, wLayout, { responsive: true, displayModeBar: false });
+            chartRendered = true;
+        } else {
+            Plotly.react(el, fig.data, wLayout);
+        }
+        document.getElementById('chart-cat-name').textContent = 'WRONG CARD // ' + provider.toUpperCase();
+        var remEl = document.getElementById('chart-remaining');
+        var total = fig.data.reduce(function (sum, trace) {
+            return sum + (trace.y && trace.y.length ? trace.y[trace.y.length - 1] : 0);
+        }, 0);
+        remEl.textContent = '£' + Math.round(total) + ' WRONG';
+        remEl.className = 'chart-remaining over';
+
+        document.querySelectorAll('.cat-item').forEach(function (item) {
+            var active = item.dataset.cat === 'wrong_card_' + provider;
+            item.classList.toggle('active', active);
+            item.style.borderLeftColor = active ? '#FF6B00' : 'transparent';
+            item.style.background      = active ? '#FF6B0018' : '';
+        });
+
+        var badge = document.getElementById('txn-cat-badge');
+        badge.textContent   = 'WRONG CARD';
+        badge.style.display = '';
+        badge.style.background = '#FF6B00';
+        badge.style.color = '#FFFFFF';
+
+        var list = document.getElementById('txn-list');
+        var allTxns = [];
+        fig.data.forEach(function (trace) {
+            var cat = trace.name;
+            var txns = catTxns[cat] || [];
+            txns.forEach(function (t) {
+                if (t.provider === provider) allTxns.push(Object.assign({}, t, { category: cat }));
+            });
+        });
+        allTxns.sort(function (a, b) { return b.date < a.date ? -1 : 1; });
+        if (!allTxns.length) {
+            list.innerHTML = '<div class="empty-state">NO WRONG-CARD TRANSACTIONS.</div>';
+        } else {
+            list.innerHTML = allTxns.map(function (t, i) {
+                var p   = (t.provider || 'monzo').slice(0,3).toUpperCase();
+                var cls = t.provider || 'monzo';
+                return '<div class="txn-row">' +
+                    '<div class="txn-chip ' + cls + '">' + p + '</div>' +
+                    '<div class="txn-desc">' + esc(t.description).toUpperCase() + '</div>' +
+                    '<div class="txn-date">' + t.date + '</div>' +
+                    '<div class="txn-amount">£' + t.amount.toFixed(2) + '</div>' +
+                    '</div>';
+            }).join('');
+        }
+    };
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'ArrowLeft')  prevCat();
@@ -1024,5 +1547,28 @@ html, body {
 {% endif %}
 
 })();
+
+/* ── Settings toggle ──────────────────────────────────────── */
+window.toggleSettings = function () {
+    var panel = document.getElementById('settings-panel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+};
+
+/* ── Interaction-aware dwell timer ─────────────────────────── */
+(function () {
+    var IDLE_MS   = 25000;   /* 25 s when idle */
+    var ACTIVE_MS = 120000;  /* 2 min after any button/link/input interaction */
+    var _t = null;
+    function arm(ms) {
+        clearTimeout(_t);
+        _t = setTimeout(function () { ptNavigate('/', 'random', 0); }, ms);
+    }
+    arm(IDLE_MS);
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('button, a, input, select, .cat-item')) {
+            arm(ACTIVE_MS);
+        }
+    }, true);
+}());
 </script>
 {% endblock %}

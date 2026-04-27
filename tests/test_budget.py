@@ -70,10 +70,34 @@ class TestMapCategoryByDescription:
     def test_monzo_rounding_excluded(self):
         assert map_category([], "left-over monthly") is None
 
-    def test_council_tax_paypal(self):
+    def test_amrit_paypal_in_range_is_bills(self):
         assert (
-            map_category([], "Visa purchase PAYPAL *amrit.kaur.minhas")
+            map_category([], "Visa purchase PAYPAL *amrit.kaur.minhas", amount=95.0)
             == "Bills & Utilities"
+        )
+
+    def test_amrit_paypal_boundary_low(self):
+        assert (
+            map_category([], "Visa purchase PAYPAL *amrit.kaur.minhas", amount=80.0)
+            == "Bills & Utilities"
+        )
+
+    def test_amrit_paypal_boundary_high(self):
+        assert (
+            map_category([], "Visa purchase PAYPAL *amrit.kaur.minhas", amount=115.0)
+            == "Bills & Utilities"
+        )
+
+    def test_amrit_paypal_out_of_range_is_other(self):
+        assert (
+            map_category([], "Visa purchase PAYPAL *amrit.kaur.minhas", amount=50.0)
+            == "Other"
+        )
+
+    def test_amrit_paypal_large_amount_is_other(self):
+        assert (
+            map_category([], "Visa purchase PAYPAL *amrit.kaur.minhas", amount=200.0)
+            == "Other"
         )
 
     def test_parking_permit(self):
@@ -138,6 +162,24 @@ class TestMapCategoryByDescription:
 
     def test_case_insensitive(self):
         assert map_category([], "TESCO STORES") == map_category([], "tesco stores")
+
+    def test_amex_food_remapped_to_groceries(self):
+        assert (
+            map_category([], "Contactless Payment TESCO-STORES", provider="amex")
+            == "Groceries"
+        )
+
+    def test_monzo_food_stays_food_and_coffee(self):
+        assert (
+            map_category([], "Contactless Payment TESCO-STORES", provider="monzo")
+            == "Food & Coffee"
+        )
+
+    def test_nationwide_food_stays_food_and_coffee(self):
+        assert (
+            map_category([], "Contactless Payment TESCO-STORES", provider="nationwide")
+            == "Food & Coffee"
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -42,12 +42,15 @@
         // ── rarest ──────────────────────────────────────────
         { key: 'newspaper',   weight: 1  },
         { key: 'cube',        weight: 1  },
-        // ── shiny (even rarer — sparkles on top) ────────────
-        { key: 'newspaper',   weight: 0.5, shiny: true },
-        { key: 'cube',        weight: 0.3, shiny: true },
-        { key: 'fold',        weight: 0.4, shiny: true },
-        { key: 'carousel',    weight: 0.3, shiny: true },
-        { key: 'scale-down',  weight: 0.3, shiny: true },
+        // ── shiny (~15% of transitions) ─────────────────────
+        { key: 'newspaper',   weight: 2.5, shiny: true },
+        { key: 'cube',        weight: 2.0, shiny: true },
+        { key: 'fold',        weight: 2.0, shiny: true },
+        { key: 'carousel',    weight: 2.0, shiny: true },
+        { key: 'scale-down',  weight: 2.0, shiny: true },
+        { key: 'flip',        weight: 1.5, shiny: true },
+        { key: 'ease',        weight: 1.5, shiny: true },
+        { key: 'fade',        weight: 1.0, shiny: true },
     ];
 
     function pickRandom() {

@@ -86,35 +86,50 @@ ACTIVE_TIMES = {
 }
 
 
-ROTATION_INTERVAL = randint(5, 15)  # (1800,7200)
-DWELL_TIME = randint(5, 15)  # (1800,7200)
+ROTATION_INTERVAL = randint(1800, 7200)  # (5, 15)
+DWELL_TIME = randint(300, 600)  # (5, 15)
 
 # Which categories belong to which provider (drives per-tab budget limits).
 # Transport is split: trains on Amex, parking on Nationwide.
 PROVIDER_BUDGET_LIMITS: dict[str, dict[str, float]] = {
-    "nationwide": {
-        "Rent": 660.0,
-        "Bills & Utilities": 85.0,
+    "nationwide": {  # these categories only, anything else wouldbe an error
+        "Rent": 1460.0,
+        "Bills & Utilities": 242.33,
         "Transport": 100.0,  # parking direct debit
         "Subscriptions": 80.0,
     },
-    "amex": {
+    "amex": {  # these categories only, anything else wouldbe an error
         "Groceries": 200.0,
-        "Transport": 330.0,  # trains season ticket / ad-hoc
+        "Transport": 350.0,  # trains season ticket / ad-hoc travel/ petrol
     },
-    "monzo": {
+    "monzo": {  # these categories only, anything else wouldbe an error
         "Food & Coffee": 80.0,
         "Eating Out & Social": 120.0,
     },
 }
+
+""" Savings currently
+LISA and ISA you can find from AJBELL contributions currently there.
+    ISA = 7,119.36 - adventurous account (interest rates vary)
+    LISA = 24,434.88 - balanced account (1k extra if 4k is deposited)
+
+Nationwide savings
+    nationwide = 1000 - 6.5% currently
+
+Bonds
+    bonds = 1025 - return is gambling
+
+ATOM should NOT BE INCLUDED IN SAVINGS, it is easy accessible and not used for long-term savings just
+emergency, holiday, car etc.etc.
+"""
 
 # Monthly budget limits per personal category (£)
 BUDGET_LIMITS: dict[str, float] = {
     "Groceries": 200.0,  # big food shop
     "Food & Coffee": 80.0,  # misc food, coffees, snacks
     "Eating Out & Social": 120.0,  # restaurants, bars, nights out
-    "Rent": 1460.0,  # £760 plus £700 partner contribution
-    "Bills & Utilities": 85.0,  # £185 less £100 partner contribution
+    "Rent": 1460.0,  # full outgoing; GF contribution tracked via extra_income
+    "Bills & Utilities": 242.33,  # full outgoing; GF contribution tracked via extra_income
     "Transport": 480.0,  # trains (330) + parking (100) + trainline (30) + petrol (20)
     "Subscriptions": 89.0,  # gym (50) + phone (10) + claude (18) + lastpass (3) + proton (6)
     "Personal Care": 50.84,  # haircut (22.50) + skin/haircare (13.34) + house products (15)
@@ -181,19 +196,76 @@ CATEGORY_MAP: dict[str, Any] = {
 
 # Description-based fallback patterns (case-insensitive substring match, first wins).
 # None means exclude from spending entirely.
+BASE_INCOME: float = 2440.0
+DEFAULT_EXTRA_INCOME: float = 100.0
+
+CATEGORY_GROUPS: dict[str, list[str]] = {
+    "Fixed": ["Rent", "Bills & Utilities", "Transport", "Subscriptions"],
+    "Essentials": ["Groceries", "Food & Coffee"],
+    "Discretionary": ["Eating Out & Social", "Entertainment", "Personal Care", "Other"],
+}
+
+SAVINGS_ACCOUNTS: list[dict] = [
+    {
+        "name": "LISA",
+        "patterns": ["lifetime isa", "moneybox", "lisa"],
+        "colour": "#FF1493",
+        "annual_bonus_rate": 0.25,  # 25% government bonus
+        "annual_bonus_cap": 4000.0,  # capped at £4k contributions/year
+        "default_balance": 24434.88,
+    },
+    {
+        "name": "AJ Bell",
+        "patterns": ["aj bell"],
+        "colour": "#9B30FF",
+        "annual_return_rate": 0.07,  # estimated 7% blended return
+        "default_balance": 7119.36,
+    },
+    {
+        "name": "Premium Bonds",
+        "patterns": ["ns&i", "premium bonds"],
+        "colour": "#FFD700",
+        "annual_prize_rate": 0.044,  # 4.4% average annual prize rate
+        "default_balance": 1025.0,
+    },
+    {
+        "name": "Atom",
+        "patterns": ["atom"],
+        "colour": "#FF6B00",
+        "annual_return_rate": 0.05,  # 5% fixed-rate savings
+        "default_balance": 0.0,
+    },
+    {
+        "name": "Nationwide",
+        "patterns": ["nationwide sav", "flex saver"],
+        "colour": "#00B4D8",
+        "annual_return_rate": 0.045,  # ~4.5% easy-access rate
+        "default_balance": 1000.0,
+    },
+]
+
+SAVINGS_PATTERNS: list[str] = [
+    p for acc in SAVINGS_ACCOUNTS for p in acc["patterns"]
+] + ["bonds"]
+
 DESCRIPTION_PATTERNS: list[tuple[str, str | None]] = [
     # ── Exclude: internal transfers, savings movements ───────────────────────
     ("left-over monthly", None),  # Monzo internal rounding
     ("transfer to", None),
     ("transfer from", None),
     ("payment to henry crosswell", None),
+    ("payment received", None),  # Amex credit-card payment confirmation
     ("american express", None),  # Nationwide paying off Amex balance
     ("ns&i", None),
     ("aj bell", None),
     ("premium bonds", None),
     ("atom", None),  # savings transfers to Atom
+    ("moneybox", None),  # Moneybox LISA/ISA
+    ("lifetime isa", None),  # generic LISA transfers
+    ("flex saver", None),  # Nationwide Flex Saver
+    ("nationwide sav", None),  # Nationwide savings account
     # ── Rent ─────────────────────────────────────────────────────────────────
-    ("ashtons", "Rent"),
+    ("ashton", "Rent"),
     # ── User-confirmed Nationwide payees ─────────────────────────────────────
     ("amrit.kaur", "Bills & Utilities"),  # GF council tax repayment (dominant) + misc
     ("stalbans.gov", "Transport"),  # St Albans parking permit

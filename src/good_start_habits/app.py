@@ -8,7 +8,7 @@ from datetime import date, datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
-from flask import Flask, abort, redirect, render_template, request, url_for
+from flask import Flask, abort, jsonify, redirect, render_template, request, url_for
 
 from good_start_habits import budget as budget_module  # noqa: E402
 from good_start_habits import truelayer  # noqa: E402
@@ -17,7 +17,15 @@ from good_start_habits.config import (
     PROVIDER_BUDGET_LIMITS,
     ROTATION_INTERVAL,
 )  # noqa: E402
-from good_start_habits.db import get_db, init_db  # noqa: E402
+from good_start_habits.config import SAVINGS_ACCOUNTS  # noqa: E402
+from good_start_habits.db import (  # noqa: E402
+    get_budget_settings,
+    get_db,
+    get_savings_baselines,
+    init_db,
+    save_budget_settings,
+    save_savings_baseline,
+)
 from good_start_habits.habits import (  # noqa: E402
     check_current_datetime,
     daily_maintenance,
@@ -163,17 +171,31 @@ def auth_disconnect(provider: str):
 @app.route("/budget")
 def budget():
     db = get_db()
+    budget_module.load_overrides(db)
     status = truelayer.get_connection_status(db)
 
     today = date.today()
     view = request.args.get("view", "month")
     projection = request.args.get("projection", "") == "on"
     active_provider = request.args.get("provider", "all")
+    offset = max(-1, min(0, int(request.args.get("offset", "0"))))
+
+    if offset == -1:
+        if today.month == 1:
+            disp_year, disp_month = today.year - 1, 12
+        else:
+            disp_year, disp_month = today.year, today.month - 1
+    else:
+        disp_year, disp_month = today.year, today.month
+
+    settings = get_budget_settings(db, disp_year, disp_month)
+    income = settings["base_income"] + settings["extra_income"]
+    savings_baselines = get_savings_baselines(db, disp_year, disp_month)
 
     if view == "year":
-        since = datetime(today.year, 1, 1, tzinfo=timezone.utc)
+        since = datetime(disp_year, 1, 1, tzinfo=timezone.utc)
     else:
-        since = datetime(today.year, today.month, 1, tzinfo=timezone.utc)
+        since = datetime(disp_year, disp_month, 1, tzinfo=timezone.utc)
 
     connected_providers = [p for p in truelayer.PROVIDERS if status[p] == "connected"]
 
@@ -184,26 +206,61 @@ def budget():
         provider_transactions[provider] = txns
         all_transactions.extend(txns)
 
-    def _build(txns: list[dict], cat_limits=None) -> tuple[dict, dict | None]:
+    def _build(txns: list[dict], cat_limits=None, txn_income=None, sav_baselines=None):
         if view == "year":
             return budget_module.build_yearly_charts(
-                txns, today.year, projection, cat_limits
+                txns, disp_year, projection, cat_limits
             ), None
         return (
             budget_module.build_monthly_charts(
-                txns, today.year, today.month, projection, cat_limits
+                txns,
+                disp_year,
+                disp_month,
+                projection,
+                cat_limits,
+                baselines=sav_baselines,
             ),
-            budget_module.monthly_summary(txns, today.year, today.month, cat_limits),
+            budget_module.monthly_summary(
+                txns, disp_year, disp_month, cat_limits, income=txn_income
+            ),
         )
 
     views: dict[str, dict] = {"all": {}}
-    views["all"]["charts"], views["all"]["summary"] = _build(all_transactions)
+    views["all"]["charts"], views["all"]["summary"] = _build(
+        all_transactions, txn_income=income, sav_baselines=savings_baselines
+    )
     for provider, txns in provider_transactions.items():
         c, s = _build(txns, PROVIDER_BUDGET_LIMITS.get(provider))
         views[provider] = {"charts": c, "summary": s}
 
     if active_provider not in views:
         active_provider = "all"
+
+    # Per-provider breakdown for left panel: expected vs error spend
+    provider_breakdowns: dict[str, dict] = {}
+    for p in connected_providers:
+        psummary = views[p].get("summary") if views.get(p) else None
+        plimits = PROVIDER_BUDGET_LIMITS.get(p, {})
+        pcats = (psummary or {}).get("categories", [])
+        expected = [c for c in pcats if c["name"] in plimits]
+        error_cats = [c for c in pcats if c["name"] not in plimits and c["spent"] > 0]
+        provider_breakdowns[p] = {
+            "categories": expected,
+            "error_cats": error_cats,
+            "error_total": round(sum(c["spent"] for c in error_cats), 2),
+        }
+
+    wrong_card_charts: dict[str, str] = {}
+    if view == "month":
+        for p in connected_providers:
+            pdata = provider_breakdowns[p]
+            error_names = [c["name"] for c in pdata["error_cats"]]
+            if error_names:
+                wc = budget_module.build_wrong_card_chart(
+                    provider_transactions[p], disp_year, disp_month, error_names
+                )
+                if wc:
+                    wrong_card_charts[p] = wc
 
     charts = views[active_provider]["charts"]
     summary = views[active_provider]["summary"]
@@ -215,10 +272,18 @@ def budget():
         recent_txn_source = {
             active_provider: provider_transactions.get(active_provider, [])
         }
-    recent_transactions = budget_module.get_recent_transactions(recent_txn_source)
-    category_transactions = budget_module.get_all_transactions_by_category(
-        recent_txn_source
+    txn_year = disp_year if view == "month" else None
+    txn_month = disp_month if view == "month" else None
+    recent_transactions = budget_module.get_recent_transactions(
+        recent_txn_source, year=txn_year, month=txn_month
     )
+    category_transactions = budget_module.get_all_transactions_by_category(
+        recent_txn_source, year=txn_year, month=txn_month
+    )
+
+    import calendar as _cal
+
+    display_month = f"{_cal.month_name[disp_month].upper()} {disp_year}"
 
     return render_template(
         "budget.html",
@@ -233,6 +298,99 @@ def budget():
         active_provider=active_provider,
         recent_transactions=recent_transactions,
         category_transactions=category_transactions,
+        offset=offset,
+        display_month=display_month,
+        disp_year=disp_year,
+        disp_month=disp_month,
+        settings=settings,
+        dwell_time=DWELL_TIME,
+        all_categories=budget_module.ALL_CATEGORY_NAMES,
+        provider_breakdowns=provider_breakdowns,
+        savings_accounts=[
+            {
+                "name": acc["name"],
+                "baseline": savings_baselines.get(acc["name"], 0.0),
+                "colour": acc["colour"],
+            }
+            for acc in SAVINGS_ACCOUNTS
+        ],
+        wrong_card_charts=wrong_card_charts,
+    )
+
+
+@app.route("/budget/settings", methods=["POST"])
+def budget_settings_save():
+    db = get_db()
+    _today = date.today()
+    year = int(request.form.get("year", _today.year))
+    month = int(request.form.get("month", _today.month))
+    try:
+        base_income = float(request.form.get("base_income", 2440.0))
+        extra_income = float(request.form.get("extra_income", 100.0))
+    except ValueError:
+        base_income, extra_income = 2440.0, 100.0
+    notes = request.form.get("notes", "")
+    save_budget_settings(db, year, month, base_income, extra_income, notes)
+    offset = request.form.get("offset", "0")
+    return redirect(
+        url_for(
+            "budget",
+            view=request.form.get("view", "month"),
+            provider=request.form.get("provider", "all"),
+            offset=offset,
+        )
+    )
+
+
+@app.route("/budget/reclassify", methods=["POST"])
+def budget_reclassify():
+    db = get_db()
+    description = request.form.get("description", "").lower().strip()
+    category = request.form.get("category", "").strip()
+    if description and category:
+        db.execute(
+            "INSERT INTO category_overrides (description_lower, category)"
+            " VALUES (?, ?) ON CONFLICT(description_lower) DO UPDATE SET"
+            " category = excluded.category",
+            (description, category),
+        )
+        db.commit()
+    return redirect(
+        url_for(
+            "budget",
+            view=request.form.get("view", "month"),
+            provider=request.form.get("provider", "all"),
+            offset=request.form.get("offset", "0"),
+            flash="recategorized",
+        )
+    )
+
+
+# ---------------------------------------------------------------------------
+# Savings baselines
+# ---------------------------------------------------------------------------
+
+
+@app.route("/budget/savings-baseline", methods=["POST"])
+def budget_savings_baseline():
+    db = get_db()
+    _today = date.today()
+    year = int(request.form.get("year", _today.year))
+    month = int(request.form.get("month", _today.month))
+    for acc in SAVINGS_ACCOUNTS:
+        key = "baseline_" + acc["name"].replace(" ", "_").lower()
+        try:
+            balance = float(request.form.get(key, 0.0))
+        except ValueError:
+            balance = 0.0
+        save_savings_baseline(db, acc["name"], year, month, balance)
+    return redirect(
+        url_for(
+            "budget",
+            view=request.form.get("view", "month"),
+            provider=request.form.get("provider", "all"),
+            offset=request.form.get("offset", "0"),
+        )
     )
 
 
@@ -244,3 +402,29 @@ def budget():
 @app.route("/debug")
 def debug():
     return render_template("debug.html")
+
+
+@app.route("/debug/transactions/<provider>")
+def debug_transactions(provider: str):
+    """Dump raw TrueLayer transaction descriptions and classifications."""
+    from good_start_habits.budget import map_category
+
+    db = get_db()
+    txns = truelayer.get_transactions(db, provider)
+    out = []
+    for t in txns:
+        classification = t.get("transaction_classification", [])
+        description = t.get("description", "")
+        amount = t.get("amount", 0)
+        mapped = map_category(classification, description, abs(amount), provider)
+        out.append(
+            {
+                "date": t.get("timestamp", "")[:10],
+                "description": description,
+                "classification": classification,
+                "amount": amount,
+                "mapped_category": mapped,
+            }
+        )
+    out.sort(key=lambda x: x["date"], reverse=True)
+    return jsonify(out)

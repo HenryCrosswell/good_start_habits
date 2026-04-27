@@ -17,7 +17,7 @@ html, body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 110vh;
     overflow: hidden;
     background: #FFFFFF;
 }
@@ -61,8 +61,8 @@ html, body {
 }
 
 #clock {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 17vw;
+    font-family: 'Limelight', monospace;
+    font-size: 26vw;
     line-height: 1;
     letter-spacing: -0.03em;
     color: #9B30FF;
@@ -214,6 +214,9 @@ html, body {
     requestAnimationFrame(scrollSquiggles);
 
     var rotation = Number(document.getElementById('clock').dataset.rotation);
-    if (rotation > 0) ptNavigate('/habits', 'random', rotation);
+    if (rotation > 0) {
+        var dest = Math.random() < 0.5 ? '/budget' : '/habits';
+        ptNavigate(dest, 'random', rotation);
+    }
 </script>
 {% endblock %}
