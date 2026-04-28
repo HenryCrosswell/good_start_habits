@@ -17,4 +17,4 @@ EXPOSE 5000
 
 # dashboard.db and .env are expected to be bind-mounted at runtime:
 #   docker run -v $(pwd)/dashboard.db:/app/dashboard.db --env-file .env ...
-CMD ["sh", "-c", "flask run --port ${PORT:-5000}"]
+CMD ["sh", "-c", "flask run --port ${PORT:-8080}"]
