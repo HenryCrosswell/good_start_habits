@@ -1057,6 +1057,38 @@ html, body {
             </div>
             {% endif %}
             {% endfor %}
+            {% if sinking_fund_cats and view == 'month' %}
+            <div class="cat-group-hdr" style="color:#9B30FF;">// SINKING FUND</div>
+            {% for cat in sinking_fund_cats %}
+            <div class="cat-item" data-cat="{{ cat.name }}"
+                 onclick="selectCatByName('{{ cat.name }}')"
+                 style="--cat-colour:#9B30FF;">
+                <div class="cat-top-row">
+                    <div class="cat-dot-name">
+                        <span class="cat-dot" style="background:#9B30FF;"></span>
+                        {{ cat.name | upper }}
+                    </div>
+                    <div class="cat-amounts">
+                        {% if cat.spent > 0 %}<span class="spent">£{{ "%.0f"|format(cat.spent) }}</span>/{% endif %}
+                        <span style="color:#9B30FF;">£{{ "%.2f"|format(cat.budget) }}</span>
+                    </div>
+                </div>
+                {% if cat.spent > 0 %}
+                <div class="cat-track">
+                    <div class="cat-fill {% if cat.pct_used > 100 %}over{% endif %}"
+                         style="width:{{ [cat.pct_used, 100]|min }}%; background:#9B30FF;"></div>
+                </div>
+                <div class="cat-rem {% if cat.remaining < 0 %}over{% endif %}">
+                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT
+                    {% else %}£{{ "%.0f"|format(cat.remaining | abs) }} OVER{% endif %}
+                </div>
+                {% else %}
+                <div class="cat-rem" style="color:#9B30FF80;">£{{ "%.2f"|format(cat.budget) }}/MO</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% endif %}
+
             {% if summary and summary.total_savings is defined %}
             <div class="cat-group-hdr" style="color:#00C851;">// SAVINGS</div>
             <div class="cat-item" data-cat="Savings"

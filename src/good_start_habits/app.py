@@ -13,6 +13,7 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, url
 from good_start_habits import budget as budget_module  # noqa: E402
 from good_start_habits import truelayer  # noqa: E402
 from good_start_habits.config import (
+    CATEGORY_GROUPS,
     DWELL_TIME,
     PROVIDER_BUDGET_LIMITS,
     ROTATION_INTERVAL,
@@ -238,13 +239,20 @@ def budget():
         active_provider = "all"
 
     # Per-provider breakdown for left panel: expected vs error spend
+    sf_cat_names = set(CATEGORY_GROUPS.get("Sinking Fund", []))
     provider_breakdowns: dict[str, dict] = {}
     for p in connected_providers:
         psummary = views[p].get("summary") if views.get(p) else None
         plimits = PROVIDER_BUDGET_LIMITS.get(p, {})
         pcats = (psummary or {}).get("categories", [])
         expected = [c for c in pcats if c["name"] in plimits]
-        error_cats = [c for c in pcats if c["name"] not in plimits and c["spent"] > 0]
+        error_cats = [
+            c
+            for c in pcats
+            if c["name"] not in plimits
+            and c["spent"] > 0
+            and c["name"] not in sf_cat_names
+        ]
         provider_breakdowns[p] = {
             "categories": expected,
             "error_cats": error_cats,
@@ -286,6 +294,15 @@ def budget():
 
     display_month = f"{_cal.month_name[disp_month].upper()} {disp_year}"
 
+    sf_order = CATEGORY_GROUPS.get("Sinking Fund", [])
+    all_summary = views["all"].get("summary") or {}
+    sinking_fund_cats = [
+        c for c in (all_summary.get("categories") or []) if c["name"] in sf_cat_names
+    ]
+    sinking_fund_cats.sort(
+        key=lambda c: sf_order.index(c["name"]) if c["name"] in sf_order else 999
+    )
+
     return render_template(
         "budget.html",
         status=status,
@@ -316,6 +333,7 @@ def budget():
             for acc in SAVINGS_ACCOUNTS
         ],
         wrong_card_charts=wrong_card_charts,
+        sinking_fund_cats=sinking_fund_cats,
     )
 
 
