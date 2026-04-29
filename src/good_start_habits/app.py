@@ -286,14 +286,27 @@ def budget():
         recent_txn_source = {
             active_provider: provider_transactions.get(active_provider, [])
         }
-    txn_year = disp_year if view == "month" else None
-    txn_month = disp_month if view == "month" else None
+    txn_year = disp_year if view in ("month", "sort") else None
+    txn_month = disp_month if view in ("month", "sort") else None
+    sf_starts = (
+        budget_module.sf_period_starts_for_month(disp_year, disp_month)
+        if view in ("month", "sort")
+        else {}
+    )
     recent_transactions = budget_module.get_recent_transactions(
         recent_txn_source, year=txn_year, month=txn_month
     )
     category_transactions = budget_module.get_all_transactions_by_category(
-        recent_txn_source, year=txn_year, month=txn_month
+        recent_txn_source, year=txn_year, month=txn_month, sf_period_starts=sf_starts
     )
+    uncategorized_txns = (
+        budget_module.get_uncategorized_transactions(
+            recent_txn_source, year=txn_year, month=txn_month
+        )
+        if view == "sort"
+        else []
+    )
+    total_uncategorized = round(sum(t["amount"] for t in uncategorized_txns), 2)  # noqa: F841
 
     import calendar as _cal
 
@@ -350,6 +363,8 @@ def budget():
         ],
         wrong_card_charts=wrong_card_charts,
         sinking_fund_cats=sinking_fund_cats,
+        uncategorized_txns=uncategorized_txns,
+        total_uncategorized=total_uncategorized,
     )
 
 

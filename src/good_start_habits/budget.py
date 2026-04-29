@@ -2,6 +2,7 @@
 
 import calendar
 import json
+import re
 from calendar import monthrange
 from datetime import date, datetime
 from typing import Any
@@ -318,7 +319,7 @@ def _add_burn_rate_monthly(
                 mode="lines",
                 line={
                     "color": colour,
-                    "width": 2.5,
+                    "width": 4,
                     "shape": "spline",
                     "smoothing": 0.7,
                 },
@@ -411,7 +412,12 @@ def build_savings_chart(
                 y=cumulative,
                 name=acc_name,
                 mode="lines",
-                line={"color": colour, "width": 2, "shape": "spline", "smoothing": 0.5},
+                line={
+                    "color": colour,
+                    "width": 3.5,
+                    "shape": "spline",
+                    "smoothing": 0.5,
+                },
                 hovertemplate=f"<b>{acc_name}</b>: £%{{y:,.0f}}<extra></extra>",
             )
         )
@@ -439,7 +445,7 @@ def build_savings_chart(
                     x=[days_so_far, days_in_month],
                     y=[running, proj_end],
                     mode="lines",
-                    line={"color": colour, "dash": "dot", "width": 1.5},
+                    line={"color": colour, "dash": "dot", "width": 2.5},
                     showlegend=False,
                     hoverinfo="skip",
                 )
@@ -462,7 +468,7 @@ def build_savings_chart(
                 mode="lines",
                 line={
                     "color": "#FFE600",
-                    "width": 4,
+                    "width": 5.5,
                     "shape": "spline",
                     "smoothing": 0.5,
                 },
@@ -576,7 +582,12 @@ def build_wrong_card_chart(
                 y=cumulative,
                 name=cat,
                 mode="lines",
-                line={"color": colour, "width": 2, "shape": "spline", "smoothing": 0.5},
+                line={
+                    "color": colour,
+                    "width": 3.5,
+                    "shape": "spline",
+                    "smoothing": 0.5,
+                },
                 hovertemplate=f"<b>{cat}</b>: £%{{y:,.0f}}<extra></extra>",
             )
         )
@@ -686,7 +697,7 @@ def build_monthly_charts(
                 y=sav_cumulative,
                 name="Savings",
                 mode="lines",
-                line={"color": "#00C851", "width": 2.5, "dash": "dot"},
+                line={"color": "#00C851", "width": 4, "dash": "dot"},
                 hovertemplate="<b>Savings</b>: £%{y:.0f}<extra></extra>",
             )
         )
@@ -702,7 +713,7 @@ def build_monthly_charts(
                     x=[days_so_far, days_in_month],
                     y=[sav_running, projected_sav],
                     mode="lines",
-                    line={"color": "#00C851", "dash": "dash", "width": 1.5},
+                    line={"color": "#00C851", "dash": "dash", "width": 2.5},
                     showlegend=False,
                     hoverinfo="skip",
                 )
@@ -931,8 +942,8 @@ def build_yearly_charts(
                 y=cumulative,
                 name=cat,
                 mode="lines+markers",
-                line={"color": colour, "width": 2.5},
-                marker={"size": 5},
+                line={"color": colour, "width": 4},
+                marker={"size": 7},
                 hovertemplate=f"<b>{cat}</b>: £%{{y:.0f}}<extra></extra>",
             )
         )
@@ -1210,20 +1221,29 @@ def get_recent_transactions(
     return annotated[:limit]
 
 
+def sf_period_starts_for_month(year: int, month: int) -> dict[str, tuple[int, int]]:
+    """Return {cat_name: (start_year, start_month)} for all SF categories with defined resets."""
+    return {cat: _sf_period_start(year, month, cat) for cat in SINKING_FUND_RESETS}
+
+
 def get_all_transactions_by_category(
     provider_transactions: dict[str, list[dict]],
     year: int | None = None,
     month: int | None = None,
+    sf_period_starts: dict[str, tuple[int, int]] | None = None,
 ) -> dict[str, list[dict]]:
-    """Return all spending transactions grouped by personal category, date descending."""
+    """Return all spending transactions grouped by personal category, date descending.
+
+    For sinking-fund categories, sf_period_starts widens the date window back to the
+    period start so transactions from prior months are included in the list.
+    """
     month_prefix = f"{year:04d}-{month:02d}" if year and month else None
     by_cat: dict[str, list[dict]] = {}
     for provider, txns in provider_transactions.items():
         for t in txns:
             if t.get("amount", 0) >= 0:
                 continue
-            if month_prefix and t.get("timestamp", "")[:7] != month_prefix:
-                continue
+            ts = t.get("timestamp", "")[:7]
             cat = map_category(
                 t.get("transaction_classification", []),
                 t.get("description", ""),
@@ -1232,6 +1252,14 @@ def get_all_transactions_by_category(
             )
             if cat is None:
                 continue
+            if month_prefix:
+                if sf_period_starts and cat in sf_period_starts:
+                    sy, sm = sf_period_starts[cat]
+                    start_prefix = f"{sy:04d}-{sm:02d}"
+                    if ts < start_prefix or ts > month_prefix:
+                        continue
+                elif ts != month_prefix:
+                    continue
             entry = {
                 "description": _clean_desc(t.get("description", "Unknown")),
                 "amount": round(abs(t.get("amount", 0)), 2),
@@ -1243,3 +1271,42 @@ def get_all_transactions_by_category(
     for cat in by_cat:
         by_cat[cat].sort(key=lambda x: x["date"], reverse=True)
     return by_cat
+
+
+def get_uncategorized_transactions(
+    provider_transactions: dict[str, list[dict]],
+    year: int | None = None,
+    month: int | None = None,
+) -> list[dict]:
+    """Return all transactions mapped to 'Other', date descending."""
+    month_prefix = f"{year:04d}-{month:02d}" if year and month else None
+    result = []
+    for provider, txns in provider_transactions.items():
+        for t in txns:
+            if t.get("amount", 0) >= 0:
+                continue
+            if month_prefix and t.get("timestamp", "")[:7] != month_prefix:
+                continue
+            if _is_sinking_fund(t.get("description", "")):
+                continue
+            cat = map_category(
+                t.get("transaction_classification", []),
+                t.get("description", ""),
+                abs(t.get("amount", 0.0)),
+                t.get("_provider", provider),
+            )
+            if cat != "Other":
+                continue
+            raw = t.get("description", "")
+            rule_desc = re.sub(r"\s+\d{4}-\d{2}-\d{2}\s*$", "", raw).lower().strip()
+            result.append(
+                {
+                    "description": _clean_desc(raw or "Unknown"),
+                    "raw_description": rule_desc,
+                    "amount": round(abs(t.get("amount", 0)), 2),
+                    "date": t.get("timestamp", "")[:10],
+                    "provider": provider,
+                }
+            )
+    result.sort(key=lambda x: x["date"], reverse=True)
+    return result

@@ -221,7 +221,7 @@ html, body {
 
 .stat-label {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.36rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: #888888;
@@ -248,7 +248,7 @@ html, body {
 .cat-list-header {
     padding: 0.4rem 0.8rem;
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.36rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: #888888;
@@ -516,7 +516,7 @@ html, body {
 }
 .txn-title {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.36rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: #888888;
@@ -556,7 +556,7 @@ html, body {
     align-items: center;
     justify-content: center;
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.28rem;
+    font-size: 0.65rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     border: 2px solid #111111;
@@ -632,7 +632,7 @@ html, body {
 .mnav-btn.active { background: #00B4D8; color: #111111; }
 .mnav-label {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.45rem;
+    font-size: 0.75rem;
     letter-spacing: 0.06em;
     color: #111111;
     padding: 0 0.3em;
@@ -663,7 +663,7 @@ html, body {
 }
 .sf-label {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.36rem;
+    font-size: 0.7rem;
     color: #FFE600;
     letter-spacing: 0.08em;
     display: flex;
@@ -718,7 +718,7 @@ html, body {
 }
 .edit-panel-title {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.45rem;
+    font-size: 0.85rem;
     color: #FFE600;
     letter-spacing: 0.1em;
     margin-bottom: 0.9rem;
@@ -744,7 +744,7 @@ html, body {
 }
 .edit-panel-lbl {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.33rem;
+    font-size: 0.75rem;
     color: #888888;
     letter-spacing: 0.08em;
     flex-shrink: 0;
@@ -766,8 +766,8 @@ html, body {
 }
 .edit-btn {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.33rem;
-    padding: 0.45em 0.8em;
+    font-size: 0.85rem;
+    padding: 0.35em 0.8em;
     border: 2px solid transparent;
     cursor: pointer;
     letter-spacing: 0.06em;
@@ -785,7 +785,7 @@ html, body {
 /* Edit button on transaction rows (appears on hover) */
 .txn-edit-btn {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.27rem;
+    font-size: 0.75rem;
     padding: 0.25em 0.5em;
     border: 1.5px solid #CCCCCC;
     background: #FFFFFF;
@@ -803,7 +803,7 @@ html, body {
 /* Sinking-fund toggle button */
 .txn-sf-btn {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.27rem;
+    font-size: 0.75rem;
     padding: 0.25em 0.55em;
     border: 1.5px solid #9B30FF;
     background: #FFFFFF;
@@ -848,6 +848,120 @@ html, body {
 }
 .flash.ok  { background: #00C851; color: #FFFFFF; }
 .flash.err { background: #FF1493; color: #FFFFFF; }
+
+/* ── Sort / categorise view ──────────────────────────────── */
+.sort-panel {
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sort-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.9rem;
+    border-bottom: 2px solid #EEEEEE;
+    flex-shrink: 0;
+    background: #FAFAFA;
+}
+.sort-title {
+    font-family: 'VT323', monospace;
+    font-size: 1.15rem;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    color: #111111;
+}
+.sort-meta {
+    font-family: 'VT323', monospace;
+    font-size: 0.95rem;
+    color: #888888;
+    letter-spacing: 0.04em;
+}
+.sort-list {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #DDDDDD transparent;
+}
+.sort-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.9rem;
+    border-bottom: 1px solid #F0F0F0;
+}
+.sort-row:last-child { border-bottom: none; }
+.sort-desc {
+    flex: 1;
+    font-family: 'VT323', monospace;
+    font-size: 1.05rem;
+    color: #111111;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sort-form {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+.sort-select {
+    font-family: 'VT323', monospace;
+    font-size: 0.95rem;
+    background: #FFFFFF;
+    color: #111111;
+    border: 2px solid #111111;
+    padding: 0.1em 0.4em;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #111111;
+    max-width: 180px;
+}
+.sort-save-btn {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.75rem;
+    padding: 0.25em 0.6em;
+    border: 2px solid #007830;
+    background: #00C851;
+    color: #FFFFFF;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    box-shadow: 2px 2px 0 #007830;
+    white-space: nowrap;
+    transition: transform 0.07s, box-shadow 0.07s;
+}
+.sort-save-btn:hover { transform: translate(2px,2px); box-shadow: 0 0 0 #007830; }
+.sort-stat-cell {
+    background: #FFFFFF;
+    padding: 0.8rem 0.8rem 0.6rem;
+    border-bottom: 2px solid #111111;
+    text-align: center;
+}
+.sort-stat-big {
+    font-family: 'VT323', monospace;
+    font-size: 2.5rem;
+    color: #FF6B00;
+    line-height: 1;
+}
+.sort-stat-lbl {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888888;
+    margin-top: 0.2em;
+}
+.sort-hint {
+    padding: 1.2rem 0.9rem;
+    font-family: 'VT323', monospace;
+    font-size: 0.95rem;
+    color: #AAAAAA;
+    letter-spacing: 0.05em;
+    line-height: 1.8;
+    text-align: center;
+}
 </style>
 {% endblock %}
 
@@ -892,6 +1006,9 @@ html, body {
         <div class="header-sep"></div>
 
         <div class="nav-group">
+            <a href="/budget?view=sort&provider={{ active_provider }}&offset={{ offset }}"
+               class="btn-link {% if view == 'sort' %}active{% endif %}"
+               style="{% if view == 'sort' %}background:#FF6B00;color:#FFFFFF;{% endif %}">&#9998; SORT</a>
         </div>
 
         <div class="month-nav">
@@ -950,7 +1067,60 @@ html, body {
         </form>
     </div>
 
-    {% if charts %}
+    {% if view == 'sort' %}
+
+    <!-- ── Sort / categorise view ───────────────────────────── -->
+    <div class="left-panel">
+        <div class="sort-stat-cell">
+            <div class="sort-stat-big">{{ uncategorized_txns | length }}</div>
+            <div class="sort-stat-lbl">Unsorted this month</div>
+        </div>
+        <div class="sort-stat-cell" style="border-bottom:3px solid #111111;">
+            <div class="sort-stat-big" style="font-size:2rem;">£{{ "%.0f"|format(total_uncategorized) }}</div>
+            <div class="sort-stat-lbl">Total unsorted</div>
+        </div>
+        <div class="sort-hint">
+            USE THE DROPDOWNS<br>TO ASSIGN EACH<br>TRANSACTION A CATEGORY.<br><br>
+            SAVE RULE APPLIES<br>TO ALL FUTURE<br>MATCHING TRANSACTIONS.
+        </div>
+    </div>
+    <div class="right-panel sort-panel">
+        <div class="sort-header">
+            <span class="sort-title">// UNSORTED — {{ display_month }}</span>
+            <a href="/budget?view=month&provider={{ active_provider }}&offset={{ offset }}" class="btn-link">&#8592; BACK</a>
+        </div>
+        <div class="sort-list">
+            {% if uncategorized_txns %}
+            {% for txn in uncategorized_txns %}
+            <div class="sort-row">
+                <div class="txn-chip {{ txn.provider }}">{{ txn.provider[:3] | upper }}</div>
+                <div class="sort-desc" title="{{ txn.description | upper }}">{{ txn.description | upper }}</div>
+                <div class="txn-date">{{ txn.date }}</div>
+                <div class="txn-amount">£{{ "%.2f"|format(txn.amount) }}</div>
+                <form method="post" action="/budget/reclassify" class="sort-form">
+                    <input type="hidden" name="description" value="{{ txn.raw_description }}">
+                    <input type="hidden" name="view" value="sort">
+                    <input type="hidden" name="provider" value="{{ active_provider }}">
+                    <input type="hidden" name="offset" value="{{ offset }}">
+                    <select name="category" class="sort-select" required>
+                        <option value="" disabled selected>— PICK —</option>
+                        {% for cat in all_categories %}
+                        <option value="{{ cat }}">{{ cat | upper }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="sort-save-btn">SAVE RULE</button>
+                </form>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                ALL CLEAN — NO UNSORTED TRANSACTIONS THIS MONTH.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% elif charts %}
 
     <!-- ── Left panel ─────────────────────────────────────── -->
     <div class="left-panel">
@@ -1031,9 +1201,9 @@ html, body {
                          style="width:{{ [cat.pct_used, 100]|min }}%; background:{{ colour }};"></div>
                 </div>
                 <div class="cat-rem {% if cat.remaining < 0 %}over{% endif %}">
-                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT
-                    {% else %}£{{ "%.0f"|format(cat.remaining | abs) }} OVER{% endif %}
-                </div>
+                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT{% if cat.next_reset %} · RESETS {{ cat.next_reset | upper }}{% endif %}
+        {% else %}£{{ "%.0f"|format(cat.remaining | abs) }} OVER{% if cat.next_reset %} · RESETS {{ cat.next_reset | upper }}{% endif %}{% endif %}
+    </div>
                 {% endif %}
             </div>
             {% endif %}
@@ -1407,7 +1577,7 @@ html, body {
                 traces.push({
                     x: cat.x, y: cat.y,
                     type: 'scatter', mode: 'lines',
-                    line: { color: '#00C851', width: 3.5, shape: 'spline', smoothing: 0.6 },
+                    line: { color: '#00C851', width: 5, shape: 'spline', smoothing: 0.6 },
                     hovertemplate: '£%{y:.0f} saved<extra></extra>',
                 });
             } else {
@@ -1415,13 +1585,13 @@ html, body {
                 if (split.posX.length) traces.push({
                     x: split.posX, y: split.posY,
                     type: 'scatter', mode: 'lines',
-                    line: { color: '#00C851', width: 3.5, shape: 'spline', smoothing: 0.6 },
+                    line: { color: '#00C851', width: 5, shape: 'spline', smoothing: 0.6 },
                     hovertemplate: '£%{y:.0f} left<extra></extra>',
                 });
                 if (split.negX.length) traces.push({
                     x: split.negX, y: split.negY,
                     type: 'scatter', mode: 'lines',
-                    line: { color: '#FF1493', width: 3.5, shape: 'spline', smoothing: 0.6 },
+                    line: { color: '#FF1493', width: 5, shape: 'spline', smoothing: 0.6 },
                     hovertemplate: '£%{y:.0f}<extra></extra>',
                 });
             }
@@ -1430,7 +1600,7 @@ html, body {
                 traces.push({
                     x: cat.proj.x, y: cat.proj.y,
                     type: 'scatter', mode: 'lines',
-                    line: { color: pColour, dash: 'dot', width: 2 },
+                    line: { color: pColour, dash: 'dot', width: 3 },
                     hoverinfo: 'skip', showlegend: false,
                 });
             }
@@ -1523,10 +1693,10 @@ html, body {
         var newCat = document.getElementById('edit-cat-select').value;
         if (_editTxnIdx < 0) return;
         var t = _editTxnBank[_editTxnIdx];
-        /* remove from original category list */
+        /* remove by reference so provider-filtered indices don't corrupt full list */
         if (catTxns[_editOrigCat]) {
-            catTxns[_editOrigCat] = catTxns[_editOrigCat].filter(function (_, i) {
-                return i !== _editTxnIdx;
+            catTxns[_editOrigCat] = catTxns[_editOrigCat].filter(function (x) {
+                return x !== t;
             });
         }
         /* add to new category */
