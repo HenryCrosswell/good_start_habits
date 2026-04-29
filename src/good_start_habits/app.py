@@ -17,6 +17,7 @@ from good_start_habits.config import (
     DWELL_TIME,
     PROVIDER_BUDGET_LIMITS,
     ROTATION_INTERVAL,
+    SINKING_FUND_RESETS,
 )  # noqa: E402
 from good_start_habits.config import SAVINGS_ACCOUNTS  # noqa: E402
 from good_start_habits.db import (  # noqa: E402
@@ -300,8 +301,19 @@ def budget():
 
     sf_order = CATEGORY_GROUPS.get("Sinking Fund", [])
     all_summary = views["all"].get("summary") or {}
+
+    def _next_reset_month(cat_name: str, current_month: int) -> str:
+        resets = SINKING_FUND_RESETS.get(cat_name, [])
+        if not resets:
+            return ""
+        future = [m for m in resets if m > current_month]
+        next_m = min(future) if future else min(resets)
+        return _cal.month_name[next_m]
+
     sinking_fund_cats = [
-        c for c in (all_summary.get("categories") or []) if c["name"] in sf_cat_names
+        {**c, "next_reset": _next_reset_month(c["name"], disp_month)}
+        for c in (all_summary.get("categories") or [])
+        if c["name"] in sf_cat_names
     ]
     sinking_fund_cats.sort(
         key=lambda c: sf_order.index(c["name"]) if c["name"] in sf_order else 999

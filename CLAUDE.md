@@ -1,24 +1,14 @@
 # good-start-habits — CLAUDE.md
 
-A personal dashboard for tracking habits, fitness, and budget.
-Built in Python/Flask, runs in the browser now (WSL2), ports to Raspberry Pi later.
+A personal dashboard for tracking habits, fitness, and budget. Built in Python/Flask, deployed on Railway (Docker) and optionally on a Raspberry Pi as a kiosk.
 
 ---
 
-## Developer Context
+## Developer context
 
-- Experienced Python developer, first time using Flask and SQLite
+- Experienced Python developer, first time with Flask and SQLite
 - Explain Flask and SQLite patterns rather than assuming familiarity
 - Do not include code snippets in responses unless explicitly requested
-
----
-
-## Project Philosophy
-
-- One problem at a time
-- Working code at every phase — nothing half-built
-- No external dependencies until they're genuinely needed
-- Each phase builds directly on the last
 
 ---
 
@@ -26,195 +16,109 @@ Built in Python/Flask, runs in the browser now (WSL2), ports to Raspberry Pi lat
 
 | Thing | Choice | Why |
 |---|---|---|
-| Language | Python 3.12+ | Only language needed |
+| Language | Python 3.12+ | |
 | Web framework | Flask | Lightweight, Pi-friendly |
 | Templating | Jinja2 | Bundled with Flask |
 | Database | SQLite (`dashboard.db`) | Zero setup, local, Pi-friendly |
 | Graphs | Plotly (Python) | Renders in browser, no heavy deps |
-| Scheduling | APScheduler | Background jobs (token refresh etc.) |
-| Styling | Plain CSS in Jinja templates | No build step, no frameworks |
+| Scheduling | APScheduler | Background token refresh |
+| Production server | Gunicorn (1 worker, 4 threads) | Single worker keeps APScheduler simple |
+| Styling | Plain CSS | No build step, no frameworks |
 
 ---
 
-## Project Structure (target)
+## Project structure
 
 ```
 src/good_start_habits/
-├── __init__.py
-├── app.py                  # Flask app, all routes
-├── config.py               # Habits, active hours, active days per habit
-├── habits.py               # Streak logic (SQLite-backed)
-├── db.py                   # SQLite connection + schema
-├── templates/
-│   ├── base.html
-│   ├── standby.html
-│   ├── habits.html
-│   ├── fitness.html
-│   └── budget.html
-├── static/
-│   └── style.css
-├── strava.py
-├── hevy.py
-└── truelayer.py
+├── app.py          # Flask app and all route handlers
+├── config.py       # Everything user-configurable — habits, hours, budgets
+├── habits.py       # Streak logic: daily_maintenance, mark_done, check_current_datetime
+├── db.py           # SQLite connection management and schema creation
+├── budget.py       # Transaction categorisation and Plotly chart builders
+└── truelayer.py    # TrueLayer OAuth client and banking data API wrapper
+templates/
+├── base.html       # Shared skeleton, fonts, CSS variables
+├── clock.html      # Standby page with animated clock
+├── habits.html     # Daily habit checklist with streaks
+├── budget.html     # Budget dashboard with charts
+└── debug.html      # Page transition tester (dev only)
+static/
+├── style.css
+├── transitions.css # Keyframe animations for page transitions
+└── transitions.js  # Navigation system with randomised transition effects
+tests/
+├── test_db.py
+├── test_habits.py
+├── test_budget.py
+└── test_truelayer.py
 ```
 
 ---
 
-## Pages
+## Current state
 
-| Page | Route | Notes |
-|---|---|---|
-| Standby (clock) | `/` | Default view. Large clock + date. Rotates to habits during active hours. |
-| Habits | `/habits` | One button per habit, streak shown. Only shows habits relevant to today. |
-| Fitness | `/fitness` | Running (Strava) + weights (Hevy) graphs via Plotly |
-| Budget | `/budget` | Category budgets vs actual spend, burn-rate line graph, Monzo/Nationwide/Amex via TrueLayer |
+### Done
+- Flask scaffold + SQLite migration from Streamlit prototype
+- Standby clock with active hours per day of week
+- Habits checklist with streak tracking, undo, per-day visibility
+- Budget page: TrueLayer OAuth (Monzo, Nationwide, Amex), transaction categorisation, burn-rate line graphs, monthly/yearly views, projection, sinking fund tracking, savings baselines, wrong-card detection, inline reclassification
+- Docker + Gunicorn production setup
+- Railway deployment
 
----
-
-## Habits (defined in config.py)
-
-| Habit | When it appears | How it completes |
-|---|---|---|
-| SPF applied | Daily | Button |
-| Vitamins & Omega-3 | Daily | Button |
-| Log meal | Daily | Button |
-| Piano practice | Daily | Button |
-| Journal entry | Daily | Button |
-| Neuroscience notes | Weekdays | Button |
-| Check to-do book | Daily | Button |
-| Workout logged | Mon / Wed / Fri | Button (Hevy API later) |
-| Run logged | Tue / Thu / Sat | Button (Strava API later) |
-
-Habit visibility is controlled by active days in `config.py` — habits not scheduled for today simply don't appear. There is no time-based urgency or escalation.
+### Planned
+- Phase 4 — Strava integration: `did_i_run_today()`, `get_recent_runs()`, auto-tick "Track run"
+- Phase 5 — Hevy integration: `did_i_lift_today()`, `get_recent_workouts()`, auto-tick "Track workout"
+- Phase 7 — Raspberry Pi kiosk: systemd service, Chromium kiosk mode
 
 ---
 
-## Active Hours & Rotation
+## Key patterns
 
-Active hours (defined per day in `config.py`) define the window when the dashboard is "live". Outside that window the clock shows with a quiet message — no habits, no data, just the time.
+### SQLite connection (Flask `g` object)
+`db.py:get_db()` stores the connection on Flask's `g` object. A new connection is created per request and closed automatically when the request ends. `init_db()` runs on every request via `@app.before_request` — it uses `CREATE TABLE IF NOT EXISTS` so this is a no-op after the first run.
 
-Within active hours the screen periodically transitions from the clock to the habits page, then back. The point is not to remind or nag — it's that a screen change draws the eye passively. You glance, you see your streaks and today's habits, you decide whether to act. Then the clock comes back.
+The APScheduler token refresh job opens its own connection directly (`sqlite3.connect("dashboard.db")`) because it runs outside of a request context.
 
-Things still TBD / to explore:
-- **Rotation interval:** fixed (e.g. every 20 min) or randomised within a range
-- **Habits dwell time:** how long the habits page stays up before returning to the clock
-- **Transition style:** randomly pick from a set of CSS transitions on each rotation (star wipe, rotate, scale, fade etc.) — the varied effect makes the change more eye-catching. Implement after basic rotation is working.
+### Habit visibility vs habit existence
+Habits are always stored in the database. Whether they appear on the `/habits` page is controlled by `HABIT_ACTIVE_DAYS` in `config.py` — the template filters by today's day name. Adding a new habit only requires two changes: add to `HABITS` and add to `HABIT_ACTIVE_DAYS`.
 
----
+### Transaction categorisation (two-pass)
+`budget.py:map_category()` runs two passes:
+1. Check `CATEGORY_MAP` for a match on TrueLayer's `transaction_classification` field.
+2. If no match, scan `DESCRIPTION_PATTERNS` for a case-insensitive substring match on the description. First match wins.
+3. Fall back to `"Other"`.
+4. `None` result = exclude from all totals (transfers, income, savings movements).
 
-## Build Phases
+Per-session overrides are stored in the `category_overrides` SQLite table and loaded into `budget._overrides` on each request. The override check happens before the two-pass default logic.
 
-### ✅ Already done (transfers from Streamlit prototype)
-- Habit list defined in `config.py`
-- Active hours per day of week in `config.py`
-- Active days per habit in `config.py` (repurpose `HABIT_REMINDER_TIME` day schedule, drop times)
-- Streak logic: `day_diff`, `daily_maintenance`, `mark_done`, `check_current_datetime` in `habits.py`
-- Test suite covering all habit logic functions
+### Sinking funds
+Sinking fund categories (Haircut, Gigs, etc.) reset their cumulative spend on defined months (`SINKING_FUND_RESETS`). `budget.py:_sf_period_start()` finds the most recent reset month and `budget.py:earliest_sf_since()` widens the TrueLayer fetch window to include the reset point.
 
----
-
-### ✅ Phase 1 — Flask scaffold + SQLite migration
-**Goal:** Replace Streamlit with Flask. Migrate JSON state → SQLite. **Complete.**
-
----
-
-### ✅ Phase 2 — Standby clock + active hours
-**Goal:** Standby is the default view. Clock displays. During active hours it rotates to habits. **Complete.**
-
----
-
-### ✅ Phase 3 — Habits page
-**Goal:** Clean habits checklist. Button per habit, streak shown. Only today's habits visible. **Complete.**
-
----
-
-### Phase 4 — Strava integration + Fitness page (running)
-**Goal:** Run days auto-complete. Fitness page shows running data.
-
-New file: `strava.py`
-
-- [ ] Register Strava app, store tokens in `.env`, refresh via APScheduler
-- [ ] `did_i_run_today() -> bool`
-- [ ] `get_recent_runs() -> list[dict]`
-- [ ] Hook into habits route: auto-complete "Run logged" if run detected
-- [ ] `templates/fitness.html` — Plotly graph (distance/pace over time)
-
-**Done when:** Running ticks the box automatically; fitness page shows data.
-
----
-
-### Phase 5 — Hevy integration (weights)
-**Goal:** Workout days auto-complete. Fitness page extended with weights data.
-
-New file: `hevy.py`
-
-- [ ] Hevy API key in `.env`
-- [ ] `did_i_lift_today() -> bool`
-- [ ] `get_recent_workouts() -> list[dict]`
-- [ ] Hook into habits route: auto-complete "Workout logged"
-- [ ] Extend `templates/fitness.html` with volume/PR graphs
-
-**Done when:** Logging in Hevy ticks the box; page shows workout graphs.
-
----
-
-### Phase 6 — Budget page (TrueLayer)
-**Goal:** Category budgets vs actual spend, with burn-rate visualisation.
-
-#### ✅ Infrastructure complete
-- TrueLayer OAuth (PKCE + CSRF state) for Monzo, Nationwide, Amex
-- Tokens in SQLite with `expires_at`; per-request refresh, APScheduler backstop
-- `get_transactions(provider) -> list[dict]` — last 30 days
-- Sandbox mode via `TRUELAYER_SANDBOX=true` in `.env`; switch to production by setting `false` and updating credentials
-
-#### Remaining — budget UI
-The current charts (spend-by-category bar, daily total line) are placeholder. The real page design:
-
-**What the user wants to see:**
-- Per-category budget limits set by the user, compared against per-category actual spend for the month
-- A line graph showing cumulative spend per category over the month — the slope reveals burn rate
-- Toggles: month view (default), year view, projection to end of period
-- monzo, amex and nationwide should be seperated int
-
-**Design decisions:**
-- **Budget limits live in `config.py`** — simple dict mapping category name → monthly limit. No UI editor needed yet; editing the file is fine.
-- **Category mapping layer** — TrueLayer returns its own taxonomy (`transaction_classification`, e.g. `["Food", "Groceries"]`). A mapping layer in `truelayer.py` or a new `budget.py` translates these to the user's personal categories (travel, food, restaurants, rent, subscriptions, etc.). Some will be 1:1; a catch-all "Other" handles the rest.
-- **Projection** — extrapolate current daily spend rate to end of month/year. Only meaningful after a few days of data; show a dashed line.
-- **Line graph is the primary visualisation** — one line per category, x-axis is days of month, y-axis is cumulative spend, horizontal dotted line marks the budget limit.
-
-**Done when:** Budget page shows each category's spend vs limit, burn-rate line graph, with month/year/projection toggle.
-
----
-
-### Phase 7 — Raspberry Pi deployment
-**Goal:** Headless autostart, kiosk browser.
-
-- [ ] Install all deps on Pi
-- [ ] systemd service for Flask (or gunicorn)
-- [ ] Chromium kiosk mode pointing at `localhost:5000`
-- [ ] Test all integrations on Pi hardware
-
-**Done when:** Pi boots straight into the dashboard, no keyboard needed.
+### APScheduler + Gunicorn
+The scheduler guard in `app.py` uses `if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true"`. In production (Gunicorn, debug=False) this evaluates to True and the scheduler starts. With `--workers 1` only one scheduler instance exists.
 
 ---
 
 ## Conventions
 
-- All credentials go in `.env` — never hardcode, never commit
+- Credentials go in `.env` — never hardcoded, never committed
 - `dashboard.db` and `.env` are gitignored
-- Each integration has one job: return a bool or a list. No UI logic in integrations.
-- If an integration fails, log the error and fall back to manual button — never crash the app
-- All business logic in Python — keep Jinja templates thin
+- Each integration returns a bool or a list — no UI logic inside integrations
+- If an integration fails, log it and fall back to the manual button — never crash the app
+- Business logic lives in Python — Jinja templates stay thin
 - No external CSS frameworks — plain CSS only
+- No comments explaining what code does — only why when it's non-obvious
 
 ---
 
 ## Running the app
 
 ```bash
-# Install
+# Local dev
 uv sync
-
-# Run
 flask --app src/good_start_habits/app.py run
+
+# Docker (production, also works on Pi)
+docker compose up -d
 ```

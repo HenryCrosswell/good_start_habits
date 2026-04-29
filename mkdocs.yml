@@ -1,1 +1,23 @@
-site_name: My Docs
+site_name: good-start-habits
+site_description: Personal dashboard for habits, budget, and standby clock
+
+nav:
+  - Home: index.md
+  - Tutorials:
+      - Getting started: tutorials/getting-started.md
+      - Raspberry Pi kiosk: tutorials/raspberry-pi-kiosk.md
+  - How-to guides:
+      - Add a habit: how-to/add-a-habit.md
+      - Add a spending category: how-to/add-a-spending-category.md
+      - Connect a bank account: how-to/connect-a-bank.md
+      - Reclassify a transaction: how-to/reclassify-a-transaction.md
+      - Deploy to Railway: how-to/deploy-to-railway.md
+      - Deploy to Raspberry Pi: how-to/deploy-to-raspberry-pi.md
+  - Reference:
+      - Config: reference/config.md
+      - Routes: reference/routes.md
+      - Database: reference/database.md
+  - Explanation:
+      - Habits and streaks: explanation/habits-and-streaks.md
+      - Budget and categorisation: explanation/budget-architecture.md
+      - Rotation and active hours: explanation/rotation-and-active-hours.md

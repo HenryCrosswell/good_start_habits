@@ -9,12 +9,10 @@ COPY src/ ./src/
 
 RUN uv sync --frozen --no-dev
 
-ENV FLASK_APP=src/good_start_habits/app.py
-ENV FLASK_RUN_HOST=0.0.0.0
 ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 5000
 
-# dashboard.db and .env are expected to be bind-mounted at runtime:
-#   docker run -v $(pwd)/dashboard.db:/app/dashboard.db --env-file .env ...
-CMD ["flask", "run"]
+# dashboard.db is bind-mounted at runtime so data survives container restarts.
+# See docker-compose.yml for the recommended invocation.
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--threads", "4", "good_start_habits.app:app"]

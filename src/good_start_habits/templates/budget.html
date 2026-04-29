@@ -445,7 +445,7 @@ html, body {
 }
 .amt-bg-val {
     font-family: 'Cherry Cream Soda', monospace;
-    font-size: clamp(4.5rem, 14vw, 9rem);
+    font-size: clamp(6rem, 32vw, 14rem);
     line-height: 0.88;
     letter-spacing: -0.03em;
     white-space: nowrap;
@@ -1083,7 +1083,7 @@ html, body {
                     {% else %}£{{ "%.0f"|format(cat.remaining | abs) }} OVER{% endif %}
                 </div>
                 {% else %}
-                <div class="cat-rem" style="color:#9B30FF80;">£{{ "%.2f"|format(cat.budget) }}/MO</div>
+                <div class="cat-rem" style="color:#9B30FF80;">{% if cat.next_reset %}RESETS {{ cat.next_reset | upper }}{% else %}£{{ "%.2f"|format(cat.budget) }}{% endif %}</div>
                 {% endif %}
             </div>
             {% endfor %}
