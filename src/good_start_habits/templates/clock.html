@@ -214,7 +214,8 @@ html, body {
     requestAnimationFrame(scrollSquiggles);
 
     var rotation = Number(document.getElementById('clock').dataset.rotation);
-    if (rotation > 0) {
+    var frozen = new URLSearchParams(window.location.search).get('freeze') === '1';
+    if (rotation > 0 && !frozen) {
         var dest = Math.random() < 0.5 ? '/budget' : '/habits';
         ptNavigate(dest, 'random', rotation);
     }

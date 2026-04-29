@@ -243,6 +243,8 @@ html, body {
 
 {% block scripts %}
 <script>
-    ptNavigate('/', 'fall', {{ dwell_time }});
+    if (new URLSearchParams(window.location.search).get('freeze') !== '1') {
+        ptNavigate('/', 'fall', {{ dwell_time }});
+    }
 </script>
 {% endblock %}

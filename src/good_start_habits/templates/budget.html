@@ -1708,6 +1708,7 @@ window.toggleSettings = function () {
 
 /* ── Interaction-aware dwell timer ─────────────────────────── */
 (function () {
+    if (new URLSearchParams(window.location.search).get('freeze') === '1') return;
     var IDLE_MS   = 25000;   /* 25 s when idle */
     var ACTIVE_MS = 120000;  /* 2 min after any button/link/input interaction */
     var _t = null;
