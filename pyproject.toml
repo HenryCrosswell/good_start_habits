@@ -19,6 +19,9 @@ dependencies = [
     "requests>=2.33.1",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/good_start_habits"]
+
 [tool.mypy]
 ignore_missing_imports = true
 disable_error_code = ["import-untyped"]
