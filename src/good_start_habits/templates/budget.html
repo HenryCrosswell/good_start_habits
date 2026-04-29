@@ -426,7 +426,40 @@ html, body {
     height: 100%;
     position: absolute;
     inset: 0;
+    z-index: 1;
 }
+
+/* Remaining-amount watermark behind the chart */
+.amt-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+    user-select: none;
+    overflow: hidden;
+    gap: 0.15rem;
+}
+.amt-bg-val {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: clamp(4.5rem, 14vw, 9rem);
+    line-height: 0.88;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+}
+.amt-bg-val.good { color: rgba(0, 200, 81, 0.22); }
+.amt-bg-val.over { color: rgba(255, 20, 147, 0.26); }
+.amt-bg-lbl {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+}
+.amt-bg-lbl.good { color: rgba(0, 200, 81, 0.30); }
+.amt-bg-lbl.over { color: rgba(255, 20, 147, 0.36); }
 
 /* Year-view multi-line chart */
 .burn-chart-wrap {
@@ -767,6 +800,39 @@ html, body {
 .txn-row:hover .txn-edit-btn { opacity: 1; }
 .txn-edit-btn:hover { background: #FFE600; color: #111111; border-color: #111111; box-shadow: 2px 2px 0 #111111; }
 
+/* Sinking-fund toggle button */
+.txn-sf-btn {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.27rem;
+    padding: 0.25em 0.55em;
+    border: 1.5px solid #9B30FF;
+    background: #FFFFFF;
+    color: #9B30FF;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    box-shadow: 2px 2px 0 #9B30FF;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.08s, color 0.08s;
+}
+.txn-row:hover .txn-sf-btn { opacity: 1; }
+.txn-sf-btn:hover { background: #9B30FF; color: #FFFFFF; }
+.txn-sf-btn.sf-on {
+    background: #9B30FF;
+    color: #FFFFFF;
+    opacity: 1;
+    box-shadow: 1px 1px 0 #6B20CF;
+}
+.txn-sf-btn.sf-on:hover { background: #FFFFFF; color: #9B30FF; box-shadow: 2px 2px 0 #9B30FF; }
+.txn-desc.sf-tagged {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+.txn-amount.sf-tagged {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
 /* ── Flash ───────────────────────────────────────────────── */
 .flash {
     position: fixed;
@@ -798,6 +864,8 @@ html, body {
         <div class="flash err">CONNECTION FAILED. TRY AGAIN.</div>
     {% elif flash == 'recategorized' %}
         <div class="flash ok">CATEGORY RULE SAVED.</div>
+    {% elif flash == 'sf_updated' %}
+        <div class="flash ok">SINKING FUND UPDATED.</div>
     {% endif %}
 {% endif %}
 
@@ -1032,6 +1100,10 @@ html, body {
             </div>
             <div class="auto-bar"><div id="auto-fill"></div></div>
             <div class="chart-wrap">
+                <div id="amt-bg" class="amt-bg" aria-hidden="true">
+                    <div id="amt-bg-val" class="amt-bg-val good"></div>
+                    <div id="amt-bg-lbl" class="amt-bg-lbl good"></div>
+                </div>
                 <div id="cat-chart"></div>
             </div>
         </div>
@@ -1057,9 +1129,11 @@ html, body {
                 {% for txn in recent_transactions %}
                 <div class="txn-row">
                     <div class="txn-chip {{ txn.provider }}">{{ txn.provider[:3] | upper }}</div>
-                    <div class="txn-desc">{{ txn.description | upper }}</div>
+                    <div class="txn-desc{% if txn.sinking_fund %} sf-tagged{% endif %}">{{ txn.description | upper }}</div>
                     <div class="txn-date">{{ txn.date }}</div>
-                    <div class="txn-amount">£{{ "%.2f"|format(txn.amount) }}</div>
+                    <div class="txn-amount{% if txn.sinking_fund %} sf-tagged{% endif %}">£{{ "%.2f"|format(txn.amount) }}</div>
+                    <button class="txn-sf-btn{% if txn.sinking_fund %} sf-on{% endif %}"
+                            onclick="toggleSF('{{ txn.description | lower | replace("'", "\\'") }}', {{ 'true' if txn.sinking_fund else 'false' }})">SF</button>
                 </div>
                 {% endfor %}
                 {% else %}
@@ -1112,6 +1186,14 @@ html, body {
     <input type="hidden" name="offset"   value="{{ offset }}">
 </form>
 
+<form id="sf-form" method="post" action="/budget/sinking-fund" style="display:none;">
+    <input type="hidden" name="description" id="sf-desc">
+    <input type="hidden" name="action"      id="sf-action">
+    <input type="hidden" name="view"     value="{{ view }}">
+    <input type="hidden" name="provider" value="{{ active_provider }}">
+    <input type="hidden" name="offset"   value="{{ offset }}">
+</form>
+
 {% endblock %}
 
 {% block scripts %}
@@ -1127,8 +1209,8 @@ html, body {
     var AUTO_MS = 10000;
 
     var CHART_LAYOUT = {
-        paper_bgcolor: '#FFFFFF',
-        plot_bgcolor:  '#FFFFFF',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor:  'rgba(0,0,0,0)',
         font: { family: "'VT323', monospace", color: '#888888', size: 14 },
         margin: { l: 55, r: 14, t: 6, b: 44 },
         xaxis: {
@@ -1227,6 +1309,26 @@ html, body {
         var colour = cat.is_savings ? '#00C851' : CAT_COLOURS[idx % CAT_COLOURS.length];
         var lastY  = cat.y.length ? cat.y[cat.y.length - 1] : 0;
         var rem    = Math.round(lastY);
+
+        /* ── Remaining-amount watermark ───────────────── */
+        var bgVal = document.getElementById('amt-bg-val');
+        var bgLbl = document.getElementById('amt-bg-lbl');
+        if (cat.is_savings) {
+            bgVal.textContent = '£' + Math.abs(rem).toLocaleString();
+            bgVal.className   = 'amt-bg-val good';
+            bgLbl.textContent = 'SAVED';
+            bgLbl.className   = 'amt-bg-lbl good';
+        } else if (rem >= 0) {
+            bgVal.textContent = '£' + rem;
+            bgVal.className   = 'amt-bg-val good';
+            bgLbl.textContent = 'LEFT';
+            bgLbl.className   = 'amt-bg-lbl good';
+        } else {
+            bgVal.textContent = '£' + Math.abs(rem);
+            bgVal.className   = 'amt-bg-val over';
+            bgLbl.textContent = 'OVER';
+            bgLbl.className   = 'amt-bg-lbl over';
+        }
 
         document.getElementById('chart-cat-name').textContent = cat.name.toUpperCase();
 
@@ -1345,11 +1447,13 @@ html, body {
             list.innerHTML = txns.map(function (t, i) {
                 var p   = (t.provider || 'monzo').slice(0,3).toUpperCase();
                 var cls = t.provider || 'monzo';
+                var sf  = !!t.sinking_fund;
                 return '<div class="txn-row">' +
                     '<div class="txn-chip ' + cls + '">' + p + '</div>' +
-                    '<div class="txn-desc">' + esc(t.description).toUpperCase() + '</div>' +
+                    '<div class="txn-desc' + (sf ? ' sf-tagged' : '') + '">' + esc(t.description).toUpperCase() + '</div>' +
                     '<div class="txn-date">' + t.date + '</div>' +
-                    '<div class="txn-amount">£' + t.amount.toFixed(2) + '</div>' +
+                    '<div class="txn-amount' + (sf ? ' sf-tagged' : '') + '">£' + t.amount.toFixed(2) + '</div>' +
+                    '<button class="txn-sf-btn' + (sf ? ' sf-on' : '') + '" onclick="toggleSF(\'' + escAttr(t.description) + '\',' + sf + ')">SF</button>' +
                     '<button class="txn-edit-btn" onclick="openEdit(' + i + ',\'' + escAttr(cat.name) + '\')">EDIT</button>' +
                     '</div>';
             }).join('');
@@ -1416,6 +1520,12 @@ html, body {
         return 0;
     }
 
+    window.toggleSF = function (description, isSF) {
+        document.getElementById('sf-desc').value   = description.toLowerCase();
+        document.getElementById('sf-action').value = isSF ? 'remove' : 'add';
+        document.getElementById('sf-form').submit();
+    };
+
     window.prevCat        = function () { renderCat((activeCatIdx - 1 + perCatData.length) % perCatData.length); };
     window.nextCat        = function () { renderCat((activeCatIdx + 1) % perCatData.length); };
     window.selectCatByName = function (name) { renderCat(idxForName(name)); };
@@ -1433,11 +1543,13 @@ html, body {
             list.innerHTML = filtered.map(function (t, i) {
                 var p   = (t.provider || 'monzo').slice(0, 3).toUpperCase();
                 var cls = t.provider || 'monzo';
+                var sf  = !!t.sinking_fund;
                 return '<div class="txn-row">' +
                     '<div class="txn-chip ' + cls + '">' + p + '</div>' +
-                    '<div class="txn-desc">' + esc(t.description).toUpperCase() + '</div>' +
+                    '<div class="txn-desc' + (sf ? ' sf-tagged' : '') + '">' + esc(t.description).toUpperCase() + '</div>' +
                     '<div class="txn-date">' + t.date + '</div>' +
-                    '<div class="txn-amount">£' + t.amount.toFixed(2) + '</div>' +
+                    '<div class="txn-amount' + (sf ? ' sf-tagged' : '') + '">£' + t.amount.toFixed(2) + '</div>' +
+                    '<button class="txn-sf-btn' + (sf ? ' sf-on' : '') + '" onclick="toggleSF(\'' + escAttr(t.description) + '\',' + sf + ')">SF</button>' +
                     '<button class="txn-edit-btn" onclick="openEdit(' + i + ',\'' + escAttr(catName) + '\')">EDIT</button>' +
                     '</div>';
             }).join('');
@@ -1481,6 +1593,12 @@ html, body {
         }, 0);
         remEl.textContent = '£' + Math.round(total) + ' WRONG';
         remEl.className = 'chart-remaining over';
+        var bgVal = document.getElementById('amt-bg-val');
+        var bgLbl = document.getElementById('amt-bg-lbl');
+        bgVal.textContent = '£' + Math.round(total);
+        bgVal.className   = 'amt-bg-val over';
+        bgLbl.textContent = 'WRONG';
+        bgLbl.className   = 'amt-bg-lbl over';
 
         document.querySelectorAll('.cat-item').forEach(function (item) {
             var active = item.dataset.cat === 'wrong_card_' + provider;
@@ -1511,11 +1629,13 @@ html, body {
             list.innerHTML = allTxns.map(function (t, i) {
                 var p   = (t.provider || 'monzo').slice(0,3).toUpperCase();
                 var cls = t.provider || 'monzo';
+                var sf  = !!t.sinking_fund;
                 return '<div class="txn-row">' +
                     '<div class="txn-chip ' + cls + '">' + p + '</div>' +
-                    '<div class="txn-desc">' + esc(t.description).toUpperCase() + '</div>' +
+                    '<div class="txn-desc' + (sf ? ' sf-tagged' : '') + '">' + esc(t.description).toUpperCase() + '</div>' +
                     '<div class="txn-date">' + t.date + '</div>' +
-                    '<div class="txn-amount">£' + t.amount.toFixed(2) + '</div>' +
+                    '<div class="txn-amount' + (sf ? ' sf-tagged' : '') + '">£' + t.amount.toFixed(2) + '</div>' +
+                    '<button class="txn-sf-btn' + (sf ? ' sf-on' : '') + '" onclick="toggleSF(\'' + escAttr(t.description) + '\',' + sf + ')">SF</button>' +
                     '</div>';
             }).join('');
         }

@@ -112,7 +112,7 @@ class TestMapCategoryByDescription:
         )
 
     def test_hair_salon(self):
-        assert map_category([], "Contactless Payment STUDIO 10") == "Personal Care"
+        assert map_category([], "Contactless Payment STUDIO 10") == "Haircut"
 
     def test_restaurant(self):
         assert (
@@ -127,10 +127,7 @@ class TestMapCategoryByDescription:
         )
 
     def test_gig_venue(self):
-        assert (
-            map_category([], "Contactless Payment O2 ACADEMY BRIXTON")
-            == "Entertainment"
-        )
+        assert map_category([], "Contactless Payment O2 ACADEMY BRIXTON") == "Gigs"
 
     def test_homebrew(self):
         assert map_category([], "Visa purchase THE MALT MILLER") == "Entertainment"

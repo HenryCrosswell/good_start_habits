@@ -194,5 +194,13 @@ def init_db():
         )
         """
     )
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sinking_fund_overrides (
+            description_lower TEXT PRIMARY KEY,
+            created_at        TEXT DEFAULT (datetime('now'))
+        )
+        """
+    )
     populate_habits()
     db.commit()

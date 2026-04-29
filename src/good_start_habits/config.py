@@ -93,18 +93,21 @@ DWELL_TIME = randint(300, 600)  # (5, 15)
 # Transport is split: trains on Amex, parking on Nationwide.
 PROVIDER_BUDGET_LIMITS: dict[str, dict[str, float]] = {
     "nationwide": {  # these categories only, anything else wouldbe an error
-        "Rent": 1460.0,
+        "Rent": 1475.0,
         "Bills & Utilities": 242.33,
         "Transport": 100.0,  # parking direct debit
-        "Subscriptions": 80.0,
+        "Subscriptions": 82.0,
+        "Lastpass": 5.43,
+        "Proton": 9.28,
     },
     "amex": {  # these categories only, anything else wouldbe an error
-        "Groceries": 200.0,
-        "Transport": 350.0,  # trains season ticket / ad-hoc travel/ petrol
+        "Groceries": 160.0,
+        "Transport": 330.0,  # trains season ticket / ad-hoc travel
+        "Petrol": 30.0,
     },
     "monzo": {  # these categories only, anything else wouldbe an error
-        "Food & Coffee": 80.0,
-        "Eating Out & Social": 120.0,
+        "Food & Coffee": 130.0,
+        "Eating Out & Social": 170.0,
     },
 }
 
@@ -125,16 +128,25 @@ emergency, holiday, car etc.etc.
 
 # Monthly budget limits per personal category (£)
 BUDGET_LIMITS: dict[str, float] = {
-    "Groceries": 200.0,  # big food shop
-    "Food & Coffee": 80.0,  # misc food, coffees, snacks
-    "Eating Out & Social": 120.0,  # restaurants, bars, nights out
-    "Rent": 1460.0,  # full outgoing; GF contribution tracked via extra_income
+    "Groceries": 160.0,  # big food shop
+    "Food & Coffee": 130.0,  # misc food, coffees, snacks
+    "Eating Out & Social": 170.0,  # restaurants, bars, nights out
+    "Rent": 1475.0,  # full outgoing; GF contribution tracked via extra_income
     "Bills & Utilities": 242.33,  # full outgoing; GF contribution tracked via extra_income
-    "Transport": 480.0,  # trains (330) + parking (100) + trainline (30) + petrol (20)
-    "Subscriptions": 89.0,  # gym (50) + phone (10) + claude (18) + lastpass (3) + proton (6)
-    "Personal Care": 50.84,  # haircut (22.50) + skin/haircare (13.34) + house products (15)
-    "Entertainment": 15.0,  # gigs (10) + steam games (5)
-    "Other": 51.67,  # gifts (15) + clothing (16.67) + random (20)
+    "Transport": 430.0,  # trains (330) + parking (100)
+    "Petrol": 30.0,  # £60/2mo — sinking fund
+    "Subscriptions": 82.0,  # gym (50) + phone (10) + claude (18) + tesco (4)
+    "Lastpass": 5.43,  # £38/7mo — sinking fund
+    "Proton": 9.28,  # £64.95/7mo — sinking fund
+    "Haircut": 22.50,  # £45/2mo — sinking fund
+    "Skin & Haircare": 5.0,  # £20/4mo — sinking fund
+    "Gigs": 10.0,  # £30/3mo — sinking fund
+    "Steam Games": 5.0,  # £15/3mo — sinking fund
+    "Entertainment": 5.0,  # cinema, misc — catch-all
+    "Clothing": 10.0,  # £60/6mo — sinking fund
+    "Gifts": 37.50,  # £450/12mo — sinking fund
+    "House Products": 15.0,  # £60/4mo — sinking fund
+    "Other": 20.0,  # random misc
 }
 
 
@@ -170,16 +182,16 @@ CATEGORY_MAP: dict[str, Any] = {
     "Travel": "Transport",
     "Taxi": "Transport",
     "Parking": "Transport",
-    "Fuel": "Transport",
+    "Fuel": "Petrol",
     "Public Transport": "Transport",
     # Subscriptions
     "Subscription": "Subscriptions",
     "Subscriptions": "Subscriptions",
     "Sports & Fitness": "Subscriptions",
-    # Personal care
-    "Healthcare": "Personal Care",
-    "Health & Beauty": "Personal Care",
-    "Personal Care": "Personal Care",
+    # Personal care / skin
+    "Healthcare": "Skin & Haircare",
+    "Health & Beauty": "Skin & Haircare",
+    "Personal Care": "Skin & Haircare",
     # Entertainment
     "Entertainment": "Entertainment",
     "Hobbies": "Entertainment",
@@ -202,7 +214,23 @@ DEFAULT_EXTRA_INCOME: float = 100.0
 CATEGORY_GROUPS: dict[str, list[str]] = {
     "Fixed": ["Rent", "Bills & Utilities", "Transport", "Subscriptions"],
     "Essentials": ["Groceries", "Food & Coffee"],
-    "Discretionary": ["Eating Out & Social", "Entertainment", "Personal Care", "Other"],
+    "Discretionary": [
+        "Eating Out & Social",
+        "Entertainment",
+        "Skin & Haircare",
+        "Other",
+    ],
+    "Sinking Fund": [
+        "Haircut",
+        "Gigs",
+        "Steam Games",
+        "Clothing",
+        "Gifts",
+        "House Products",
+        "Petrol",
+        "Lastpass",
+        "Proton",
+    ],
 }
 
 SAVINGS_ACCOUNTS: list[dict] = [
@@ -271,28 +299,28 @@ DESCRIPTION_PATTERNS: list[tuple[str, str | None]] = [
     ("stalbans.gov", "Transport"),  # St Albans parking permit
     ("voxi", "Subscriptions"),  # phone SIM
     ("everyoneactive", "Subscriptions"),  # gym membership
-    ("studio 10", "Personal Care"),  # hair salon
+    ("studio 10", "Haircut"),  # hair salon
     ("zizzi", "Eating Out & Social"),
     ("evan cryer-jenkins", "Other"),  # misc payment to friend
     ("malt miller", "Entertainment"),  # homebrewing supplies
-    ("o2 shepherd", "Entertainment"),  # gig venue
-    ("o2 academy", "Entertainment"),  # gig venue
+    ("o2 shepherd", "Gigs"),  # gig venue
+    ("o2 academy", "Gigs"),  # gig venue
     ("proto artisan", "Food & Coffee"),  # artisan bakery/cafe
     ("grind", "Food & Coffee"),  # Grind coffee chain
     ("arriva", "Transport"),  # bus operator
-    ("fealla", "Other"),  # local clothing/misc merchant
-    ("arket", "Other"),  # clothing (H&M group)
+    ("fealla", "Clothing"),  # local clothing merchant
+    ("arket", "Clothing"),  # clothing (H&M group)
     ("johnlewis", "Other"),
     ("john lewis", "Other"),
-    ("wilko", "Other"),
+    ("wilko", "House Products"),
     ("itsu", "Eating Out & Social"),
     ("hawk", "Eating Out & Social"),  # Hawks Nest pub
     ("beehive", "Eating Out & Social"),
     ("great northern", "Eating Out & Social"),
     ("white lion", "Eating Out & Social"),
-    ("bunches", "Other"),
-    ("holland & barrett", "Personal Care"),
-    ("jade pharmacy", "Personal Care"),
+    ("bunches", "Gifts"),  # flowers / gifts
+    ("holland & barrett", "Skin & Haircare"),
+    ("jade pharmacy", "Skin & Haircare"),
     ("dropout", "Subscriptions"),
     # ── Bills & Utilities (direct debits not matched above) ──────────────────
     ("dvla", "Transport"),  # car tax direct debit
@@ -341,27 +369,44 @@ DESCRIPTION_PATTERNS: list[tuple[str, str | None]] = [
     ("tfl", "Transport"),
     ("national rail", "Transport"),
     ("uber", "Transport"),
-    # ── Personal Care ─────────────────────────────────────────────────────────
-    ("benefit cosmetics", "Personal Care"),
-    ("benefit", "Personal Care"),
-    ("superdrug", "Personal Care"),
-    ("boots", "Personal Care"),
-    ("barber", "Personal Care"),
-    ("hairdress", "Personal Care"),
+    # ── Petrol ────────────────────────────────────────────────────────────────
+    ("shell", "Petrol"),
+    ("bp", "Petrol"),
+    ("esso", "Petrol"),
+    ("texaco", "Petrol"),
+    ("moto", "Petrol"),  # motorway services
+    ("euro garages", "Petrol"),
+    # ── Skin & Haircare ───────────────────────────────────────────────────────
+    ("benefit cosmetics", "Skin & Haircare"),
+    ("benefit", "Skin & Haircare"),
+    ("superdrug", "Skin & Haircare"),
+    ("boots", "Skin & Haircare"),
+    ("barber", "Haircut"),
+    ("hairdress", "Haircut"),
+    # ── Gigs ──────────────────────────────────────────────────────────────────
+    ("lw theatre", "Gigs"),
+    ("ticketmaster", "Gigs"),
     # ── Entertainment ─────────────────────────────────────────────────────────
     ("waterstones", "Entertainment"),
-    ("lw theatre", "Entertainment"),
     ("odeon", "Entertainment"),
     ("vue cinema", "Entertainment"),
-    ("ticketmaster", "Entertainment"),
     # ── Subscriptions ─────────────────────────────────────────────────────────
     ("spotify", "Subscriptions"),
     ("netflix", "Subscriptions"),
     ("claude", "Subscriptions"),
     ("anthropic", "Subscriptions"),
+    ("lastpass", "Lastpass"),
+    ("proton", "Proton"),
+    # ── Steam Games ───────────────────────────────────────────────────────────
+    ("steam", "Steam Games"),
+    # ── Clothing ──────────────────────────────────────────────────────────────
+    ("zara", "Clothing"),
+    ("primark", "Clothing"),
+    ("h&m", "Clothing"),
+    # ── House Products ────────────────────────────────────────────────────────
+    ("robert dyas", "House Products"),
     # ── Other ─────────────────────────────────────────────────────────────────
     ("amazon", "Other"),
     ("paypal", "Other"),
-    ("robert dyas", "Other"),
     ("garmin", "Other"),
 ]

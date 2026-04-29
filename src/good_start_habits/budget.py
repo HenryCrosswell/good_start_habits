@@ -43,6 +43,7 @@ _BURN_COLOURS = [
 ]
 
 _overrides: dict[str, str] = {}
+_sinking_fund_descs: set[str] = set()
 
 ALL_CATEGORY_NAMES: list[str] = [c for cats in CATEGORY_GROUPS.values() for c in cats]
 
@@ -53,6 +54,19 @@ def load_overrides(con: Any) -> None:
         "SELECT description_lower, category FROM category_overrides"
     ).fetchall()
     _overrides = {r[0]: r[1] for r in rows}
+
+
+def load_sinking_fund(con: Any) -> None:
+    global _sinking_fund_descs
+    rows = con.execute(
+        "SELECT description_lower FROM sinking_fund_overrides"
+    ).fetchall()
+    _sinking_fund_descs = {r[0] for r in rows}
+
+
+def _is_sinking_fund(description: str) -> bool:
+    desc = description.lower()
+    return any(p in desc for p in _sinking_fund_descs)
 
 
 _CHART_LAYOUT = {
@@ -158,10 +172,12 @@ def map_category(
 
 
 def _spending(transactions: list[dict]) -> list[dict]:
-    """Outgoing transactions only, with transfers/income excluded."""
+    """Outgoing transactions only, with transfers/income and sinking-fund excluded."""
     result = []
     for t in transactions:
         if t.get("amount", 0) >= 0:
+            continue
+        if _is_sinking_fund(t.get("description", "")):
             continue
         if (
             map_category(
@@ -1102,6 +1118,7 @@ def get_recent_transactions(
                     "date": t.get("timestamp", "")[:10],
                     "provider": provider,
                     "category": cat,
+                    "sinking_fund": _is_sinking_fund(t.get("description", "")),
                 }
             )
     annotated.sort(key=lambda x: x["date"], reverse=True)
@@ -1135,6 +1152,7 @@ def get_all_transactions_by_category(
                 "amount": round(abs(t.get("amount", 0)), 2),
                 "date": t.get("timestamp", "")[:10],
                 "provider": provider,
+                "sinking_fund": _is_sinking_fund(t.get("description", "")),
             }
             by_cat.setdefault(cat, []).append(entry)
     for cat in by_cat:

@@ -172,6 +172,7 @@ def auth_disconnect(provider: str):
 def budget():
     db = get_db()
     budget_module.load_overrides(db)
+    budget_module.load_sinking_fund(db)
     status = truelayer.get_connection_status(db)
 
     today = date.today()
@@ -362,6 +363,35 @@ def budget_reclassify():
             provider=request.form.get("provider", "all"),
             offset=request.form.get("offset", "0"),
             flash="recategorized",
+        )
+    )
+
+
+@app.route("/budget/sinking-fund", methods=["POST"])
+def budget_sinking_fund():
+    db = get_db()
+    description = request.form.get("description", "").strip().lower()
+    action = request.form.get("action", "add")
+    if description:
+        if action == "add":
+            db.execute(
+                "INSERT OR IGNORE INTO sinking_fund_overrides (description_lower) VALUES (?)",
+                (description,),
+            )
+        else:
+            db.execute(
+                "DELETE FROM sinking_fund_overrides WHERE description_lower = ?",
+                (description,),
+            )
+        db.commit()
+        budget_module.load_sinking_fund(db)
+    return redirect(
+        url_for(
+            "budget",
+            view=request.form.get("view", "month"),
+            provider=request.form.get("provider", "all"),
+            offset=request.form.get("offset", "0"),
+            flash="sf_updated",
         )
     )
 
