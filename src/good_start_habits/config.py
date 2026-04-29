@@ -96,11 +96,12 @@ PROVIDER_BUDGET_LIMITS: dict[str, dict[str, float]] = {
         "Rent": 1475.0,
         "Bills & Utilities": 242.33,
         "Transport": 100.0,  # parking direct debit
-        "Subscriptions": 82.0,
+        "Subscriptions": 78.0,
     },
     "amex": {  # these categories only, anything else wouldbe an error
         "Groceries": 160.0,
-        "Transport": 330.0,  # trains season ticket / ad-hoc travel
+        "Transport": 330.0,
+        "Subscriptions": 4.0,  # trains season ticket / ad-hoc travel
     },
     "monzo": {  # these categories only, anything else wouldbe an error
         "Food & Coffee": 130.0,
