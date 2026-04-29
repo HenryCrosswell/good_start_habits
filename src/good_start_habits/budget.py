@@ -15,6 +15,7 @@ from good_start_habits.config import (
     CATEGORY_MAP,
     DESCRIPTION_PATTERNS,
     SAVINGS_ACCOUNTS,
+    SINKING_FUND_RESETS,
 )
 
 _CATEGORY_COLOURS = [
@@ -46,6 +47,56 @@ _overrides: dict[str, str] = {}
 _sinking_fund_descs: set[str] = set()
 
 ALL_CATEGORY_NAMES: list[str] = [c for cats in CATEGORY_GROUPS.values() for c in cats]
+_SF_NAMES: frozenset[str] = frozenset(CATEGORY_GROUPS.get("Sinking Fund", []))
+
+
+def _sf_period_start(year: int, month: int, category: str) -> tuple[int, int]:
+    """Return (year, month) when the current sinking fund period started."""
+    reset_months = SINKING_FUND_RESETS.get(category, [])
+    if not reset_months:
+        return year, month
+    candidates = [m for m in reset_months if m <= month]
+    if candidates:
+        return year, max(candidates)
+    return year - 1, max(reset_months)
+
+
+def _sf_period_budget(category: str, year: int, month: int) -> float:
+    """Return the total budget for the current SF period (flat config value)."""
+    return BUDGET_LIMITS.get(category, 0.0)
+
+
+def _sf_period_spent(
+    all_spending: list[dict], category: str, year: int, month: int
+) -> float:
+    """Sum spending for a SF category from period start through the given month."""
+    sy, sm = _sf_period_start(year, month, category)
+    start_prefix = f"{sy:04d}-{sm:02d}"
+    end_prefix = f"{year:04d}-{month:02d}"
+    total = 0.0
+    for txn in all_spending:
+        ts = txn.get("timestamp", "")[:7]
+        if ts < start_prefix or ts > end_prefix:
+            continue
+        cat = map_category(
+            txn.get("transaction_classification", []),
+            txn.get("description", ""),
+            abs(txn.get("amount", 0.0)),
+            txn.get("_provider", ""),
+        )
+        if cat == category:
+            total += abs(txn["amount"])
+    return round(total, 2)
+
+
+def earliest_sf_since(year: int, month: int) -> tuple[int, int]:
+    """Return the (year, month) of the earliest SF period start for the given month."""
+    earliest = (year, month)
+    for cat in SINKING_FUND_RESETS:
+        start = _sf_period_start(year, month, cat)
+        if start < earliest:
+            earliest = start
+    return earliest
 
 
 def load_overrides(con: Any) -> None:
@@ -574,6 +625,7 @@ def build_monthly_charts(
     cat_limits: dict[str, float] | None = None,
     baselines: dict[str, float] | None = None,
 ) -> dict[str, str]:
+    use_sf_periods = cat_limits is None
     if cat_limits is None:
         cat_limits = BUDGET_LIMITS
     today = date.today()
@@ -721,8 +773,16 @@ def build_monthly_charts(
 
     # ── Budget vs actual bar ─────────────────────────────────────────────────
     all_cats = sorted(set(cat_day) | set(cat_limits))
-    actuals = [round(sum(cat_day.get(c, {}).values()), 2) for c in all_cats]
-    lim_vals = [cat_limits.get(c, 0.0) for c in all_cats]
+    all_spending_bar = _spending(transactions)
+    actuals = []
+    lim_vals = []
+    for c in all_cats:
+        if use_sf_periods and c in _SF_NAMES and c in SINKING_FUND_RESETS:
+            actuals.append(_sf_period_spent(all_spending_bar, c, year, month))
+            lim_vals.append(_sf_period_budget(c, year, month))
+        else:
+            actuals.append(round(sum(cat_day.get(c, {}).values()), 2))
+            lim_vals.append(cat_limits.get(c, 0.0))
     pairs = [
         (c, act, lim)
         for c, act, lim in zip(all_cats, actuals, lim_vals)
@@ -758,11 +818,19 @@ def build_monthly_charts(
 
     # ── Per-category JS data ─────────────────────────────────────────────────
     all_cats_js = sorted(set(cat_day) | set(cat_limits))
+    all_spending_js = _spending(transactions)
     per_cat_list = []
     for cat in all_cats_js:
         dtotals = cat_day.get(cat, {})
-        budget_for_cat = cat_limits.get(cat, 0.0)
-        running_spend = 0.0
+        if use_sf_periods and cat in _SF_NAMES and cat in SINKING_FUND_RESETS:
+            budget_for_cat = _sf_period_budget(cat, year, month)
+            # Start the line from prior-period spend so remaining reflects the full period
+            period_total = _sf_period_spent(all_spending_js, cat, year, month)
+            prior_spend = max(0.0, round(period_total - sum(dtotals.values()), 2))
+        else:
+            budget_for_cat = cat_limits.get(cat, 0.0)
+            prior_spend = 0.0
+        running_spend = prior_spend
         cat_remaining: list[float] = []
         for d in days_axis:
             running_spend += dtotals.get(d, 0.0)
@@ -1005,6 +1073,7 @@ def monthly_summary(
     income: float | None = None,
 ) -> dict:
     """Return spending totals, savings, income-based balance, and grouped categories."""
+    use_sf_periods = cat_limits is None
     if cat_limits is None:
         cat_limits = BUDGET_LIMITS
     today = date.today()
@@ -1013,11 +1082,13 @@ def monthly_summary(
     days_so_far = today.day if is_current_month else days_in_month
 
     month_prefix = f"{year:04d}-{month:02d}"
-    spending = [
-        t for t in _spending(transactions) if t.get("timestamp", "")[:7] == month_prefix
-    ]
+    all_spending = _spending(transactions)
+
+    # Regular categories: current month only
     cat_totals: dict[str, float] = {}
-    for txn in spending:
+    for txn in all_spending:
+        if txn.get("timestamp", "")[:7] != month_prefix:
+            continue
         cat = map_category(
             txn.get("transaction_classification", []),
             txn.get("description", ""),
@@ -1026,7 +1097,18 @@ def monthly_summary(
         )
         if cat is None:
             continue
+        if use_sf_periods and cat in _SF_NAMES and cat in SINKING_FUND_RESETS:
+            continue  # SF categories are accumulated from period start below
         cat_totals[cat] = cat_totals.get(cat, 0.0) + abs(txn["amount"])
+
+    # SF categories: accumulate from period start through current month
+    if use_sf_periods:
+        for sf_cat in _SF_NAMES:
+            if sf_cat not in SINKING_FUND_RESETS:
+                continue
+            period_spent = _sf_period_spent(all_spending, sf_cat, year, month)
+            if period_spent > 0:
+                cat_totals[sf_cat] = period_spent
 
     total_spent = round(sum(cat_totals.values()), 2)
     total_budget = sum(cat_limits.values())
@@ -1044,7 +1126,10 @@ def monthly_summary(
     categories: list[dict] = []
     for cat in all_cats:
         spent = round(cat_totals.get(cat, 0.0), 2)
-        budget_limit = cat_limits.get(cat, 0.0)
+        if use_sf_periods and cat in _SF_NAMES and cat in SINKING_FUND_RESETS:
+            budget_limit = _sf_period_budget(cat, year, month)
+        else:
+            budget_limit = cat_limits.get(cat, 0.0)
         if spent > 0 or budget_limit > 0:
             categories.append(
                 {

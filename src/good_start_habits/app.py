@@ -198,6 +198,10 @@ def budget():
         since = datetime(disp_year, 1, 1, tzinfo=timezone.utc)
     else:
         since = datetime(disp_year, disp_month, 1, tzinfo=timezone.utc)
+        sf_year, sf_month = budget_module.earliest_sf_since(disp_year, disp_month)
+        sf_since = datetime(sf_year, sf_month, 1, tzinfo=timezone.utc)
+        if sf_since < since:
+            since = sf_since
 
     connected_providers = [p for p in truelayer.PROVIDERS if status[p] == "connected"]
 

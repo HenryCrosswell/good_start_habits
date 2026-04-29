@@ -131,18 +131,17 @@ BUDGET_LIMITS: dict[str, float] = {
     "Rent": 1475.0,  # full outgoing; GF contribution tracked via extra_income
     "Bills & Utilities": 242.33,  # full outgoing; GF contribution tracked via extra_income
     "Transport": 430.0,  # trains (330) + parking (100)
-    "Petrol": 30.0,  # £60/2mo — sinking fund
+    "Petrol": 60.0,  # £60, 01/04/07/10 — sinking fund - resets at start of these months
     "Subscriptions": 82.0,  # gym (50) + phone (10) + claude (18) + tesco (4)
-    "Lastpass": 5.43,  # £38/7mo — sinking fund
-    "Proton": 9.28,  # £64.95/7mo — sinking fund
-    "Haircut": 22.50,  # £45/2mo — sinking fund
-    "Skin & Haircare": 5.0,  # £20/4mo — sinking fund
-    "Gigs": 10.0,  # £30/3mo — sinking fund
-    "Steam Games": 5.0,  # £15/3mo — sinking fund
-    "Entertainment": 5.0,  # cinema, misc — catch-all
-    "Clothing": 10.0,  # £60/6mo — sinking fund
-    "Gifts": 37.50,  # £450/12mo — sinking fund
-    "House Products": 15.0,  # £60/4mo — sinking fund
+    "Lastpass": 38,  # £38, 01 — sinking fund
+    "Proton": 64.95,  # £64.95, 01 — sinking fund
+    "Haircut": 45,  # £45, 02/04/06/08/10/12 — sinking fund
+    "Skin & Haircare": 20.0,  # £20, 01/05/09 — sinking fund
+    "Gigs": 30.0,  # £30, 01/04/07/10 sinking fund
+    "Steam Games": 15.0,  # £15, 01/04/07/10 — sinking fund
+    "Clothing": 60.0,  # £60, 01/07 — sinking fund
+    "Gifts": 37.50,  # every month - sinking fund
+    "House Products": 60.0,  # £60, 01/05/09 — sinking fund
     "Other": 20.0,  # random misc
 }
 
@@ -166,6 +165,9 @@ CATEGORY_MAP: dict[str, Any] = {
     "Restaurants": "Eating Out & Social",
     "Takeaway": "Eating Out & Social",
     "Bars": "Eating Out & Social",
+    # Entertainment
+    "Entertainment": "Eating Out & Social",
+    "Hobbies": "Eating Out & Social",
     # Rent / housing
     "Housing": "Rent",
     "Rent": "Rent",
@@ -189,9 +191,6 @@ CATEGORY_MAP: dict[str, Any] = {
     "Healthcare": "Skin & Haircare",
     "Health & Beauty": "Skin & Haircare",
     "Personal Care": "Skin & Haircare",
-    # Entertainment
-    "Entertainment": "Entertainment",
-    "Hobbies": "Entertainment",
     # Other (shopping, clothing, gifts, etc.)
     "Shopping": "Other",
     "Clothing": "Other",
@@ -206,7 +205,7 @@ CATEGORY_MAP: dict[str, Any] = {
 # Description-based fallback patterns (case-insensitive substring match, first wins).
 # None means exclude from spending entirely.
 BASE_INCOME: float = 2440.0
-DEFAULT_EXTRA_INCOME: float = 100.0
+DEFAULT_EXTRA_INCOME: float = 880.0
 
 CATEGORY_GROUPS: dict[str, list[str]] = {
     "Fixed": ["Rent", "Bills & Utilities", "Transport", "Subscriptions"],
@@ -228,6 +227,19 @@ CATEGORY_GROUPS: dict[str, list[str]] = {
         "Lastpass",
         "Proton",
     ],
+}
+
+SINKING_FUND_RESETS: dict[str, list[int]] = {
+    "Petrol": [1, 4, 7, 10],
+    "Lastpass": [1],
+    "Proton": [1],
+    "Haircut": [2, 4, 6, 8, 10, 12],
+    "Skin & Haircare": [1, 5, 9],
+    "Gigs": [1, 4, 7, 10],
+    "Steam Games": [1, 4, 7, 10],
+    "Clothing": [1, 7],
+    "Gifts": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "House Products": [1, 5, 9],
 }
 
 SAVINGS_ACCOUNTS: list[dict] = [
