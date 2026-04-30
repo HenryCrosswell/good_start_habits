@@ -51,7 +51,13 @@ Saves income settings for a given month. Form fields: `year`, `month`, `base_inc
 
 Stores a category override for a transaction description. Form fields: `description`, `category`, `view`, `provider`, `offset`.
 
-The override is stored in the `category_overrides` table, keyed on the description lowercased. Takes effect immediately on the next page load.
+The override is stored in the `category_overrides` table, keyed on the description lowercased. Redirects to `/budget` on completion.
+
+### `POST /budget/api/reclassify`
+
+JSON API version of the same override. Request body: `{ "description": "...", "category": "..." }`. Returns `{ "ok": true }`.
+
+Used by the Sort tab SAVE RULE button, the edit overlay SAVE button, and the UNSORT button — all of which update the page in place without a reload. Setting `category` to `"Transfer"` excludes the transaction from all spend totals.
 
 ### `POST /budget/sinking-fund`
 

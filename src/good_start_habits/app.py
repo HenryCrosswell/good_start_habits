@@ -50,7 +50,9 @@ _scheduler = BackgroundScheduler()
 
 
 def _refresh_tokens_job() -> None:
-    con = sqlite3.connect("dashboard.db")
+    from good_start_habits.db import DB_PATH
+
+    con = sqlite3.connect(DB_PATH)
     try:
         truelayer.refresh_all(con)
     finally:
@@ -414,6 +416,24 @@ def budget_reclassify():
             flash="recategorized",
         )
     )
+
+
+@app.route("/budget/api/reclassify", methods=["POST"])
+def budget_api_reclassify():
+    db = get_db()
+    data = request.get_json(silent=True) or {}
+    description = data.get("description", "").lower().strip()
+    category = data.get("category", "").strip()
+    if description and category:
+        db.execute(
+            "INSERT INTO category_overrides (description_lower, category)"
+            " VALUES (?, ?) ON CONFLICT(description_lower) DO UPDATE SET"
+            " category = excluded.category",
+            (description, category),
+        )
+        db.commit()
+        budget_module.load_overrides(db)
+    return jsonify({"ok": True})
 
 
 @app.route("/budget/sinking-fund", methods=["POST"])

@@ -1108,7 +1108,7 @@ html, body {
                         <option value="{{ cat }}">{{ cat | upper }}</option>
                         {% endfor %}
                     </select>
-                    <button type="submit" class="sort-save-btn">SAVE RULE</button>
+                    <button type="button" class="sort-save-btn">SAVE RULE</button>
                 </form>
             </div>
             {% endfor %}
@@ -1334,8 +1334,9 @@ html, body {
                     <div class="txn-desc{% if txn.sinking_fund %} sf-tagged{% endif %}">{{ txn.description | upper }}</div>
                     <div class="txn-date">{{ txn.date }}</div>
                     <div class="txn-amount{% if txn.sinking_fund %} sf-tagged{% endif %}">£{{ "%.2f"|format(txn.amount) }}</div>
-                    <button class="txn-sf-btn{% if txn.sinking_fund %} sf-on{% endif %}"
-                            onclick="toggleSF('{{ txn.description | lower | replace("'", "\\'") }}', {{ 'true' if txn.sinking_fund else 'false' }})">SF</button>
+                    <button class="txn-sf-btn"
+                            data-desc="{{ txn.description | lower | e }}"
+                            onclick="unsortTxn(this, this.dataset.desc)">UNSORT</button>
                 </div>
                 {% endfor %}
                 {% else %}
@@ -1388,13 +1389,6 @@ html, body {
     <input type="hidden" name="offset"   value="{{ offset }}">
 </form>
 
-<form id="sf-form" method="post" action="/budget/sinking-fund" style="display:none;">
-    <input type="hidden" name="description" id="sf-desc">
-    <input type="hidden" name="action"      id="sf-action">
-    <input type="hidden" name="view"     value="{{ view }}">
-    <input type="hidden" name="provider" value="{{ active_provider }}">
-    <input type="hidden" name="offset"   value="{{ offset }}">
-</form>
 
 {% endblock %}
 
@@ -1655,7 +1649,7 @@ html, body {
                     '<div class="txn-desc' + (sf ? ' sf-tagged' : '') + '">' + esc(t.description).toUpperCase() + '</div>' +
                     '<div class="txn-date">' + t.date + '</div>' +
                     '<div class="txn-amount' + (sf ? ' sf-tagged' : '') + '">£' + t.amount.toFixed(2) + '</div>' +
-                    '<button class="txn-sf-btn' + (sf ? ' sf-on' : '') + '" onclick="toggleSF(\'' + escAttr(t.description) + '\',' + sf + ')">SF</button>' +
+                    '<button class="txn-sf-btn" data-desc="' + escAttr(t.description) + '" onclick="unsortTxn(this, this.dataset.desc)">UNSORT</button>' +
                     '<button class="txn-edit-btn" onclick="openEdit(' + i + ',\'' + escAttr(cat.name) + '\')">EDIT</button>' +
                     '</div>';
             }).join('');
@@ -1710,9 +1704,18 @@ html, body {
         var newCat = document.getElementById('edit-cat-select').value;
         if (_editTxnIdx < 0) return;
         var t = _editTxnBank[_editTxnIdx];
-        document.getElementById('rc-desc').value = t.description.toLowerCase();
-        document.getElementById('rc-cat').value  = newCat;
-        document.getElementById('reclassify-form').submit();
+        if (catTxns[_editOrigCat]) {
+            catTxns[_editOrigCat] = catTxns[_editOrigCat].filter(function (x) { return x !== t; });
+        }
+        if (!catTxns[newCat]) catTxns[newCat] = [];
+        catTxns[newCat].unshift(t);
+        closeEdit();
+        renderCat(activeCatIdx);
+        fetch('/budget/api/reclassify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ description: t.description.toLowerCase(), category: newCat }),
+        });
     };
 
     function idxForName(name) {
@@ -1722,10 +1725,17 @@ html, body {
         return 0;
     }
 
-    window.toggleSF = function (description, isSF) {
-        document.getElementById('sf-desc').value   = description.toLowerCase();
-        document.getElementById('sf-action').value = isSF ? 'remove' : 'add';
-        document.getElementById('sf-form').submit();
+    window.unsortTxn = function (btn, description) {
+        fetch('/budget/api/reclassify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ description: description.toLowerCase(), category: 'Other' }),
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            if (data.ok) {
+                var row = btn.closest('.txn-row');
+                if (row) row.remove();
+            }
+        });
     };
 
     window.prevCat        = function () { renderCat((activeCatIdx - 1 + perCatData.length) % perCatData.length); };
@@ -1751,7 +1761,7 @@ html, body {
                     '<div class="txn-desc' + (sf ? ' sf-tagged' : '') + '">' + esc(t.description).toUpperCase() + '</div>' +
                     '<div class="txn-date">' + t.date + '</div>' +
                     '<div class="txn-amount' + (sf ? ' sf-tagged' : '') + '">£' + t.amount.toFixed(2) + '</div>' +
-                    '<button class="txn-sf-btn' + (sf ? ' sf-on' : '') + '" onclick="toggleSF(\'' + escAttr(t.description) + '\',' + sf + ')">SF</button>' +
+                    '<button class="txn-sf-btn" data-desc="' + escAttr(t.description) + '" onclick="unsortTxn(this, this.dataset.desc)">UNSORT</button>' +
                     '<button class="txn-edit-btn" onclick="openEdit(' + i + ',\'' + escAttr(catName) + '\')">EDIT</button>' +
                     '</div>';
             }).join('');
@@ -1837,7 +1847,7 @@ html, body {
                     '<div class="txn-desc' + (sf ? ' sf-tagged' : '') + '">' + esc(t.description).toUpperCase() + '</div>' +
                     '<div class="txn-date">' + t.date + '</div>' +
                     '<div class="txn-amount' + (sf ? ' sf-tagged' : '') + '">£' + t.amount.toFixed(2) + '</div>' +
-                    '<button class="txn-sf-btn' + (sf ? ' sf-on' : '') + '" onclick="toggleSF(\'' + escAttr(t.description) + '\',' + sf + ')">SF</button>' +
+                    '<button class="txn-sf-btn" data-desc="' + escAttr(t.description) + '" onclick="unsortTxn(this, this.dataset.desc)">UNSORT</button>' +
                     '</div>';
             }).join('');
         }
@@ -1875,6 +1885,41 @@ window.toggleSettings = function () {
     var panel = document.getElementById('settings-panel');
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 };
+
+/* ── Sort view: AJAX rule-save ────────────────────────────── */
+{% if view == 'sort' %}
+(function () {
+    document.querySelectorAll('.sort-save-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            var form = btn.closest('.sort-form');
+            var cat  = form.querySelector('select[name=category]').value;
+            if (!cat) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var desc = form.querySelector('input[name=description]').value;
+            fetch('/budget/api/reclassify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: desc, category: cat }),
+            }).then(function (r) { return r.json(); }).then(function (data) {
+                if (!data.ok) return;
+                var row = form.closest('.sort-row');
+                row.remove();
+                var rows = document.querySelectorAll('.sort-row');
+                var statBigs = document.querySelectorAll('.sort-stat-big');
+                if (statBigs[0]) statBigs[0].textContent = rows.length;
+                var total = Array.from(rows).reduce(function (sum, r) {
+                    return sum + (parseFloat(((r.querySelector('.txn-amount') || {}).textContent || '').replace('£', '')) || 0);
+                }, 0);
+                if (statBigs[1]) statBigs[1].textContent = '£' + Math.round(total);
+                if (!rows.length) {
+                    document.querySelector('.sort-list').innerHTML = '<div class="empty-state">ALL CLEAN — NO UNSORTED TRANSACTIONS THIS MONTH.</div>';
+                }
+            });
+        });
+    });
+}());
+{% endif %}
 
 /* ── Interaction-aware dwell timer ─────────────────────────── */
 (function () {

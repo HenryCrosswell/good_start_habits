@@ -1,31 +1,20 @@
+import os
 import sqlite3
 from flask import g
 from good_start_habits.config import BASE_INCOME, DEFAULT_EXTRA_INCOME, HABITS
 
+DB_PATH: str = os.environ.get("DB_PATH", "dashboard.db")
+
 
 def get_db():
-    """Return the per-request SQLite connection, creating it if needed.
-
-    Uses Flask's ``g`` object so the same connection is reused within a
-    single request and torn down automatically when the request ends.
-
-    Returns:
-        sqlite3.Connection: Open connection to ``dashboard.db``.
-    """
     db = getattr(g, "database", None)
     if db is None:
-        db = g.database = sqlite3.connect("dashboard.db")
+        db = g.database = sqlite3.connect(DB_PATH)
     return db
 
 
 def populate_habits():
-    """Insert any habits from config that are not already in the database.
-
-    Uses ``INSERT OR IGNORE`` so existing rows are left untouched.
-    Opens its own connection because this is called during app setup,
-    outside of a Flask request context.
-    """
-    con = sqlite3.connect("dashboard.db")
+    con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     for habit in HABITS:
         cur.execute(

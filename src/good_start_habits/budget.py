@@ -176,7 +176,7 @@ def map_category(
 
     for pattern, cat_override in _overrides.items():
         if pattern in desc:
-            return cat_override
+            return None if cat_override == "Transfer" else cat_override
 
     # Amrit PayPal conditional: rent-adjacent payment if £80–£115, else misc
     if "amrit" in desc and "paypal" in desc:

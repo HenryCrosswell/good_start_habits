@@ -63,8 +63,12 @@ tests/
 - Standby clock with active hours per day of week
 - Habits checklist with streak tracking, undo, per-day visibility
 - Budget page: TrueLayer OAuth (Monzo, Nationwide, Amex), transaction categorisation, burn-rate line graphs, monthly/yearly views, projection, sinking fund tracking, savings baselines, wrong-card detection, inline reclassification
+- Sort view (`?view=sort`) for batch categorisation of uncategorised transactions — AJAX, no page reload
+- UNSORT button on each transaction row — moves transaction back to "Other" so it appears in the sort queue
+- Transfer category — assigning Transfer excludes a transaction from all spend totals
+- Edit overlay on chart view — reclassify transactions in place without page reload
 - Docker + Gunicorn production setup
-- Railway deployment
+- Railway deployment with persistent volume for SQLite (`DB_PATH` env var)
 
 ### Planned
 - Phase 4 — Strava integration: `did_i_run_today()`, `get_recent_runs()`, auto-tick "Track run"
@@ -78,19 +82,31 @@ tests/
 ### SQLite connection (Flask `g` object)
 `db.py:get_db()` stores the connection on Flask's `g` object. A new connection is created per request and closed automatically when the request ends. `init_db()` runs on every request via `@app.before_request` — it uses `CREATE TABLE IF NOT EXISTS` so this is a no-op after the first run.
 
-The APScheduler token refresh job opens its own connection directly (`sqlite3.connect("dashboard.db")`) because it runs outside of a request context.
+The APScheduler token refresh job opens its own connection directly using `DB_PATH` from `db.py` because it runs outside of a request context.
+
+### Database path (`DB_PATH`)
+The SQLite file path is read from the `DB_PATH` environment variable, falling back to `"dashboard.db"` for local dev. In production on Railway, `DB_PATH=/data/dashboard.db` points to a persistent volume mounted at `/data`, so the database (and OAuth tokens) survive deploys. The constant lives in `db.py` and is imported by `app.py` for the scheduler job.
 
 ### Habit visibility vs habit existence
 Habits are always stored in the database. Whether they appear on the `/habits` page is controlled by `HABIT_ACTIVE_DAYS` in `config.py` — the template filters by today's day name. Adding a new habit only requires two changes: add to `HABITS` and add to `HABIT_ACTIVE_DAYS`.
 
-### Transaction categorisation (two-pass)
-`budget.py:map_category()` runs two passes:
-1. Check `CATEGORY_MAP` for a match on TrueLayer's `transaction_classification` field.
-2. If no match, scan `DESCRIPTION_PATTERNS` for a case-insensitive substring match on the description. First match wins.
-3. Fall back to `"Other"`.
-4. `None` result = exclude from all totals (transfers, income, savings movements).
+### Transaction categorisation (three-pass)
+`budget.py:map_category()` assigns a category in priority order:
+1. **`category_overrides` table** — substring match on the lowercased description. First matching override wins. If the stored category is `"Transfer"`, returns `None` (excluded from all totals).
+2. **`CATEGORY_MAP`** (`config.py`) — matched against TrueLayer's `transaction_classification` field.
+3. **`DESCRIPTION_PATTERNS`** (`config.py`) — case-insensitive substring scan of the description. First match wins.
+4. Fall back to `"Other"`.
+5. `None` result at any step = excluded from all totals (transfers, income, savings movements).
 
-Per-session overrides are stored in the `category_overrides` SQLite table and loaded into `budget._overrides` on each request. The override check happens before the two-pass default logic.
+Overrides are loaded into `budget._overrides` on each request via `load_overrides()`.
+
+### Reclassification AJAX API
+`POST /budget/api/reclassify` accepts `{ "description": "...", "category": "..." }` and returns `{ "ok": true }`. Used by:
+- **Sort view SAVE RULE button** — saves override and removes the row from the sort list without a page reload
+- **Edit overlay SAVE button** — moves the transaction to the new category in the client-side data structure
+- **UNSORT button** — reclassifies the transaction as `"Other"` and removes the row from the current view
+
+The older form-POST `POST /budget/reclassify` still exists for fallback but is no longer used by the UI.
 
 ### Sinking funds
 Sinking fund categories (Haircut, Gigs, etc.) reset their cumulative spend on defined months (`SINKING_FUND_RESETS`). `budget.py:_sf_period_start()` finds the most recent reset month and `budget.py:earliest_sf_since()` widens the TrueLayer fetch window to include the reset point.
@@ -122,3 +138,8 @@ flask --app src/good_start_habits/app.py run
 # Docker (production, also works on Pi)
 docker compose up -d
 ```
+
+## Railway deployment notes
+
+- Persistent volume mounted at `/data`, set `DB_PATH=/data/dashboard.db` in Railway Variables
+- To verify after deploy: open the service shell and run `ls -la /data/` — `dashboard.db` should be present with a non-zero size

@@ -228,6 +228,7 @@ CATEGORY_GROUPS: dict[str, list[str]] = {
         "Lastpass",
         "Proton",
     ],
+    "Excluded": ["Transfer"],
 }
 
 SINKING_FUND_RESETS: dict[str, list[int]] = {

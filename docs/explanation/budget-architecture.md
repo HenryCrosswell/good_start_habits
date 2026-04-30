@@ -22,7 +22,9 @@ TrueLayer returns transactions from the last N days. The app fetches separately 
 
 `budget.map_category()` assigns a personal category to each transaction using two sources of truth in order of priority:
 
-1. **Inline overrides** (`category_overrides` table) — checked first. If the transaction's lowercased description exactly matches a stored override, that category is used. These are set via the reclassify UI.
+1. **Inline overrides** (`category_overrides` table) — checked first via substring match on the lowercased description. If the stored description pattern appears anywhere in the transaction description, that category is used. These are set via the Sort tab or edit overlay.
+
+   - If the stored category is `"Transfer"`, the override returns `None` and the transaction is excluded from all spend totals — same as an automatically detected internal transfer.
 
 2. **`CATEGORY_MAP`** (`config.py`) — matched against TrueLayer's `transaction_classification` field. TrueLayer returns a list like `["Food", "Groceries"]`. The map supports two key formats:
    - `"Food|Groceries"` — matches if both top-level and sub-level match
@@ -51,6 +53,18 @@ Sinking fund categories (Haircut, Gigs, Steam Games, etc.) accumulate spend over
 3. The chart shows cumulative spend since the last reset against the sinking fund limit.
 
 This means a £45 haircut limit resets every 2 months — the chart starts at £0 in February, April, June, etc., and accumulates until the next reset.
+
+---
+
+## UNSORT and the sort queue
+
+Each transaction row on the month view has an **UNSORT** button. Clicking it:
+
+1. Calls `POST /budget/api/reclassify` with `category: "Other"` — no page reload.
+2. Removes the row from the current view immediately.
+3. The transaction now appears in the **Sort** tab (`?view=sort`) as an uncategorised item, where it can be assigned a correct category or marked as Transfer.
+
+This replaced the old SF button, which only crossed transactions out visually without affecting spend totals.
 
 ---
 
