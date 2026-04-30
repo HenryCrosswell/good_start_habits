@@ -249,36 +249,30 @@ SAVINGS_ACCOUNTS: list[dict] = [
         "name": "LISA",
         "patterns": ["lifetime isa", "moneybox", "lisa"],
         "colour": "#FF1493",
-        "annual_bonus_rate": 0.25,  # 25% government bonus
-        "annual_bonus_cap": 4000.0,  # capped at £4k contributions/year
         "default_balance": 24434.88,
     },
     {
         "name": "AJ Bell",
         "patterns": ["aj bell"],
         "colour": "#9B30FF",
-        "annual_return_rate": 0.07,  # estimated 7% blended return
         "default_balance": 7119.36,
     },
     {
         "name": "Premium Bonds",
         "patterns": ["ns&i", "premium bonds"],
         "colour": "#FFD700",
-        "annual_prize_rate": 0.044,  # 4.4% average annual prize rate
         "default_balance": 1025.0,
     },
     {
         "name": "Atom",
         "patterns": ["atom"],
         "colour": "#FF6B00",
-        "annual_return_rate": 0.05,  # 5% fixed-rate savings
         "default_balance": 0.0,
     },
     {
         "name": "Nationwide",
         "patterns": ["nationwide sav", "flex saver"],
         "colour": "#00B4D8",
-        "annual_return_rate": 0.045,  # ~4.5% easy-access rate
         "default_balance": 1000.0,
     },
 ]
