@@ -59,9 +59,21 @@ def _refresh_tokens_job() -> None:
         con.close()
 
 
+def _garmin_sync_job() -> None:
+    from good_start_habits import garmin as garmin_module
+    from good_start_habits.db import DB_PATH
+
+    con = sqlite3.connect(DB_PATH)
+    try:
+        garmin_module.sync_activities(con)
+    finally:
+        con.close()
+
+
 # Only start in the main Werkzeug process (not the file-watcher child)
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     _scheduler.add_job(_refresh_tokens_job, "interval", hours=1)
+    _scheduler.add_job(_garmin_sync_job, "interval", minutes=30)
     _scheduler.start()
     atexit.register(lambda: _scheduler.shutdown(wait=False))
 
@@ -491,6 +503,43 @@ def budget_savings_baseline():
             offset=request.form.get("offset", "0"),
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# Garmin
+# ---------------------------------------------------------------------------
+
+
+@app.route("/garmin")
+def garmin_page():
+    from good_start_habits import garmin as garmin_module
+
+    db = get_db()
+    activities = garmin_module.get_all_activities(db)
+    ef_chart = garmin_module.build_ef_chart(activities)
+    latest_stats = garmin_module.get_latest_run_stats(activities)
+    summary = garmin_module.generate_summary(db, activities)
+    ef_runs = [a for a in activities if a["ef"] is not None]
+
+    return render_template(
+        "garmin.html",
+        activities=list(reversed(activities)),
+        ef_chart=ef_chart,
+        latest_stats=latest_stats,
+        summary=summary,
+        total_runs=len(ef_runs),
+        dwell_time=DWELL_TIME,
+    )
+
+
+@app.route("/garmin/sync", methods=["POST"])
+def garmin_sync():
+    """Trigger a manual Garmin sync (for Railway shell use / initial backfill)."""
+    from good_start_habits import garmin as garmin_module
+
+    db = get_db()
+    added = garmin_module.sync_activities(db)
+    return jsonify({"added": added})
 
 
 # ---------------------------------------------------------------------------

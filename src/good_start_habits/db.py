@@ -148,6 +148,38 @@ def save_savings_baseline(
     db.commit()
 
 
+def init_garmin_tables(db: sqlite3.Connection) -> None:
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS garmin_activities (
+            activity_id       INTEGER PRIMARY KEY,
+            activity_date     TEXT    NOT NULL,
+            name              TEXT    NOT NULL DEFAULT '',
+            distance_meters   REAL,
+            duration_seconds  REAL,
+            avg_hr_bpm        REAL,
+            max_hr_bpm        REAL,
+            calories          INTEGER,
+            run_distance_m    REAL,
+            run_duration_s    REAL,
+            ef                REAL,
+            run_pace_s_per_km REAL,
+            fetched_at        TEXT DEFAULT (datetime('now'))
+        )
+        """
+    )
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS garmin_summaries (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            generated_at     TEXT NOT NULL,
+            last_activity_id INTEGER,
+            summary          TEXT NOT NULL
+        )
+        """
+    )
+
+
 def init_db():
     """Create all tables if they do not exist and seed habit rows."""
     db = get_db()
@@ -163,6 +195,7 @@ def init_db():
     )
     init_tl_tables(db)
     init_budget_settings(db)
+    init_garmin_tables(db)
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS category_overrides (
