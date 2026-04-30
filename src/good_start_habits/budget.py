@@ -1303,6 +1303,7 @@ def get_uncategorized_transactions(
                 {
                     "description": _clean_desc(raw or "Unknown"),
                     "raw_description": rule_desc,
+                    "full_description": raw.lower().strip(),
                     "amount": round(abs(t.get("amount", 0)), 2),
                     "date": t.get("timestamp", "")[:10],
                     "provider": provider,

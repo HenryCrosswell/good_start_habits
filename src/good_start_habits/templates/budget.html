@@ -919,6 +919,20 @@ html, body {
     box-shadow: 2px 2px 0 #111111;
     max-width: 180px;
 }
+.sort-once-btn {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.75rem;
+    padding: 0.25em 0.6em;
+    border: 2px solid #007AA0;
+    background: #00B4D8;
+    color: #111111;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    box-shadow: 2px 2px 0 #007AA0;
+    white-space: nowrap;
+    transition: transform 0.07s, box-shadow 0.07s;
+}
+.sort-once-btn:hover { transform: translate(2px,2px); box-shadow: 0 0 0 #007AA0; }
 .sort-save-btn {
     font-family: 'Cherry Cream Soda', monospace;
     font-size: 0.75rem;
@@ -1097,7 +1111,9 @@ html, body {
                 <div class="sort-desc" title="{{ txn.description | upper }}">{{ txn.description | upper }}</div>
                 <div class="txn-date">{{ txn.date }}</div>
                 <div class="txn-amount">£{{ "%.2f"|format(txn.amount) }}</div>
-                <form method="post" action="/budget/reclassify" class="sort-form">
+                <form method="post" action="/budget/reclassify" class="sort-form"
+                      data-rule-desc="{{ txn.raw_description | e }}"
+                      data-once-desc="{{ txn.full_description | e }}">
                     <input type="hidden" name="description" value="{{ txn.raw_description }}">
                     <input type="hidden" name="view" value="sort">
                     <input type="hidden" name="provider" value="{{ active_provider }}">
@@ -1108,6 +1124,7 @@ html, body {
                         <option value="{{ cat }}">{{ cat | upper }}</option>
                         {% endfor %}
                     </select>
+                    <button type="button" class="sort-once-btn">ONE-OFF</button>
                     <button type="button" class="sort-save-btn">SAVE RULE</button>
                 </form>
             </div>
@@ -1860,7 +1877,7 @@ html, body {
 
     renderCat(0);
 
-{% elif charts and charts.burn_rate %}
+{% elif charts and charts.burn_rate and view != 'sort' %}
 
     var fig = {{ charts.burn_rate | safe }};
     var yearLayout = Object.assign({}, CHART_LAYOUT, {
@@ -1889,33 +1906,46 @@ window.toggleSettings = function () {
 /* ── Sort view: AJAX rule-save ────────────────────────────── */
 {% if view == 'sort' %}
 (function () {
+    function removeRow(form) {
+        var row = form.closest('.sort-row');
+        row.remove();
+        var rows = document.querySelectorAll('.sort-row');
+        var statBigs = document.querySelectorAll('.sort-stat-big');
+        if (statBigs[0]) statBigs[0].textContent = rows.length;
+        var total = Array.from(rows).reduce(function (sum, r) {
+            return sum + (parseFloat(((r.querySelector('.txn-amount') || {}).textContent || '').replace('£', '')) || 0);
+        }, 0);
+        if (statBigs[1]) statBigs[1].textContent = '£' + Math.round(total);
+        if (!rows.length) {
+            document.querySelector('.sort-list').innerHTML = '<div class="empty-state">ALL CLEAN — NO UNSORTED TRANSACTIONS THIS MONTH.</div>';
+        }
+    }
+
+    function saveAndRemove(desc, cat, form) {
+        fetch('/budget/api/reclassify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ description: desc, category: cat }),
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            if (data.ok) removeRow(form);
+        });
+    }
+
     document.querySelectorAll('.sort-save-btn').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
+        btn.addEventListener('click', function () {
             var form = btn.closest('.sort-form');
             var cat  = form.querySelector('select[name=category]').value;
             if (!cat) return;
-            e.preventDefault();
-            e.stopPropagation();
-            var desc = form.querySelector('input[name=description]').value;
-            fetch('/budget/api/reclassify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ description: desc, category: cat }),
-            }).then(function (r) { return r.json(); }).then(function (data) {
-                if (!data.ok) return;
-                var row = form.closest('.sort-row');
-                row.remove();
-                var rows = document.querySelectorAll('.sort-row');
-                var statBigs = document.querySelectorAll('.sort-stat-big');
-                if (statBigs[0]) statBigs[0].textContent = rows.length;
-                var total = Array.from(rows).reduce(function (sum, r) {
-                    return sum + (parseFloat(((r.querySelector('.txn-amount') || {}).textContent || '').replace('£', '')) || 0);
-                }, 0);
-                if (statBigs[1]) statBigs[1].textContent = '£' + Math.round(total);
-                if (!rows.length) {
-                    document.querySelector('.sort-list').innerHTML = '<div class="empty-state">ALL CLEAN — NO UNSORTED TRANSACTIONS THIS MONTH.</div>';
-                }
-            });
+            saveAndRemove(form.dataset.ruleDesc, cat, form);
+        });
+    });
+
+    document.querySelectorAll('.sort-once-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var form = btn.closest('.sort-form');
+            var cat  = form.querySelector('select[name=category]').value;
+            if (!cat) return;
+            saveAndRemove(form.dataset.onceDesc, cat, form);
         });
     });
 }());
