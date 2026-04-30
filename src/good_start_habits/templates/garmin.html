@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block title %}Garmin{% endblock %}
+
+{% block extra_styles %}
+<style>
+html, body {
+    min-height: 100vh;
+    background: #FFF9F0;
+    background-image: radial-gradient(#00000012 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+}
+
+#pt-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.garmin-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.4rem;
+    height: 56px;
+    background: #FF6B00;
+    border-bottom: 3px solid #111111;
+    box-shadow: 0 3px 0 #111111;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.garmin-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg,
+        #FF1493  0%     14.28%,
+        #FF6B00  14.28% 28.57%,
+        #FFE600  28.57% 42.85%,
+        #00C851  42.85% 57.14%,
+        #00B4D8  57.14% 71.42%,
+        #9B30FF  71.42% 85.71%,
+        #FF00CC  85.71% 100%
+    );
+}
+
+.garmin-header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+}
+
+.garmin-title {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 1.1rem;
+    color: #FFFFFF;
+}
+
+.garmin-subtitle {
+    font-family: 'VT323', monospace;
+    font-size: 1.4rem;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.06em;
+}
+
+.garmin-run-count {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    color: #FFFFFF;
+    letter-spacing: 0.05em;
+}
+
+/* ── Body ───────────────────────────────────────────────────────── */
+.garmin-body {
+    flex: 1;
+    padding: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────── */
+.garmin-card {
+    background: #FFFFFF;
+    border: 3px solid #111111;
+    box-shadow: 6px 6px 0 #111111;
+    overflow: hidden;
+}
+
+.card-header {
+    background: #FFE600;
+    border-bottom: 3px solid #111111;
+    padding: 0.5rem 1rem;
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.75rem;
+    color: #111111;
+    letter-spacing: 0.04em;
+}
+
+.card-body {
+    padding: 1rem 1.2rem;
+}
+
+/* ── Top row: stats + chart ─────────────────────────────────────── */
+.garmin-top-row {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.2rem;
+}
+
+@media (max-width: 760px) {
+    .garmin-top-row { grid-template-columns: 1fr; }
+}
+
+/* ── Stats card ─────────────────────────────────────────────────── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem 0.4rem;
+    margin-top: 0.3rem;
+}
+
+.stat-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.stat-label {
+    font-family: 'VT323', monospace;
+    font-size: 0.95rem;
+    color: #888888;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-family: 'VT323', monospace;
+    font-size: 2rem;
+    color: #111111;
+    line-height: 1;
+}
+
+.stat-value.big {
+    font-size: 2.6rem;
+    color: #FF6B00;
+}
+
+.stat-delta {
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    margin-top: 0.1rem;
+}
+
+.stat-delta.good  { color: #00C851; }
+.stat-delta.bad   { color: #FF1493; }
+.stat-delta.flat  { color: #888888; }
+
+.stat-run-date {
+    font-family: 'VT323', monospace;
+    font-size: 1.2rem;
+    color: #888888;
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.03em;
+}
+
+.empty-state {
+    font-family: 'VT323', monospace;
+    font-size: 1.4rem;
+    color: #888888;
+    line-height: 1.5;
+    padding: 0.5rem 0;
+}
+
+/* ── EF chart ──────────────────────────────────────────────────── */
+#ef-chart {
+    width: 100%;
+    height: 300px;
+}
+
+/* ── Trainer notes ─────────────────────────────────────────────── */
+.trainer-text {
+    font-family: 'VT323', monospace;
+    font-size: 1.35rem;
+    color: #111111;
+    line-height: 1.5;
+}
+
+.trainer-retry {
+    font-family: 'VT323', monospace;
+    font-size: 1.2rem;
+    color: #888888;
+}
+
+/* ── Activity history table ────────────────────────────────────── */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'VT323', monospace;
+    font-size: 1.2rem;
+}
+
+.history-table th {
+    text-align: left;
+    padding: 0.5rem 0.8rem;
+    background: #F5F0E8;
+    border-bottom: 2px solid #111111;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    color: #555555;
+    white-space: nowrap;
+}
+
+.history-table td {
+    padding: 0.45rem 0.8rem;
+    border-bottom: 1px solid #F0ECE4;
+    color: #111111;
+    white-space: nowrap;
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.history-table tr:hover td {
+    background: #FFF9F0;
+}
+
+.ef-val {
+    color: #FF6B00;
+    font-weight: bold;
+}
+
+.no-ef {
+    color: #CCCCCC;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="garmin-header">
+    <div class="garmin-header-left">
+        <span class="garmin-title">GARMIN</span>
+        <span class="garmin-subtitle">RUNNING TRACKER</span>
+    </div>
+    <span class="garmin-run-count">{{ total_runs }} RUNS</span>
+</div>
+
+<div class="garmin-body">
+
+    {# ── Top row: latest stats + EF chart ───────────────────────── #}
+    <div class="garmin-top-row">
+
+        {# Stats card #}
+        <div class="garmin-card">
+            <div class="card-header">LAST RUN</div>
+            <div class="card-body">
+                {% if latest_stats %}
+                    <div class="stat-run-date">{{ latest_stats.date }}</div>
+                    <div class="stats-grid">
+
+                        {# EF #}
+                        <div class="stat-block">
+                            <span class="stat-label">EF</span>
+                            <span class="stat-value big">{{ latest_stats.ef }}</span>
+                            {% set ind = latest_stats.ef_ind %}
+                            {% if ind.pct is not none %}
+                                <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">
+                                    {{ ind.arrow }} {{ ind.pct }}%
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        {# Run Pace #}
+                        <div class="stat-block">
+                            <span class="stat-label">RUN PACE</span>
+                            <span class="stat-value">{{ latest_stats.run_pace or '—' }}/km</span>
+                            {% set ind = latest_stats.pace_ind %}
+                            {% if ind.pct is not none %}
+                                <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">
+                                    {{ ind.arrow }} {{ ind.pct }}%
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        {# Avg HR #}
+                        <div class="stat-block">
+                            <span class="stat-label">AVG HR</span>
+                            <span class="stat-value">{{ latest_stats.avg_hr | int }} bpm</span>
+                            {% set ind = latest_stats.hr_ind %}
+                            {% if ind.pct is not none %}
+                                <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">
+                                    {{ ind.arrow }} {{ ind.pct }}%
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        {# Total Distance #}
+                        <div class="stat-block">
+                            <span class="stat-label">DISTANCE</span>
+                            <span class="stat-value">{{ latest_stats.distance_km }} km</span>
+                            {% set ind = latest_stats.dist_ind %}
+                            {% if ind.pct is not none %}
+                                <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">
+                                    {{ ind.arrow }} {{ ind.pct }}%
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        {# Run Distance #}
+                        {% if latest_stats.run_distance_km %}
+                        <div class="stat-block">
+                            <span class="stat-label">RUN DIST</span>
+                            <span class="stat-value">{{ latest_stats.run_distance_km }} km</span>
+                        </div>
+                        {% endif %}
+
+                        {# Calories #}
+                        <div class="stat-block">
+                            <span class="stat-label">CALORIES</span>
+                            <span class="stat-value">{{ latest_stats.calories }}</span>
+                        </div>
+
+                        {# Max HR #}
+                        <div class="stat-block">
+                            <span class="stat-label">MAX HR</span>
+                            <span class="stat-value">{{ latest_stats.max_hr | int }} bpm</span>
+                        </div>
+
+                        {# Duration #}
+                        <div class="stat-block">
+                            <span class="stat-label">DURATION</span>
+                            <span class="stat-value">{{ latest_stats.duration_min }} min</span>
+                        </div>
+
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        No runs synced yet.<br>
+                        POST to /garmin/sync<br>
+                        to load your history.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Chart card #}
+        <div class="garmin-card">
+            <div class="card-header">EFFICIENCY FACTOR OVER TIME &mdash; speed (km/h) ÷ avg HR</div>
+            <div class="card-body">
+                {% if ef_chart %}
+                    <div id="ef-chart"></div>
+                {% else %}
+                    <div class="empty-state" style="padding: 2rem 0;">
+                        Chart will appear after first sync.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    {# ── Trainer notes ──────────────────────────────────────────── #}
+    <div class="garmin-card">
+        <div class="card-header">COACH NOTES</div>
+        <div class="card-body">
+            {% if summary == "__retry__" %}
+                <p class="trainer-retry">
+                    Coaching summary is temporarily unavailable — check back in a few minutes.
+                </p>
+            {% elif summary %}
+                <p class="trainer-text">{{ summary }}</p>
+            {% elif total_runs > 0 %}
+                <p class="trainer-retry">
+                    Add ANTHROPIC_API_KEY to .env to enable coaching summaries.
+                </p>
+            {% else %}
+                <p class="trainer-retry">Summaries will appear once runs are synced.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── Activity history ────────────────────────────────────────── #}
+    <div class="garmin-card">
+        <div class="card-header">ACTIVITY HISTORY ({{ activities | length }} runs, newest first)</div>
+        <div class="card-body" style="padding: 0; overflow-x: auto;">
+            {% if activities %}
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>DATE</th>
+                        <th>EF</th>
+                        <th>RUN PACE</th>
+                        <th>AVG HR</th>
+                        <th>MAX HR</th>
+                        <th>DIST</th>
+                        <th>RUN DIST</th>
+                        <th>DURATION</th>
+                        <th>CALORIES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for act in activities %}
+                    <tr>
+                        <td>{{ act.date }}</td>
+                        <td>
+                            {% if act.ef %}
+                                <span class="ef-val">{{ act.ef }}</span>
+                            {% else %}
+                                <span class="no-ef">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ act.run_pace or '—' }}</td>
+                        <td>{{ act.avg_hr | int if act.avg_hr else '—' }}</td>
+                        <td>{{ act.max_hr | int if act.max_hr else '—' }}</td>
+                        <td>{{ act.distance_km }} km</td>
+                        <td>{{ act.run_distance_km ~ ' km' if act.run_distance_km else '—' }}</td>
+                        <td>{{ act.duration_min }} min</td>
+                        <td>{{ act.calories or '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <div class="empty-state" style="padding: 1.2rem;">No activity history yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" crossorigin="anonymous"></script>
+<script>
+{% if ef_chart %}
+(function () {
+    const fig = {{ ef_chart | safe }};
+    Plotly.newPlot('ef-chart', fig.data, fig.layout, {
+        responsive: true,
+        displayModeBar: false,
+    });
+})();
+{% endif %}
+
+if (new URLSearchParams(window.location.search).get('freeze') !== '1') {
+    ptNavigate('/', 'fall', {{ dwell_time }});
+}
+</script>
+{% endblock %}
