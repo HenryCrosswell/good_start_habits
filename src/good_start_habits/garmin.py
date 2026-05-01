@@ -405,7 +405,8 @@ def _lm_bullets(api_key: str, system_text: str, user_json: str, max_tokens: int)
             ],
             messages=[{"role": "user", "content": user_json}],
         )
-        return msg.content[0].text.strip()
+        block = msg.content[0]
+        return block.text.strip() if hasattr(block, "text") else ""
     except Exception as exc:
         log.warning("LLM call failed: %s", exc)
         err = str(exc).lower()
@@ -838,7 +839,8 @@ def ask_trainer(
             ],
             messages=[{"role": "user", "content": question}],
         )
-        response = msg.content[0].text.strip()
+        block = msg.content[0]
+        response = block.text.strip() if hasattr(block, "text") else ""
         if not response:
             return "__error__", count
     except Exception as exc:
