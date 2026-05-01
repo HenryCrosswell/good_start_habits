@@ -193,6 +193,19 @@ html, body {
     transform: translate(2px, 2px);
     box-shadow: 1px 1px 0 #999999;
 }
+
+@media (max-width: 768px) {
+    html, body { height: auto; overflow-y: auto; }
+    #pt-container { height: auto; overflow: visible; }
+    .habits-header { height: auto; min-height: 52px; padding: 0.4rem 1rem; }
+    .habits-header-date { font-size: 1.35rem; }
+    .habits-body { overflow: visible; padding: 0.6rem; align-items: flex-start; }
+    .habits-panel { width: 100%; }
+    .habit-row { height: auto; min-height: 54px; }
+    .habit-name { font-size: 1.4rem; white-space: normal; }
+    .habit-streak { padding: 0 0.55rem; font-size: 1.05rem; }
+    .habit-streak strong { font-size: 1.2rem; }
+}
 </style>
 {% endblock %}
 

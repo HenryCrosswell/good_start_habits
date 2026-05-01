@@ -976,6 +976,164 @@ html, body {
     line-height: 1.8;
     text-align: center;
 }
+
+/* ── List view ─────────────────────────────────────────────── */
+.list-panel {
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.list-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.9rem;
+    border-bottom: 2px solid #EEEEEE;
+    flex-shrink: 0;
+    background: #FAFAFA;
+}
+.list-view-title {
+    font-family: 'VT323', monospace;
+    font-size: 1.05rem;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    color: #111111;
+}
+.list-view-meta {
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    color: #888888;
+    letter-spacing: 0.04em;
+}
+.list-scroll {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #DDDDDD transparent;
+}
+.list-group-hdr {
+    padding: 0.32rem 0.9rem;
+    font-family: 'VT323', monospace;
+    font-size: 1.0rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888888;
+    background: #F2F2F2;
+    border-bottom: 2px solid #E0E0E0;
+    border-top: 2px solid #E0E0E0;
+    font-weight: bold;
+}
+.list-row {
+    display: grid;
+    grid-template-columns: 190px 1fr 130px 130px 100px;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.48rem 0.9rem;
+    border-bottom: 1px solid #F0F0F0;
+    border-left: 4px solid transparent;
+    transition: background 0.08s;
+}
+.list-row:hover { background: #FAFAFA; }
+.list-row:last-child { border-bottom: none; }
+.list-name {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: 'VT323', monospace;
+    font-size: 1.0rem;
+    color: #111111;
+    letter-spacing: 0.04em;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.list-dot {
+    width: 9px; height: 9px;
+    border-radius: 0;
+    flex-shrink: 0;
+    border: 1.5px solid #111111;
+}
+.list-bar-wrap {
+    height: 7px;
+    background: #EEEEEE;
+    border: 1.5px solid #CCCCCC;
+    overflow: hidden;
+}
+.list-bar-fill {
+    height: 100%;
+    transition: width 0.4s steps(12, end);
+    border-right: 1px solid rgba(0,0,0,0.15);
+}
+.list-bar-fill.over { background: #FF1493 !important; }
+.list-spent {
+    font-family: 'VT323', monospace;
+    font-size: 0.92rem;
+    color: #888888;
+    text-align: right;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+.list-spent .spent-val { color: #111111; font-weight: bold; }
+.list-remaining {
+    font-family: 'VT323', monospace;
+    font-size: 1.0rem;
+    font-weight: bold;
+    text-align: right;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+}
+.list-remaining.good    { color: #00C851; }
+.list-remaining.over    { color: #FF1493; }
+.list-remaining.neutral { color: #888888; }
+.list-reset {
+    font-family: 'VT323', monospace;
+    font-size: 0.82rem;
+    color: #9B30FF;
+    text-align: right;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+}
+
+@media (max-width: 768px) {
+    html, body { height: auto; overflow-y: auto; }
+    #pt-container { height: auto; overflow: visible; }
+    .budget-app {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+    }
+    .budget-header {
+        height: auto;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        padding: 0.5rem 0.75rem;
+        white-space: normal;
+    }
+    .left-panel {
+        border-right: none;
+        border-bottom: 3px solid #111111;
+    }
+    .cat-list { max-height: 300px; }
+    .right-panel { }
+    .chart-section { height: 320px; flex: none; }
+    .txn-section { height: auto; max-height: 320px; }
+    .sort-panel { overflow: visible; }
+    .sort-list { max-height: 70vh; overflow-y: auto; }
+    .settings-panel { position: static; border-top: 3px solid #FFE600; border-bottom: 3px solid #FFE600; }
+    /* List view: collapse bar, show name | remaining | reset */
+    .list-panel { overflow: visible; }
+    .list-scroll { overflow: visible; max-height: none; }
+    .list-row {
+        grid-template-columns: 1fr auto auto;
+        gap: 0.5rem;
+    }
+    .list-bar-wrap { display: none; }
+    .list-spent { display: none; }
+    .list-remaining { font-size: 0.9rem; }
+    .list-reset { font-size: 0.75rem; }
+}
 </style>
 {% endblock %}
 
@@ -1020,6 +1178,9 @@ html, body {
         <div class="header-sep"></div>
 
         <div class="nav-group">
+            <a href="/budget?view=list&provider={{ active_provider }}&offset={{ offset }}"
+               class="btn-link {% if view == 'list' %}active{% endif %}"
+               style="{% if view == 'list' %}background:#00B4D8;color:#111111;{% endif %}">&#8801; LIST</a>
             <a href="/budget?view=sort&provider={{ active_provider }}&offset={{ offset }}"
                class="btn-link {% if view == 'sort' %}active{% endif %}"
                style="{% if view == 'sort' %}background:#FF6B00;color:#FFFFFF;{% endif %}">&#9998; SORT</a>
@@ -1134,6 +1295,164 @@ html, body {
                 ALL CLEAN — NO UNSORTED TRANSACTIONS THIS MONTH.
             </div>
             {% endif %}
+        </div>
+    </div>
+
+    {% elif view == 'list' and charts %}
+
+    <!-- ── List view ─────────────────────────────────────────── -->
+    <div class="left-panel">
+        {% if summary %}
+        {% set income = summary.income %}
+        {% set balance = summary.usable_balance %}
+        {% set pct = summary.pct_used %}
+        <div class="summary-grid">
+            <div class="stat-cell">
+                <div class="stat-label">Spent</div>
+                <div class="stat-value {% if pct > 100 %}over{% endif %}">£{{ "%.0f"|format(summary.total_spent) }}</div>
+                <div class="stat-sub">{{ pct }}% USED</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-label">{% if income %}Income Left{% else %}Left{% endif %}</div>
+                {% if income %}
+                <div class="stat-value {% if balance < 0 %}over{% else %}good{% endif %}">
+                    {% if balance < 0 %}-{% endif %}£{{ "%.0f"|format(balance | abs) }}
+                </div>
+                <div class="stat-sub">OF £{{ "%.0f"|format(income) }}</div>
+                {% else %}
+                {% set remaining = summary.total_budget - summary.total_spent %}
+                <div class="stat-value {% if remaining < 0 %}over{% else %}good{% endif %}">
+                    {% if remaining < 0 %}-{% endif %}£{{ "%.0f"|format(remaining | abs) }}
+                </div>
+                <div class="stat-sub">OF £{{ "%.0f"|format(summary.total_budget) }}</div>
+                {% endif %}
+            </div>
+            <div class="stat-cell">
+                <div class="stat-label">Saved</div>
+                <div class="stat-value good">£{{ "%.0f"|format(summary.total_savings) }}</div>
+                {% if summary.projected_savings %}
+                <div class="stat-sub">→ £{{ "%.0f"|format(summary.projected_savings) }}</div>
+                {% else %}
+                <div class="stat-sub">THIS MONTH</div>
+                {% endif %}
+            </div>
+            <div class="stat-cell">
+                <div class="stat-label">Cats</div>
+                <div class="stat-value">{{ summary.categories | length }}</div>
+                <div class="stat-sub">TRACKED</div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="empty-state" style="font-size:0.85rem;color:#BBBBBB;letter-spacing:0.06em;padding-top:1.5rem;">
+            ALL CATEGORIES<br>{{ display_month }}
+        </div>
+    </div>
+
+    <div class="right-panel list-panel">
+        <div class="list-view-header">
+            <span class="list-view-title">// CATEGORY BREAKDOWN — {{ display_month }}</span>
+            <span class="list-view-meta">{{ connected_providers | join(' · ') | upper }}</span>
+        </div>
+        <div class="list-scroll">
+            {% set cat_colours = ['#FF1493','#9B30FF','#FF6B00','#00B4D8','#00C851','#E01A5A','#0077DD','#FF00CC','#FF8C00','#00C8A0'] %}
+            {% set provider_colours = {'nationwide': '#00B4D8', 'amex': '#9B30FF', 'monzo': '#FF1493'} %}
+            {% set ns = namespace(colour_idx=0) %}
+
+            {% for provider in connected_providers %}
+            {% set pdata = provider_breakdowns.get(provider, {}) %}
+            {% set pcol = provider_colours.get(provider, '#888888') %}
+            {% if pdata.get('categories') %}
+            <div class="list-group-hdr" style="color: {{ pcol }};">// {{ provider | upper }}</div>
+            {% for cat in pdata.get('categories', []) %}
+            {% if cat.spent > 0 or cat.budget > 0 %}
+            {% set colour = cat_colours[ns.colour_idx % 10] %}
+            {% set ns.colour_idx = ns.colour_idx + 1 %}
+            <div class="list-row" style="border-left-color: {{ colour }};">
+                <div class="list-name">
+                    <span class="list-dot" style="background: {{ colour }};"></span>
+                    {{ cat.name | upper }}
+                </div>
+                {% if cat.budget %}
+                <div class="list-bar-wrap">
+                    <div class="list-bar-fill {% if cat.pct_used > 100 %}over{% endif %}"
+                         style="width: {{ [cat.pct_used, 100]|min }}%; background: {{ colour }};"></div>
+                </div>
+                {% else %}<div></div>{% endif %}
+                <div class="list-spent">
+                    <span class="spent-val">£{{ "%.0f"|format(cat.spent) }}</span>
+                    {% if cat.budget %}<span> / £{{ "%.0f"|format(cat.budget) }}</span>{% endif %}
+                </div>
+                {% if cat.budget %}
+                <div class="list-remaining {% if cat.remaining >= 0 %}good{% else %}over{% endif %}">
+                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT{% else %}£{{ "%.0f"|format(cat.remaining|abs) }} OVER{% endif %}
+                </div>
+                {% else %}<div class="list-remaining neutral">—</div>{% endif %}
+                <div class="list-reset"></div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% if pdata.error_total > 0 %}
+            <div class="list-row" style="border-left-color: #FF6B00; background: #FF6B0008;">
+                <div class="list-name">
+                    <span class="list-dot" style="background: #FF6B00;"></span>
+                    WRONG CARD
+                </div>
+                <div></div>
+                <div class="list-spent"><span class="spent-val" style="color:#FF6B00;">£{{ "%.0f"|format(pdata.error_total) }}</span></div>
+                <div class="list-remaining over">MISPLACED</div>
+                <div class="list-reset"></div>
+            </div>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+
+            {% if sinking_fund_cats %}
+            <div class="list-group-hdr" style="color: #9B30FF;">// SINKING FUND</div>
+            {% for cat in sinking_fund_cats %}
+            <div class="list-row" style="border-left-color: #9B30FF;">
+                <div class="list-name">
+                    <span class="list-dot" style="background: #9B30FF;"></span>
+                    {{ cat.name | upper }}
+                </div>
+                {% if cat.budget %}
+                <div class="list-bar-wrap">
+                    <div class="list-bar-fill {% if cat.pct_used > 100 %}over{% endif %}"
+                         style="width: {{ [cat.pct_used, 100]|min }}%; background: #9B30FF;"></div>
+                </div>
+                {% else %}<div></div>{% endif %}
+                <div class="list-spent">
+                    {% if cat.spent > 0 %}
+                        <span class="spent-val">£{{ "%.2f"|format(cat.spent) }}</span>{% if cat.budget %}<span> / £{{ "%.0f"|format(cat.budget) }}</span>{% endif %}
+                    {% else %}
+                        <span style="color:#BBBBBB;">£{{ "%.0f"|format(cat.budget) }} budget</span>
+                    {% endif %}
+                </div>
+                {% if cat.budget and cat.spent > 0 %}
+                <div class="list-remaining {% if cat.remaining >= 0 %}good{% else %}over{% endif %}">
+                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT{% else %}£{{ "%.0f"|format(cat.remaining|abs) }} OVER{% endif %}
+                </div>
+                {% else %}<div class="list-remaining neutral">UNSPENT</div>{% endif %}
+                <div class="list-reset">{% if cat.next_reset %}RESETS {{ cat.next_reset | upper }}{% endif %}</div>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% if summary and summary.total_savings is defined and summary.total_savings > 0 %}
+            <div class="list-group-hdr" style="color: #00C851;">// SAVINGS</div>
+            <div class="list-row" style="border-left-color: #00C851;">
+                <div class="list-name">
+                    <span class="list-dot" style="background: #00C851;"></span>
+                    SAVINGS THIS MONTH
+                </div>
+                <div></div>
+                <div class="list-spent"><span class="spent-val" style="color:#00C851;">£{{ "%.0f"|format(summary.total_savings) }}</span></div>
+                <div class="list-remaining good">
+                    {% if summary.projected_savings %}→ £{{ "%.0f"|format(summary.projected_savings) }}{% else %}THIS MONTH{% endif %}
+                </div>
+                <div class="list-reset"></div>
+            </div>
+            {% endif %}
+
         </div>
     </div>
 

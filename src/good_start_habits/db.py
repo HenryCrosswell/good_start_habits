@@ -164,6 +164,7 @@ def init_garmin_tables(db: sqlite3.Connection) -> None:
             run_duration_s    REAL,
             ef                REAL,
             run_pace_s_per_km REAL,
+            avg_cadence_spm   REAL,
             fetched_at        TEXT DEFAULT (datetime('now'))
         )
         """
@@ -174,7 +175,41 @@ def init_garmin_tables(db: sqlite3.Connection) -> None:
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
             generated_at     TEXT NOT NULL,
             last_activity_id INTEGER,
+            summary_type     TEXT NOT NULL DEFAULT 'activity',
+            period_key       TEXT,
             summary          TEXT NOT NULL
+        )
+        """
+    )
+    # Migrate pre-existing tables that lack the new columns
+    for col, defn in [
+        ("summary_type", "TEXT NOT NULL DEFAULT 'activity'"),
+        ("period_key", "TEXT"),
+    ]:
+        try:
+            db.execute(f"ALTER TABLE garmin_summaries ADD COLUMN {col} {defn}")
+        except Exception:
+            pass  # column already exists
+    try:
+        db.execute("ALTER TABLE garmin_activities ADD COLUMN avg_cadence_spm REAL")
+    except Exception:
+        pass  # column already exists
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS garmin_chat_log (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            asked_date TEXT NOT NULL,
+            question   TEXT NOT NULL,
+            response   TEXT NOT NULL
+        )
+        """
+    )
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS garmin_fitness_cache (
+            fetched_date TEXT PRIMARY KEY,
+            data         TEXT NOT NULL,
+            updated_at   TEXT DEFAULT (datetime('now'))
         )
         """
     )

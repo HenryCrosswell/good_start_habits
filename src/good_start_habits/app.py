@@ -66,6 +66,7 @@ def _garmin_sync_job() -> None:
     con = sqlite3.connect(DB_PATH)
     try:
         garmin_module.sync_activities(con)
+        garmin_module.sync_fitness_stats(con)
     finally:
         con.close()
 
@@ -300,11 +301,11 @@ def budget():
         recent_txn_source = {
             active_provider: provider_transactions.get(active_provider, [])
         }
-    txn_year = disp_year if view in ("month", "sort") else None
-    txn_month = disp_month if view in ("month", "sort") else None
+    txn_year = disp_year if view in ("month", "sort", "list") else None
+    txn_month = disp_month if view in ("month", "sort", "list") else None
     sf_starts = (
         budget_module.sf_period_starts_for_month(disp_year, disp_month)
-        if view in ("month", "sort")
+        if view in ("month", "sort", "list")
         else {}
     )
     recent_transactions = budget_module.get_recent_transactions(
@@ -515,20 +516,61 @@ def garmin_page():
     from good_start_habits import garmin as garmin_module
 
     db = get_db()
-    activities = garmin_module.get_all_activities(db)
+    activities = garmin_module.get_all_activities(db)  # oldest first
     ef_chart = garmin_module.build_ef_chart(activities)
     latest_stats = garmin_module.get_latest_run_stats(activities)
-    summary = garmin_module.generate_summary(db, activities)
+    summaries = garmin_module.get_all_summaries(db, activities)
     ef_runs = [a for a in activities if a["ef"] is not None]
+
+    chat_used = garmin_module.get_daily_chat_count(db)
+    chat_history = garmin_module.get_today_chat_history(db)
+    fitness_stats = garmin_module.get_fitness_stats(db)
 
     return render_template(
         "garmin.html",
-        activities=list(reversed(activities)),
+        activities=list(reversed(activities)),  # newest first for table
+        ef_activities=ef_runs,  # oldest first, chart-order, for click overlay
         ef_chart=ef_chart,
         latest_stats=latest_stats,
-        summary=summary,
+        summaries=summaries,
         total_runs=len(ef_runs),
+        chat_used=chat_used,
+        chat_limit=garmin_module.DAILY_CHAT_LIMIT,
+        chat_history=chat_history,
+        fitness_stats=fitness_stats,
         dwell_time=DWELL_TIME,
+    )
+
+
+@app.route("/garmin/chat", methods=["POST"])
+def garmin_chat():
+    from good_start_habits import garmin as garmin_module
+
+    db = get_db()
+    data = request.get_json(silent=True) or {}
+    question = data.get("question", "").strip()
+    if not question:
+        return jsonify({"error": "empty"}), 400
+    activities = garmin_module.get_all_activities(db)
+    response, used = garmin_module.ask_trainer(db, activities, question)
+    if response is None:
+        return jsonify(
+            {
+                "error": "limit_reached",
+                "used": used,
+                "limit": garmin_module.DAILY_CHAT_LIMIT,
+            }
+        ), 429
+    if response == "__error__":
+        return jsonify(
+            {
+                "error": "unavailable",
+                "used": used,
+                "limit": garmin_module.DAILY_CHAT_LIMIT,
+            }
+        ), 503
+    return jsonify(
+        {"response": response, "used": used, "limit": garmin_module.DAILY_CHAT_LIMIT}
     )
 
 
@@ -539,7 +581,9 @@ def garmin_sync():
 
     db = get_db()
     added = garmin_module.sync_activities(db)
-    return jsonify({"added": added})
+    cadence_filled = garmin_module.backfill_cadence(db)
+    garmin_module.sync_fitness_stats(db)
+    return jsonify({"added": added, "cadence_filled": cadence_filled})
 
 
 # ---------------------------------------------------------------------------

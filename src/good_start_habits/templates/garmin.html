@@ -3,28 +3,45 @@
 {% block title %}Garmin{% endblock %}
 
 {% block extra_styles %}
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=VT323&family=Cherry+Cream+Soda&display=swap" rel="stylesheet">
 <style>
 html, body {
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    background: #FFF9F0;
+    font-family: 'VT323', monospace;
+}
+
+#pt-container {
+    height: 100vh;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* ── Root layout ─────────────────────────────────────────────── */
+.garmin-app {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-rows: 56px 1fr;
+    grid-template-columns: 272px 1fr;
+    overflow: hidden;
     background: #FFF9F0;
     background-image: radial-gradient(#00000012 1.5px, transparent 1.5px);
     background-size: 22px 22px;
 }
 
-#pt-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-/* ── Header ─────────────────────────────────────────────────────── */
+/* ── Header ─────────────────────────────────────────────────── */
 .garmin-header {
-    flex-shrink: 0;
+    grid-column: 1 / -1;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1.4rem;
-    height: 56px;
+    padding: 0 1.2rem;
     background: #FF6B00;
     border-bottom: 3px solid #111111;
     box-shadow: 0 3px 0 #111111;
@@ -32,7 +49,6 @@ html, body {
     overflow: hidden;
     white-space: nowrap;
 }
-
 .garmin-header::before {
     content: '';
     position: absolute;
@@ -48,26 +64,18 @@ html, body {
         #FF00CC  85.71% 100%
     );
 }
-
-.garmin-header-left {
-    display: flex;
-    align-items: baseline;
-    gap: 0.8rem;
-}
-
 .garmin-title {
     font-family: 'Cherry Cream Soda', monospace;
     font-size: 1.1rem;
     color: #FFFFFF;
 }
-
 .garmin-subtitle {
     font-family: 'VT323', monospace;
     font-size: 1.4rem;
     color: rgba(255,255,255,0.75);
     letter-spacing: 0.06em;
+    margin-left: 0.7rem;
 }
-
 .garmin-run-count {
     font-family: 'VT323', monospace;
     font-size: 1.5rem;
@@ -75,381 +83,770 @@ html, body {
     letter-spacing: 0.05em;
 }
 
-/* ── Body ───────────────────────────────────────────────────────── */
-.garmin-body {
-    flex: 1;
-    padding: 1.4rem;
+/* ── Left panel ─────────────────────────────────────────────── */
+.left-panel {
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
-    max-width: 1200px;
-    width: 100%;
-    margin: 0 auto;
-}
-
-/* ── Cards ──────────────────────────────────────────────────────── */
-.garmin-card {
-    background: #FFFFFF;
-    border: 3px solid #111111;
-    box-shadow: 6px 6px 0 #111111;
+    border-right: 3px solid #111111;
     overflow: hidden;
+    background: #FFFFFF;
+    min-height: 0; /* prevents grid item from overflowing its row */
 }
 
-.card-header {
-    background: #FFE600;
-    border-bottom: 3px solid #111111;
-    padding: 0.5rem 1rem;
-    font-family: 'Cherry Cream Soda', monospace;
-    font-size: 0.75rem;
-    color: #111111;
-    letter-spacing: 0.04em;
+/* Stats */
+.stats-section {
+    flex-shrink: 0;
+    padding: 0.6rem 0.85rem 0.5rem;
+    border-bottom: 2px solid #EEEEEE;
 }
-
-.card-body {
-    padding: 1rem 1.2rem;
+.stats-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
 }
-
-/* ── Top row: stats + chart ─────────────────────────────────────── */
-.garmin-top-row {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 1.2rem;
+.stats-head-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888888;
 }
-
-@media (max-width: 760px) {
-    .garmin-top-row { grid-template-columns: 1fr; }
+.run-date {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: #AAAAAA;
 }
-
-/* ── Stats card ─────────────────────────────────────────────────── */
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.7rem 0.4rem;
-    margin-top: 0.3rem;
+    gap: 0.45rem 0.3rem;
 }
-
-.stat-block {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-}
-
+.stat-block { display: flex; flex-direction: column; }
 .stat-label {
-    font-family: 'VT323', monospace;
-    font-size: 0.95rem;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.58rem;
+    font-weight: 400;
     color: #888888;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    line-height: 1.2;
 }
-
 .stat-value {
-    font-family: 'VT323', monospace;
-    font-size: 2rem;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.55rem;
     color: #111111;
     line-height: 1;
-}
-
-.stat-value.big {
-    font-size: 2.6rem;
-    color: #FF6B00;
-}
-
-.stat-delta {
-    font-family: 'VT323', monospace;
-    font-size: 1rem;
-    margin-top: 0.1rem;
-}
-
-.stat-delta.good  { color: #00C851; }
-.stat-delta.bad   { color: #FF1493; }
-.stat-delta.flat  { color: #888888; }
-
-.stat-run-date {
-    font-family: 'VT323', monospace;
-    font-size: 1.2rem;
-    color: #888888;
-    margin-bottom: 0.6rem;
     letter-spacing: 0.03em;
 }
+.stat-value.big { font-size: 2.2rem; color: #FF6B00; letter-spacing: 0.02em; }
+.stat-delta {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    line-height: 1.1;
+}
+.stat-delta.good { color: #00C851; }
+.stat-delta.bad  { color: #FF1493; }
+.stat-delta.flat { color: #888888; }
 
-.empty-state {
-    font-family: 'VT323', monospace;
-    font-size: 1.4rem;
+/* EF explanation */
+.ef-info {
+    flex-shrink: 0;
+    padding: 0.55rem 0.85rem 0.4rem;
+    border-bottom: 2px solid #EEEEEE;
+}
+.ef-info-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
     color: #888888;
-    line-height: 1.5;
-    padding: 0.5rem 0;
+    margin-bottom: 0.3rem;
 }
-
-/* ── EF chart ──────────────────────────────────────────────────── */
-#ef-chart {
-    width: 100%;
-    height: 300px;
-}
-
-/* ── Trainer notes ─────────────────────────────────────────────── */
-.trainer-text {
-    font-family: 'VT323', monospace;
+.ef-formula {
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 1.35rem;
+    color: #FF6B00;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.04em;
+}
+.ef-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: #444444;
+    line-height: 1.5;
+    margin-bottom: 0.25rem;
+}
+.ef-peer-note {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: #AAAAAA;
+    line-height: 1.45;
+    margin-top: 0.2rem;
+}
+
+/* Fitness stats */
+.fitness-panel {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.55rem 0.85rem;
+    scrollbar-width: thin;
+    scrollbar-color: #DDDDDD transparent;
+}
+.fitness-panel-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888888;
+    margin-bottom: 0.4rem;
+}
+.fit-row {
+    display: grid;
+    grid-template-columns: 6.5rem 4rem 1fr 1.5rem;
+    align-items: baseline;
+    gap: 0 0.2rem;
+    margin-bottom: 0.28rem;
+}
+.fit-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: #888888;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.fit-your {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.05rem;
     color: #111111;
+    line-height: 1;
+    letter-spacing: 0.03em;
+}
+.fit-bench {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: #AAAAAA;
+    line-height: 1;
+}
+.fit-arrow {
+    font-size: 0.7rem;
+    line-height: 1;
+}
+.fit-arrow.good { color: #00C851; }
+.fit-arrow.bad  { color: #FF1493; }
+.fit-arrow.flat { color: #888888; }
+.fit-arrow.none { color: #CCCCCC; }
+
+/* ── Right panel ────────────────────────────────────────────── */
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0; /* prevents grid item from overflowing its row */
+}
+
+/* Chart */
+.chart-section {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0.55rem 0.8rem 0.3rem;
+    overflow: hidden;
+}
+.chart-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.58rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888888;
+    margin-bottom: 0.2rem;
+    flex-shrink: 0;
+}
+.chart-wrap {
+    flex: 1 1 0;
+    min-height: 0;
+    border: 2px solid #111111;
+    box-shadow: 3px 3px 0 #111111;
+    background: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+}
+#ef-chart {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+.chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: #AAAAAA;
+}
+
+/* Coach cards */
+.coach-row {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    height: 132px;
+    border-top: 3px solid #111111;
+    overflow: hidden;
+}
+.coach-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 2px solid #111111;
+    background: #FFFFFF;
+}
+.coach-card:last-child { border-right: none; }
+.coach-card-hdr {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.28rem 0.55rem;
+    background: #FFE600;
+    border-bottom: 2px solid #111111;
+    flex-shrink: 0;
+}
+.acc-activity .coach-card-hdr { border-left: 4px solid #FF6B00; }
+.acc-week     .coach-card-hdr { border-left: 4px solid #9B30FF; }
+.acc-month    .coach-card-hdr { border-left: 4px solid #00C851; }
+.coach-card-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.3rem 0.55rem;
+    scrollbar-width: thin;
+    scrollbar-color: #DDDDDD transparent;
+}
+.coach-bullet {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    color: #111111;
+    line-height: 1.55;
+    margin: 0 0 0.18rem;
+}
+.coach-muted {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: #AAAAAA;
     line-height: 1.5;
 }
 
-.trainer-retry {
-    font-family: 'VT323', monospace;
-    font-size: 1.2rem;
+/* ── Trainer chat ───────────────────────────────────────── */
+.chat-section {
+    flex-shrink: 0;
+    height: 180px;
+    border-top: 3px solid #111111;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #FFFFFF;
+}
+.chat-hdr {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
     color: #888888;
+    padding: 0.28rem 0.75rem;
+    border-bottom: 2px solid #EEEEEE;
+    background: #FAFAFA;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
-
-/* ── Activity history table ────────────────────────────────────── */
-.history-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'VT323', monospace;
-    font-size: 1.2rem;
+.chat-quota {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: #AAAAAA;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
 }
-
-.history-table th {
-    text-align: left;
-    padding: 0.5rem 0.8rem;
-    background: #F5F0E8;
-    border-bottom: 2px solid #111111;
-    font-size: 1rem;
-    letter-spacing: 0.05em;
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.35rem 0.75rem;
+    scrollbar-width: thin;
+    scrollbar-color: #DDDDDD transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.chat-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: #BBBBBB;
+    margin: auto 0;
+}
+.chat-q {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
     color: #555555;
-    white-space: nowrap;
+    background: #F5F0E8;
+    padding: 0.15rem 0.4rem;
+    border-radius: 2px;
+    align-self: flex-end;
+    max-width: 85%;
 }
-
-.history-table td {
-    padding: 0.45rem 0.8rem;
-    border-bottom: 1px solid #F0ECE4;
+.chat-a {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
     color: #111111;
-    white-space: nowrap;
+    line-height: 1.5;
+    max-width: 95%;
 }
-
-.history-table tr:last-child td {
-    border-bottom: none;
+.chat-input-row {
+    flex-shrink: 0;
+    display: flex;
+    border-top: 1px solid #EEEEEE;
 }
-
-.history-table tr:hover td {
-    background: #FFF9F0;
+.chat-input-row input {
+    flex: 1;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.3rem 0.6rem;
+    border: none;
+    outline: none;
+    background: #FAFAFA;
+    color: #111111;
 }
+.chat-input-row input:disabled { color: #BBBBBB; background: #F5F5F5; }
+.chat-input-row input::placeholder { color: #CCCCCC; }
+.chat-send-btn {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0 0.9rem;
+    border: none;
+    border-left: 2px solid #EEEEEE;
+    background: #FF6B00;
+    color: #FFFFFF;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+.chat-send-btn:hover:not(:disabled) { background: #E05500; }
+.chat-send-btn:disabled { background: #CCCCCC; cursor: default; }
 
-.ef-val {
+/* ── Run detail overlay ──────────────────────────────────────── */
+.run-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.68);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.run-overlay.open { display: flex; }
+.run-panel {
+    background: #111111;
+    border: 3px solid #FF6B00;
+    box-shadow: 6px 6px 0 #FF6B00;
+    padding: 1rem 1.3rem;
+    min-width: 290px;
+    max-width: 400px;
+    width: 88vw;
+}
+.run-panel-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
     color: #FF6B00;
-    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
 }
+.run-panel-date {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    color: #888888;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.6rem;
+}
+.run-panel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem 1rem;
+    margin-bottom: 0.8rem;
+}
+.rp-stat { display: flex; flex-direction: column; }
+.rp-lbl {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.58rem;
+    font-weight: 400;
+    color: #555555;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.rp-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: #FFFFFF;
+    line-height: 1;
+    letter-spacing: 0.03em;
+}
+.rp-val.hi { color: #FF6B00; font-size: 2.1rem; }
+.run-panel-close {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.3em 0.9em;
+    border: 2px solid #444444;
+    background: #222222;
+    color: #888888;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0 #333333;
+}
+.run-panel-close:hover { background: #333333; color: #FFFFFF; }
 
-.no-ef {
-    color: #CCCCCC;
+@media (max-width: 768px) {
+    html, body { height: auto; overflow-y: auto; }
+    #pt-container { height: auto; overflow: visible; }
+    .garmin-app {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
+    .garmin-header { white-space: normal; }
+    .left-panel {
+        border-right: none;
+        border-bottom: 3px solid #111111;
+        overflow: visible;
+    }
+    .ef-info { overflow: visible; max-height: none; flex: none; }
+    .right-panel { overflow: visible; min-height: 0; }
+    .chart-section { display: none; }
+    .coach-row { grid-template-columns: 1fr; height: auto; }
+    .coach-card { border-right: none; border-bottom: 2px solid #111111; }
+    .coach-card-body { max-height: 110px; }
+    .chat-section { height: auto; max-height: 300px; }
+    .fitness-panel { overflow: visible; max-height: none; flex: none; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="garmin-header">
-    <div class="garmin-header-left">
-        <span class="garmin-title">GARMIN</span>
-        <span class="garmin-subtitle">RUNNING TRACKER</span>
-    </div>
-    <span class="garmin-run-count">{{ total_runs }} RUNS</span>
+<div class="garmin-app">
+
+    <header class="garmin-header">
+        <div style="display:flex;align-items:baseline;">
+            <span class="garmin-title">GARMIN</span>
+            <span class="garmin-subtitle">RUNNING TRACKER</span>
+        </div>
+        <span class="garmin-run-count">{{ total_runs }} RUNS</span>
+    </header>
+
+        {# ── Left panel ──────────────────────────────────────── #}
+        <div class="left-panel">
+
+            <div class="stats-section">
+                <div class="stats-head">
+                    <span class="stats-head-label">Last Run</span>
+                    {% if latest_stats %}<span class="run-date">{{ latest_stats.date }}</span>{% endif %}
+                </div>
+                {% if latest_stats %}
+                <div class="stats-grid">
+                    <div class="stat-block">
+                        <span class="stat-label">EF</span>
+                        <span class="stat-value big">{{ latest_stats.ef }}</span>
+                        {% set ind = latest_stats.ef_ind %}
+                        {% if ind.pct is not none %}
+                        <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">{{ ind.arrow }} {{ ind.pct }}%</span>
+                        {% endif %}
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-label">Run Pace</span>
+                        <span class="stat-value">{{ latest_stats.run_pace or '—' }}/km</span>
+                        {% set ind = latest_stats.pace_ind %}
+                        {% if ind.pct is not none %}
+                        <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">{{ ind.arrow }} {{ ind.pct }}%</span>
+                        {% endif %}
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-label">Avg HR</span>
+                        <span class="stat-value">{{ latest_stats.avg_hr | int }} bpm</span>
+                        {% set ind = latest_stats.hr_ind %}
+                        {% if ind.pct is not none %}
+                        <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">{{ ind.arrow }} {{ ind.pct }}%</span>
+                        {% endif %}
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-label">Distance</span>
+                        <span class="stat-value">{{ latest_stats.distance_km }} km</span>
+                        {% set ind = latest_stats.dist_ind %}
+                        {% if ind.pct is not none %}
+                        <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">{{ ind.arrow }} {{ ind.pct }}%</span>
+                        {% endif %}
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-label">Max HR</span>
+                        <span class="stat-value">{{ latest_stats.max_hr | int }} bpm</span>
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-label">Duration</span>
+                        <span class="stat-value">{{ latest_stats.duration_min }} min</span>
+                    </div>
+                    {% if latest_stats.run_distance_km %}
+                    <div class="stat-block">
+                        <span class="stat-label">Run Dist</span>
+                        <span class="stat-value">{{ latest_stats.run_distance_km }} km</span>
+                    </div>
+                    {% endif %}
+                    <div class="stat-block">
+                        <span class="stat-label">Calories</span>
+                        <span class="stat-value">{{ latest_stats.calories }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div style="font-family:'VT323',monospace;font-size:1.1rem;color:#AAAAAA;line-height:1.5;">No runs synced yet.<br>POST to /garmin/sync</div>
+                {% endif %}
+            </div>
+
+            <div class="ef-info">
+                <div class="ef-info-title">// What is Efficiency Factor?</div>
+                <div class="ef-formula">EF = speed (km/h) ÷ avg HR</div>
+                <div class="ef-text">A higher EF means your heart is delivering more speed per beat — the core signal of improving aerobic fitness. <span style="color:#FF6B00;">Rising line</span> = faster at the same effort. Flat = maintained. Falling = extra cardiac cost.</div>
+                <div class="ef-peer-note">Peer line ≈ 0.070: recreational male, ~28 yr, ~5:45/km, ~155 bpm.</div>
+            </div>
+
+            <div class="fitness-panel">
+                <div class="fitness-panel-title">// Your stats vs avg 28yr male</div>
+                {% set fs = fitness_stats %}
+                {% for key in ['fitness_age', 'rhr', 'hrv', 'bmi', 'cadence'] %}
+                {% set s = fs[key] %}
+                <div class="fit-row">
+                    <span class="fit-label">{{ s.label }}</span>
+                    <span class="fit-your">{{ s.your if s.your else '—' }}</span>
+                    <span class="fit-bench">avg {{ s.bench }}</span>
+                    <span class="fit-arrow {% if s.good == true %}good{% elif s.good == false %}bad{% elif s.your %}flat{% else %}none{% endif %}">
+                        {{ s.arrow if s.arrow else ('?' if not s.your else '') }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        {# ── Right panel ─────────────────────────────────────── #}
+        <div class="right-panel">
+
+            {# Chart #}
+            <div class="chart-section">
+                <div class="chart-label">Efficiency Factor over time — click any point to inspect that run</div>
+                <div class="chart-wrap">
+                    {% if ef_chart %}
+                    <div id="ef-chart"></div>
+                    {% else %}
+                    <div class="chart-empty">Chart will appear after first sync.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Coach cards #}
+            <div class="coach-row">
+                {% for title, s, acc in [
+                    ('Last Run Review',  summaries.activity, 'activity'),
+                    ('Week in Review',   summaries.week,     'week'),
+                    ('Month in Review',  summaries.month,    'month'),
+                ] %}
+                <div class="coach-card acc-{{ acc }}">
+                    <div class="coach-card-hdr">{{ title }}{% if acc == 'month' and summaries.month_label %} — {{ summaries.month_label }}{% endif %}</div>
+                    <div class="coach-card-body">
+                        {% if s == "__retry__" %}
+                            <p class="coach-muted">Temporarily unavailable.</p>
+                        {% elif s %}
+                            {% for line in s.split('\n') %}{% if line.strip() %}
+                            <p class="coach-bullet">{{ line.strip() }}</p>
+                            {% endif %}{% endfor %}
+                        {% elif total_runs > 0 %}
+                            <p class="coach-muted">Add ANTHROPIC_API_KEY to enable.</p>
+                        {% else %}
+                            <p class="coach-muted">Sync runs to enable.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# Trainer chatbot #}
+            <div class="chat-section">
+                <div class="chat-hdr">
+                    <span>// TRAINER CHAT</span>
+                    <span class="chat-quota" id="chat-quota">{{ chat_used }}/{{ chat_limit }} today</span>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    {% if chat_history %}
+                        {% for msg in chat_history %}
+                        <div class="chat-q">{{ msg.q }}</div>
+                        <div class="chat-a">{{ msg.r }}</div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="chat-hint">Ask about your training — cadence, race prep, recovery...</div>
+                    {% endif %}
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chat-input" placeholder="Ask your trainer..."
+                           {% if chat_used >= chat_limit %}disabled{% endif %}>
+                    <button class="chat-send-btn" id="chat-send"
+                            {% if chat_used >= chat_limit %}disabled{% endif %}>ASK</button>
+                </div>
+            </div>
+
+        </div>
 </div>
 
-<div class="garmin-body">
-
-    {# ── Top row: latest stats + EF chart ───────────────────────── #}
-    <div class="garmin-top-row">
-
-        {# Stats card #}
-        <div class="garmin-card">
-            <div class="card-header">LAST RUN</div>
-            <div class="card-body">
-                {% if latest_stats %}
-                    <div class="stat-run-date">{{ latest_stats.date }}</div>
-                    <div class="stats-grid">
-
-                        {# EF #}
-                        <div class="stat-block">
-                            <span class="stat-label">EF</span>
-                            <span class="stat-value big">{{ latest_stats.ef }}</span>
-                            {% set ind = latest_stats.ef_ind %}
-                            {% if ind.pct is not none %}
-                                <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">
-                                    {{ ind.arrow }} {{ ind.pct }}%
-                                </span>
-                            {% endif %}
-                        </div>
-
-                        {# Run Pace #}
-                        <div class="stat-block">
-                            <span class="stat-label">RUN PACE</span>
-                            <span class="stat-value">{{ latest_stats.run_pace or '—' }}/km</span>
-                            {% set ind = latest_stats.pace_ind %}
-                            {% if ind.pct is not none %}
-                                <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">
-                                    {{ ind.arrow }} {{ ind.pct }}%
-                                </span>
-                            {% endif %}
-                        </div>
-
-                        {# Avg HR #}
-                        <div class="stat-block">
-                            <span class="stat-label">AVG HR</span>
-                            <span class="stat-value">{{ latest_stats.avg_hr | int }} bpm</span>
-                            {% set ind = latest_stats.hr_ind %}
-                            {% if ind.pct is not none %}
-                                <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">
-                                    {{ ind.arrow }} {{ ind.pct }}%
-                                </span>
-                            {% endif %}
-                        </div>
-
-                        {# Total Distance #}
-                        <div class="stat-block">
-                            <span class="stat-label">DISTANCE</span>
-                            <span class="stat-value">{{ latest_stats.distance_km }} km</span>
-                            {% set ind = latest_stats.dist_ind %}
-                            {% if ind.pct is not none %}
-                                <span class="stat-delta {{ 'good' if ind.good else ('bad' if ind.good == false else 'flat') }}">
-                                    {{ ind.arrow }} {{ ind.pct }}%
-                                </span>
-                            {% endif %}
-                        </div>
-
-                        {# Run Distance #}
-                        {% if latest_stats.run_distance_km %}
-                        <div class="stat-block">
-                            <span class="stat-label">RUN DIST</span>
-                            <span class="stat-value">{{ latest_stats.run_distance_km }} km</span>
-                        </div>
-                        {% endif %}
-
-                        {# Calories #}
-                        <div class="stat-block">
-                            <span class="stat-label">CALORIES</span>
-                            <span class="stat-value">{{ latest_stats.calories }}</span>
-                        </div>
-
-                        {# Max HR #}
-                        <div class="stat-block">
-                            <span class="stat-label">MAX HR</span>
-                            <span class="stat-value">{{ latest_stats.max_hr | int }} bpm</span>
-                        </div>
-
-                        {# Duration #}
-                        <div class="stat-block">
-                            <span class="stat-label">DURATION</span>
-                            <span class="stat-value">{{ latest_stats.duration_min }} min</span>
-                        </div>
-
-                    </div>
-                {% else %}
-                    <div class="empty-state">
-                        No runs synced yet.<br>
-                        POST to /garmin/sync<br>
-                        to load your history.
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
-        {# Chart card #}
-        <div class="garmin-card">
-            <div class="card-header">EFFICIENCY FACTOR OVER TIME &mdash; speed (km/h) ÷ avg HR</div>
-            <div class="card-body">
-                {% if ef_chart %}
-                    <div id="ef-chart"></div>
-                {% else %}
-                    <div class="empty-state" style="padding: 2rem 0;">
-                        Chart will appear after first sync.
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
+{# Run detail overlay #}
+<div id="run-overlay" class="run-overlay" onclick="if(event.target===this)closeOverlay()">
+    <div class="run-panel">
+        <div class="run-panel-title">// RUN DETAIL</div>
+        <div class="run-panel-date" id="ov-date"></div>
+        <div class="run-panel-grid" id="ov-grid"></div>
+        <button class="run-panel-close" onclick="closeOverlay()">CLOSE</button>
     </div>
-
-    {# ── Trainer notes ──────────────────────────────────────────── #}
-    <div class="garmin-card">
-        <div class="card-header">COACH NOTES</div>
-        <div class="card-body">
-            {% if summary == "__retry__" %}
-                <p class="trainer-retry">
-                    Coaching summary is temporarily unavailable — check back in a few minutes.
-                </p>
-            {% elif summary %}
-                <p class="trainer-text">{{ summary }}</p>
-            {% elif total_runs > 0 %}
-                <p class="trainer-retry">
-                    Add ANTHROPIC_API_KEY to .env to enable coaching summaries.
-                </p>
-            {% else %}
-                <p class="trainer-retry">Summaries will appear once runs are synced.</p>
-            {% endif %}
-        </div>
-    </div>
-
-    {# ── Activity history ────────────────────────────────────────── #}
-    <div class="garmin-card">
-        <div class="card-header">ACTIVITY HISTORY ({{ activities | length }} runs, newest first)</div>
-        <div class="card-body" style="padding: 0; overflow-x: auto;">
-            {% if activities %}
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>DATE</th>
-                        <th>EF</th>
-                        <th>RUN PACE</th>
-                        <th>AVG HR</th>
-                        <th>MAX HR</th>
-                        <th>DIST</th>
-                        <th>RUN DIST</th>
-                        <th>DURATION</th>
-                        <th>CALORIES</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for act in activities %}
-                    <tr>
-                        <td>{{ act.date }}</td>
-                        <td>
-                            {% if act.ef %}
-                                <span class="ef-val">{{ act.ef }}</span>
-                            {% else %}
-                                <span class="no-ef">—</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ act.run_pace or '—' }}</td>
-                        <td>{{ act.avg_hr | int if act.avg_hr else '—' }}</td>
-                        <td>{{ act.max_hr | int if act.max_hr else '—' }}</td>
-                        <td>{{ act.distance_km }} km</td>
-                        <td>{{ act.run_distance_km ~ ' km' if act.run_distance_km else '—' }}</td>
-                        <td>{{ act.duration_min }} min</td>
-                        <td>{{ act.calories or '—' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-                <div class="empty-state" style="padding: 1.2rem;">No activity history yet.</div>
-            {% endif %}
-        </div>
-    </div>
-
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" crossorigin="anonymous"></script>
 <script>
+// All activities indexed by date for O(1) lookup
+var _byDate = {};
+{{ ef_activities | tojson | safe }}.forEach(function(a) { _byDate[a.date] = a; });
+
+// Also index non-EF activities from the full table list
+{{ activities | tojson | safe }}.forEach(function(a) { _byDate[a.date] = _byDate[a.date] || a; });
+
 {% if ef_chart %}
 (function () {
-    const fig = {{ ef_chart | safe }};
-    Plotly.newPlot('ef-chart', fig.data, fig.layout, {
-        responsive: true,
-        displayModeBar: false,
+    var fig = {{ ef_chart | safe }};
+    var el  = document.getElementById('ef-chart');
+    Plotly.newPlot(el, fig.data, fig.layout, { responsive: true, displayModeBar: false });
+    el.on('plotly_click', function(data) {
+        var date = data.points[0].x;
+        if (_byDate[date]) openOverlay(_byDate[date]);
     });
 })();
 {% endif %}
+
+function openOverlayForDate(date) {
+    if (_byDate[date]) openOverlay(_byDate[date]);
+}
+
+function openOverlay(a) {
+    document.getElementById('ov-date').textContent = a.date;
+    function stat(lbl, val, hi) {
+        return '<div class="rp-stat"><span class="rp-lbl">' + lbl + '</span>' +
+               '<span class="rp-val' + (hi ? ' hi' : '') + '">' + val + '</span></div>';
+    }
+    document.getElementById('ov-grid').innerHTML =
+        stat('EF',        a.ef || '—', true) +
+        stat('Run Pace',  a.run_pace ? a.run_pace + '/km' : '—') +
+        stat('Avg HR',    a.avg_hr  ? Math.round(a.avg_hr)  + ' bpm' : '—') +
+        stat('Max HR',    a.max_hr  ? Math.round(a.max_hr)  + ' bpm' : '—') +
+        stat('Distance',  a.distance_km  ? a.distance_km  + ' km' : '—') +
+        stat('Run Dist',  a.run_distance_km ? a.run_distance_km + ' km' : '—') +
+        stat('Duration',  a.duration_min ? a.duration_min + ' min' : '—') +
+        stat('Calories',  a.calories || '—');
+    document.getElementById('run-overlay').classList.add('open');
+}
+
+function closeOverlay() {
+    document.getElementById('run-overlay').classList.remove('open');
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeOverlay();
+});
+
+(function() {
+    var used  = {{ chat_used }};
+    var limit = {{ chat_limit }};
+    var input = document.getElementById('chat-input');
+    var btn   = document.getElementById('chat-send');
+    var msgs  = document.getElementById('chat-messages');
+    var quota = document.getElementById('chat-quota');
+
+    function scrollBottom() { msgs.scrollTop = msgs.scrollHeight; }
+    scrollBottom();
+
+    function setDisabled(on) { input.disabled = on; btn.disabled = on; }
+
+    btn.addEventListener('click', send);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') send(); });
+
+    function send() {
+        var q = input.value.trim();
+        if (!q || used >= limit) return;
+        input.value = '';
+        setDisabled(true);
+
+        var hint = msgs.querySelector('.chat-hint');
+        if (hint) hint.remove();
+
+        var qEl = document.createElement('div');
+        qEl.className = 'chat-q';
+        qEl.textContent = q;
+        msgs.appendChild(qEl);
+
+        var aEl = document.createElement('div');
+        aEl.className = 'chat-a';
+        aEl.style.color = '#AAAAAA';
+        aEl.textContent = '...';
+        msgs.appendChild(aEl);
+        scrollBottom();
+
+        fetch('/garmin/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({question: q})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error === 'limit_reached') {
+                aEl.textContent = 'Daily limit reached (' + limit + '/' + limit + ').';
+                used = limit;
+            } else if (data.error) {
+                aEl.textContent = 'Trainer unavailable — check ANTHROPIC_API_KEY.';
+                setDisabled(false);
+            } else {
+                aEl.style.color = '';
+                aEl.textContent = data.response;
+                used = data.used;
+                if (used < limit) setDisabled(false);
+            }
+            quota.textContent = used + '/' + limit + ' today';
+            scrollBottom();
+        })
+        .catch(function() {
+            aEl.textContent = 'Request failed — try again.';
+            setDisabled(false);
+            scrollBottom();
+        });
+    }
+})();
 
 if (new URLSearchParams(window.location.search).get('freeze') !== '1') {
     ptNavigate('/', 'fall', {{ dwell_time }});

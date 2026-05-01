@@ -11,26 +11,28 @@ This guide covers the one-time setup needed to pull your running data into the `
 
 ---
 
-## Step 1 — Authenticate locally
+## Token file
 
-Run this once in the project shell to save your Garmin credentials via `garth`:
+The dashboard uses the same `garmin_tokens.json` file as the Garmin MCP tool. If the MCP is already working, the tokens are already at `~/.garminconnect/garmin_tokens.json` and no further auth setup is needed locally.
+
+If you need to generate tokens from scratch (e.g. fresh machine or Railway):
 
 ```bash
 uv run python -c "
-import garth, getpass
-garth.login(input('Email: '), getpass.getpass('Password: '))
-garth.dump('~/.garth')
-print('Done — tokens saved to ~/.garth/')
+import garminconnect, getpass
+api = garminconnect.Garmin(input('Email: '), getpass.getpass('Password: '))
+api.login(tokenstore='~/.garminconnect')
+print('Tokens saved to ~/.garminconnect/garmin_tokens.json')
 "
 ```
 
-Garmin may prompt for an MFA code. Tokens are saved to `~/.garth/` and refreshed automatically.
+Garmin may prompt for an MFA code during this step.
 
 ---
 
 ## Step 2 — Trigger the initial backfill
 
-The background scheduler polls every 30 minutes, but you can force an immediate sync:
+The background scheduler polls every 30 minutes automatically, but you can force an immediate sync:
 
 ```bash
 curl -X POST http://localhost:5000/garmin/sync
@@ -46,20 +48,22 @@ Set these environment variables in the Railway dashboard:
 
 | Variable | Value |
 |---|---|
-| `GARMIN_TOKENS_DIR` | `/data/.garth` |
+| `GARMIN_TOKENS_DIR` | `/data/.garminconnect` |
 | `ANTHROPIC_API_KEY` | your Anthropic API key |
 
 Then authenticate once via the Railway shell:
 
 ```bash
 python -c "
-import garth, getpass, os
-garth.login(input('Email: '), getpass.getpass('Password: '))
-garth.dump(os.environ.get('GARMIN_TOKENS_DIR', '/data/.garth'))
+import garminconnect, getpass, os
+token_dir = os.environ.get('GARMIN_TOKENS_DIR', '/data/.garminconnect')
+api = garminconnect.Garmin(input('Email: '), getpass.getpass('Password: '))
+api.login(tokenstore=token_dir)
+print('Tokens saved to', token_dir)
 "
 ```
 
-After that, the scheduler handles everything automatically.
+After that, the scheduler handles everything automatically. Tokens survive deploys because they are written to the persistent `/data` volume.
 
 ---
 

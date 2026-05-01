@@ -12,8 +12,11 @@ from good_start_habits.garmin import (
     _pace_str,
     build_ef_chart,
     compute_ef,
-    generate_summary,
+    generate_activity_summary,
+    generate_month_summary,
+    generate_week_summary,
     get_all_activities,
+    get_all_summaries,
     get_latest_run_stats,
     sync_activities,
 )
@@ -42,6 +45,7 @@ def db():
             run_duration_s    REAL,
             ef                REAL,
             run_pace_s_per_km REAL,
+            avg_cadence_spm   REAL,
             fetched_at        TEXT DEFAULT (datetime('now'))
         )
         """
@@ -52,7 +56,28 @@ def db():
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
             generated_at     TEXT NOT NULL,
             last_activity_id INTEGER,
+            summary_type     TEXT NOT NULL DEFAULT 'activity',
+            period_key       TEXT,
             summary          TEXT NOT NULL
+        )
+        """
+    )
+    con.execute(
+        """
+        CREATE TABLE garmin_chat_log (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            asked_date TEXT NOT NULL,
+            question   TEXT NOT NULL,
+            response   TEXT NOT NULL
+        )
+        """
+    )
+    con.execute(
+        """
+        CREATE TABLE garmin_fitness_cache (
+            fetched_date TEXT PRIMARY KEY,
+            data         TEXT NOT NULL,
+            updated_at   TEXT DEFAULT (datetime('now'))
         )
         """
     )
@@ -395,37 +420,132 @@ def test_sync_returns_zero_when_client_unavailable(mocker, db):
 
 
 # ---------------------------------------------------------------------------
-# generate_summary tests
+# generate_activity_summary tests
 # ---------------------------------------------------------------------------
 
 
-def test_generate_summary_no_api_key(monkeypatch, db):
+def test_generate_activity_summary_no_api_key(monkeypatch, db):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     _insert_activity(db)
     activities = get_all_activities(db)
-    assert generate_summary(db, activities) == ""
+    assert generate_activity_summary(db, activities) == ""
 
 
-def test_generate_summary_uses_cache(monkeypatch, db):
+def test_generate_activity_summary_uses_cache(monkeypatch, db):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     _insert_activity(db, activity_id=1)
-    # Pre-cache a summary for activity_id=1
     db.execute(
-        "INSERT INTO garmin_summaries (generated_at, last_activity_id, summary)"
-        " VALUES ('2026-04-30', 1, 'Great work on your run!')"
+        "INSERT INTO garmin_summaries (generated_at, last_activity_id, summary_type, period_key, summary)"
+        " VALUES ('2026-04-30', 1, 'activity', '1', '• EF above peer benchmark. • Pace 5:00/km solid. • Add strides next run.')"
     )
     db.commit()
 
     activities = get_all_activities(db)
-    result = generate_summary(db, activities)
-    assert result == "Great work on your run!"
+    result = generate_activity_summary(db, activities)
+    assert "EF above peer" in result
 
 
-def test_generate_summary_empty_activities(db):
-    assert generate_summary(db, []) == ""
+def test_generate_activity_summary_empty_activities(db):
+    assert generate_activity_summary(db, []) == ""
 
 
-def test_generate_summary_no_ef_activities(db):
+def test_generate_activity_summary_no_ef_activities(db):
     _insert_activity(db, ef=None)
     activities = get_all_activities(db)
-    assert generate_summary(db, activities) == ""
+    assert generate_activity_summary(db, activities) == ""
+
+
+# ---------------------------------------------------------------------------
+# generate_week_summary tests
+# ---------------------------------------------------------------------------
+
+
+def test_generate_week_summary_no_api_key(monkeypatch, db):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _insert_activity(db)
+    activities = get_all_activities(db)
+    assert generate_week_summary(db, activities) == ""
+
+
+def test_generate_week_summary_uses_cache(monkeypatch, db):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    from datetime import date
+
+    today = date.today()
+    iso = today.isocalendar()
+    period_key = f"{iso.year}-W{iso.week:02d}"
+
+    _insert_activity(db, activity_id=1, activity_date=today.isoformat())
+    db.execute(
+        "INSERT INTO garmin_summaries (generated_at, last_activity_id, summary_type, period_key, summary)"
+        " VALUES (datetime('now'), 1, 'week', ?, '• 1 run this week. • EF 0.080. • Add tempo next week.')",
+        (period_key,),
+    )
+    db.commit()
+
+    activities = get_all_activities(db)
+    result = generate_week_summary(db, activities)
+    assert "1 run" in result
+
+
+def test_generate_week_summary_empty_activities(db):
+    assert generate_week_summary(db, []) == ""
+
+
+# ---------------------------------------------------------------------------
+# generate_month_summary tests
+# ---------------------------------------------------------------------------
+
+
+def test_generate_month_summary_no_api_key(monkeypatch, db):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _insert_activity(db)
+    activities = get_all_activities(db)
+    assert generate_month_summary(db, activities) == ""
+
+
+def test_generate_month_summary_uses_cache(monkeypatch, db):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    from datetime import date
+
+    today = date.today()
+    # Function always reviews the previous calendar month
+    if today.month == 1:
+        prev_year, prev_month = today.year - 1, 12
+    else:
+        prev_year, prev_month = today.year, today.month - 1
+    period_key = f"{prev_year}-{prev_month:02d}"
+    prev_date = f"{prev_year}-{prev_month:02d}-15"
+
+    _insert_activity(db, activity_id=1, activity_date=prev_date)
+    db.execute(
+        "INSERT INTO garmin_summaries (generated_at, last_activity_id, summary_type, period_key, summary)"
+        " VALUES (datetime('now'), 1, 'month', ?, '• 1 run, 5 km. • EF up 5%. • Strong consistency. • Build volume next month.')",
+        (period_key,),
+    )
+    db.commit()
+
+    activities = get_all_activities(db)
+    result = generate_month_summary(db, activities)
+    assert "1 run" in result
+
+
+def test_generate_month_summary_empty_activities(db):
+    assert generate_month_summary(db, []) == ""
+
+
+# ---------------------------------------------------------------------------
+# get_all_summaries test
+# ---------------------------------------------------------------------------
+
+
+def test_get_all_summaries_returns_dict(monkeypatch, db):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _insert_activity(db)
+    activities = get_all_activities(db)
+    result = get_all_summaries(db, activities)
+    assert isinstance(result, dict)
+    assert {"activity", "week", "month", "month_label"} <= set(result.keys())
+    # No API key → summaries empty, label is a non-empty string
+    assert all(result[k] == "" for k in ("activity", "week", "month"))
+    assert isinstance(result["month_label"], str) and result["month_label"]
