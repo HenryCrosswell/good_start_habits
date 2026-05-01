@@ -532,19 +532,17 @@ html, body {
         overflow: visible;
     }
     .garmin-header { white-space: normal; }
-    .left-panel {
-        border-right: none;
-        border-bottom: 3px solid #111111;
-        overflow: visible;
-    }
-    .ef-info { overflow: visible; max-height: none; flex: none; }
+    .left-panel { display: none; }
     .right-panel { overflow: visible; min-height: 0; }
     .chart-section { display: none; }
-    .coach-row { grid-template-columns: 1fr; height: auto; grid-template-columns: 1fr; }
+    .coach-row {
+        grid-template-columns: 1fr;
+        height: auto;
+        border-top: none;
+    }
     .coach-card { border-right: none; border-bottom: 2px solid #111111; }
-    .coach-card-body { max-height: 110px; }
-    .chat-section { height: auto; max-height: 300px; }
-    .fitness-panel { overflow: visible; max-height: none; flex: none; }
+    .coach-card-body { max-height: none; }
+    .chat-section { display: none; }
 }
 </style>
 {% endblock %}
