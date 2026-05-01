@@ -49,21 +49,18 @@ Set these environment variables in the Railway dashboard:
 | Variable | Value |
 |---|---|
 | `GARMIN_TOKENS_DIR` | `/data/.garminconnect` |
+| `GARMIN_TOKEN_JSON` | contents of `~/.garminconnect/garmin_tokens.json` (see below) |
 | `ANTHROPIC_API_KEY` | your Anthropic API key |
 
-Then authenticate once via the Railway shell:
+**Getting `GARMIN_TOKEN_JSON`:** On your local machine, after the MCP or local auth flow has run, the token file is at `~/.garminconnect/garmin_tokens.json`. Copy its entire contents and paste as the value of `GARMIN_TOKEN_JSON` in Railway Variables.
 
 ```bash
-python -c "
-import garminconnect, getpass, os
-token_dir = os.environ.get('GARMIN_TOKENS_DIR', '/data/.garminconnect')
-api = garminconnect.Garmin(input('Email: '), getpass.getpass('Password: '))
-api.login(tokenstore=token_dir)
-print('Tokens saved to', token_dir)
-"
+cat ~/.garminconnect/garmin_tokens.json
 ```
 
-After that, the scheduler handles everything automatically. Tokens survive deploys because they are written to the persistent `/data` volume.
+On startup the app writes that value to `$GARMIN_TOKENS_DIR/garmin_tokens.json` automatically — no Railway shell session needed. Tokens are also written to the persistent `/data` volume, so they survive deploys.
+
+If you ever need to re-authenticate (e.g. token expiry), update `GARMIN_TOKEN_JSON` in Railway Variables with a fresh token file from local and redeploy.
 
 ---
 

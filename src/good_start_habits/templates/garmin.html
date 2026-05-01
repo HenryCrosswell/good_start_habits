@@ -556,7 +556,15 @@ html, body {
             <span class="garmin-title">GARMIN</span>
             <span class="garmin-subtitle">RUNNING TRACKER</span>
         </div>
-        <span class="garmin-run-count">{{ total_runs }} RUNS</span>
+        <div style="display:flex;align-items:center;gap:0.8rem;">
+            <span class="garmin-run-count">{{ total_runs }} RUNS</span>
+            <button id="sync-btn" onclick="syncGarmin()" style="
+                font-family:'Oswald',sans-serif;font-size:0.65rem;font-weight:600;
+                letter-spacing:0.1em;text-transform:uppercase;
+                padding:0.25em 0.75em;
+                border:2px solid #FFFFFF;background:transparent;color:#FFFFFF;
+                cursor:pointer;">SYNC</button>
+        </div>
     </header>
 
         {# ── Left panel ──────────────────────────────────────── #}
@@ -847,6 +855,22 @@ document.addEventListener('keydown', function(e) {
         });
     }
 })();
+
+function syncGarmin() {
+    var btn = document.getElementById('sync-btn');
+    btn.textContent = 'SYNCING...';
+    btn.disabled = true;
+    fetch('/garmin/sync', {method: 'POST'})
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            btn.textContent = d.added > 0 ? 'SYNCED +' + d.added : 'UP TO DATE';
+            setTimeout(function() { location.reload(); }, 800);
+        })
+        .catch(function() {
+            btn.textContent = 'ERROR';
+            btn.disabled = false;
+        });
+}
 
 if (new URLSearchParams(window.location.search).get('freeze') !== '1') {
     ptNavigate('/', 'fall', {{ dwell_time }});

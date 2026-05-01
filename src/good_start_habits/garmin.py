@@ -18,11 +18,28 @@ SYNC_START_DATE = date(2026, 1, 1)
 EF_BENCHMARK_28M = 0.070
 
 
+def _bootstrap_tokens() -> None:
+    """Write GARMIN_TOKEN_JSON env var content to the token directory if set.
+    Allows Railway deployments to inject token material via an env var instead of
+    requiring an interactive shell session to run the auth flow."""
+    token_json = os.environ.get("GARMIN_TOKEN_JSON")
+    if not token_json:
+        return
+    os.makedirs(GARMIN_TOKENS_DIR, exist_ok=True)
+    token_path = os.path.join(GARMIN_TOKENS_DIR, "garmin_tokens.json")
+    try:
+        with open(token_path, "w") as f:
+            f.write(token_json)
+    except OSError as exc:
+        log.warning("Could not write GARMIN_TOKEN_JSON to disk: %s", exc)
+
+
 def _get_client():
     """Return an authenticated Garmin client, or None if credentials unavailable."""
     try:
         from garminconnect import Garmin
 
+        _bootstrap_tokens()
         api = Garmin()
         api.login(tokenstore=GARMIN_TOKENS_DIR)
         return api
