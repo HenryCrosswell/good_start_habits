@@ -873,6 +873,63 @@ def ask_trainer(
     return response, count + 1
 
 
+def generate_next_run_plan(db: sqlite3.Connection, activities: list[dict]) -> str:
+    """Specific next-run targets (distance, pace, HR) derived from recent run data.
+    Cached until a new activity appears."""
+    ef_runs = [a for a in activities if a["ef"] is not None]
+    if len(ef_runs) < 2:
+        return ""
+
+    latest = ef_runs[-1]
+    period_key = f"next_{latest['activity_id']}"
+    cached = _cached_summary(db, "next_run", period_key)
+    if cached is not None:
+        return cached
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return ""
+
+    recent = ef_runs[-8:]
+    context = json.dumps(
+        {
+            "runs": [
+                {
+                    "date": a["date"],
+                    "distance_km": a["distance_km"],
+                    "pace": a["run_pace"],
+                    "avg_hr": a["avg_hr"],
+                    "ef": a["ef"],
+                    "cadence_spm": a.get("cadence_spm"),
+                }
+                for a in recent
+            ],
+            "ef_peer_benchmark": EF_BENCHMARK_28M,
+        },
+        separators=(",", ":"),
+    )
+
+    system = (
+        "You are a running coach. Using ONLY the athlete's actual recent run data provided, "
+        "output their next run targets. No generic advice — every number must come from or be "
+        "directly derived from the data.\n\n"
+        "Output EXACTLY 4 lines, no other text:\n"
+        "Distance: <value>km\n"
+        "Pace: <M:SS>/km\n"
+        "HR ceiling: <value>bpm\n"
+        "<one sentence, max 12 words, stating WHY using specific numbers from their recent runs>\n\n"
+        "Rules: distance = their recent avg ±10% based on EF trend. "
+        "Pace = their recent aerobic pace ±5s based on HR trend. "
+        "HR ceiling = their recent avg HR rounded to nearest 5. "
+        "No aspirational targets — only what their data supports."
+    )
+
+    result = _lm_bullets(api_key, system, context, max_tokens=80)
+    if result and result != "__retry__":
+        _store_summary(db, latest["activity_id"], "next_run", period_key, result)
+    return result
+
+
 def get_all_summaries(db: sqlite3.Connection, activities: list[dict]) -> dict:
     """Return all three coaching summaries plus a label for the month span."""
     import calendar as _cal
@@ -889,4 +946,5 @@ def get_all_summaries(db: sqlite3.Connection, activities: list[dict]) -> dict:
         "week": generate_week_summary(db, activities),
         "month": generate_month_summary(db, activities),
         "month_label": month_label,
+        "next_run": generate_next_run_plan(db, activities),
     }

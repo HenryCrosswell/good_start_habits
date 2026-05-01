@@ -298,7 +298,7 @@ html, body {
 .coach-row {
     flex-shrink: 0;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     height: 132px;
     border-top: 3px solid #111111;
     overflow: hidden;
@@ -322,6 +322,7 @@ html, body {
     border-bottom: 2px solid #111111;
     flex-shrink: 0;
 }
+.acc-next     .coach-card-hdr { border-left: 4px solid #00B4D8; background: #E8F8FF; }
 .acc-activity .coach-card-hdr { border-left: 4px solid #FF6B00; }
 .acc-week     .coach-card-hdr { border-left: 4px solid #9B30FF; }
 .acc-month    .coach-card-hdr { border-left: 4px solid #00C851; }
@@ -539,7 +540,7 @@ html, body {
     .ef-info { overflow: visible; max-height: none; flex: none; }
     .right-panel { overflow: visible; min-height: 0; }
     .chart-section { display: none; }
-    .coach-row { grid-template-columns: 1fr; height: auto; }
+    .coach-row { grid-template-columns: 1fr; height: auto; grid-template-columns: 1fr; }
     .coach-card { border-right: none; border-bottom: 2px solid #111111; }
     .coach-card-body { max-height: 110px; }
     .chat-section { height: auto; max-height: 300px; }
@@ -675,6 +676,23 @@ html, body {
 
             {# Coach cards #}
             <div class="coach-row">
+                {# Next Run card #}
+                <div class="coach-card acc-next">
+                    <div class="coach-card-hdr">Next Run Targets</div>
+                    <div class="coach-card-body">
+                        {% if summaries.next_run == "__retry__" %}
+                            <p class="coach-muted">Temporarily unavailable.</p>
+                        {% elif summaries.next_run %}
+                            {% for line in summaries.next_run.split('\n') %}{% if line.strip() %}
+                            <p class="coach-bullet" style="{% if loop.last %}color:#666666;font-size:0.6rem;{% else %}font-weight:700;{% endif %}">{{ line.strip() }}</p>
+                            {% endif %}{% endfor %}
+                        {% elif total_runs > 0 %}
+                            <p class="coach-muted">Add ANTHROPIC_API_KEY to enable.</p>
+                        {% else %}
+                            <p class="coach-muted">Sync runs to enable.</p>
+                        {% endif %}
+                    </div>
+                </div>
                 {% for title, s, acc in [
                     ('Last Run Review',  summaries.activity, 'activity'),
                     ('Week in Review',   summaries.week,     'week'),
