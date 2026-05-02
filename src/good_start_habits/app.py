@@ -596,6 +596,37 @@ def debug():
     return render_template("debug.html")
 
 
+@app.route("/debug/garmin")
+def debug_garmin():
+    """Dump all Garmin activities as plain text, newest first."""
+    from good_start_habits import garmin as garmin_module
+
+    db = get_db()
+    activities = garmin_module.get_all_activities(db)
+    lines = [
+        f"{a['date']}  {a['name'] or '—':<30}  "
+        f"dist {a['distance_km'] or '?':>6}km  "
+        f"run {a['run_distance_km'] or '?':>6}km  "
+        f"dur {a['duration_min'] or '?':>6}min  "
+        f"pace {a['run_pace'] or '?':>6}/km  "
+        f"hr {a['avg_hr'] or '?':>3}/{a['max_hr'] or '?':<3}bpm  "
+        f"ef {a['ef'] or '?':>7}  "
+        f"cad {a['cadence_spm'] or '?':>3}spm  "
+        f"cal {a['calories'] or '?'}"
+        for a in reversed(activities)
+    ]
+    header = (
+        f"{'date':<10}  {'name':<30}  {'dist':>9}  {'run':>9}  "
+        f"{'dur':>9}  {'pace':>10}  {'hr':>10}  {'ef':>10}  "
+        f"{'cad':>8}  cal\n" + "-" * 110
+    )
+    return (
+        (header + "\n" + "\n".join(lines)),
+        200,
+        {"Content-Type": "text/plain; charset=utf-8"},
+    )
+
+
 @app.route("/debug/transactions/<provider>")
 def debug_transactions(provider: str):
     """Dump raw TrueLayer transaction descriptions and classifications."""
