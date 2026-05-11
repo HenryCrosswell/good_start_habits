@@ -134,7 +134,6 @@ BUDGET_LIMITS: dict[str, float] = {
     "Transport": 430.0,  # trains (330) + parking (100)
     "Petrol": 60.0,  # £60, 01/04/07/10 — sinking fund - resets at start of these months
     "Subscriptions": 82.0,  # gym (50) + phone (10) + claude (18) + tesco (4)
-    "Lastpass": 38,  # £38, 01 — sinking fund
     "Proton": 64.95,  # £64.95, 01 — sinking fund
     "Haircut": 45,  # £45, 02/04/06/08/10/12 — sinking fund
     "Skin & Haircare": 20.0,  # £20, 01/05/09 — sinking fund
@@ -225,7 +224,6 @@ CATEGORY_GROUPS: dict[str, list[str]] = {
         "Gifts",
         "House Products",
         "Petrol",
-        "Lastpass",
         "Proton",
     ],
     "Excluded": ["Transfer"],
@@ -233,7 +231,6 @@ CATEGORY_GROUPS: dict[str, list[str]] = {
 
 SINKING_FUND_RESETS: dict[str, list[int]] = {
     "Petrol": [1, 4, 7, 10],
-    "Lastpass": [1],
     "Proton": [1],
     "Haircut": [2, 4, 6, 8, 10, 12],
     "Skin & Haircare": [1, 5, 9],
@@ -400,7 +397,6 @@ DESCRIPTION_PATTERNS: list[tuple[str, str | None]] = [
     ("netflix", "Subscriptions"),
     ("claude", "Subscriptions"),
     ("anthropic", "Subscriptions"),
-    ("lastpass", "Lastpass"),
     ("proton", "Proton"),
     # ── Steam Games ───────────────────────────────────────────────────────────
     ("steam", "Steam Games"),

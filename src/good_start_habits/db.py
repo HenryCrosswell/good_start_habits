@@ -259,5 +259,63 @@ def init_db():
         )
         """
     )
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS incoming_funds (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            description_lower TEXT NOT NULL,
+            category          TEXT NOT NULL,
+            amount            REAL NOT NULL,
+            timestamp         TEXT NOT NULL,
+            provider          TEXT,
+            created_at        TEXT DEFAULT (datetime('now'))
+        )
+        """
+    )
     populate_habits()
+    db.commit()
+
+
+def get_incoming_funds(
+    db: sqlite3.Connection, year: int, month: int
+) -> dict[str, float]:
+    """Return total incoming funds per category for a given month.
+
+    Returns {category_name: total_amount}
+    """
+    month_prefix = f"{year:04d}-{month:02d}"
+    rows = db.execute(
+        """
+        SELECT category, SUM(amount)
+        FROM incoming_funds
+        WHERE timestamp LIKE ?
+        GROUP BY category
+        """,
+        (f"{month_prefix}%",),
+    ).fetchall()
+    return {row[0]: round(row[1], 2) for row in rows}
+
+
+def save_incoming_fund(
+    db: sqlite3.Connection,
+    description: str,
+    category: str,
+    amount: float,
+    timestamp: str,
+    provider: str = "",
+) -> None:
+    """Save an incoming fund assignment (e.g., partner reimbursement)."""
+    db.execute(
+        """
+        INSERT INTO incoming_funds (description_lower, category, amount, timestamp, provider)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (description.lower().strip(), category, abs(amount), timestamp, provider),
+    )
+    db.commit()
+
+
+def delete_incoming_fund(db: sqlite3.Connection, fund_id: int) -> None:
+    """Delete an incoming fund assignment by ID."""
+    db.execute("DELETE FROM incoming_funds WHERE id = ?", (fund_id,))
     db.commit()

@@ -693,6 +693,9 @@ html, body {
     border-bottom: 2px solid #E0E0E0;
     border-top: 2px solid #E0E0E0;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 /* ── Edit / reclassify modal ────────────────────────────── */
@@ -1512,7 +1515,12 @@ html, body {
             {% for provider in connected_providers %}
             {% set pdata = provider_breakdowns.get(provider, {}) %}
             {% set pcol = provider_colours.get(provider, '#888888') %}
-            <div class="cat-group-hdr" style="color:{{ pcol }};">// {{ provider | upper }}</div>
+            <div class="cat-group-hdr" style="color:{{ pcol }};">
+                <span>// {{ provider | upper }}</span>
+                {% if pdata.get('total_budget') %}
+                <span style="margin-left: auto; font-size: 0.9em;">£{{ "%.0f"|format(pdata.total_spent) }}/£{{ "%.0f"|format(pdata.total_budget) }}</span>
+                {% endif %}
+            </div>
             {% for cat in pdata.get('categories', []) %}
             {% if cat.spent > 0 or cat.budget > 0 %}
             {% set colour = cat_colours[ns.colour_idx % 10] %}

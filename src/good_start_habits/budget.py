@@ -1082,8 +1082,13 @@ def monthly_summary(
     month: int,
     cat_limits: dict[str, float] | None = None,
     income: float | None = None,
+    incoming_funds: dict[str, float] | None = None,
 ) -> dict:
-    """Return spending totals, savings, income-based balance, and grouped categories."""
+    """Return spending totals, savings, income-based balance, and grouped categories.
+
+    incoming_funds: {category: amount} of funds received (e.g., partner reimbursements).
+    """
+    incoming_funds = incoming_funds or {}
     use_sf_periods = cat_limits is None
     if cat_limits is None:
         cat_limits = BUDGET_LIMITS
@@ -1137,6 +1142,8 @@ def monthly_summary(
     categories: list[dict] = []
     for cat in all_cats:
         spent = round(cat_totals.get(cat, 0.0), 2)
+        incoming = incoming_funds.get(cat, 0.0)
+        net_spent = round(max(0.0, spent - incoming), 2)
         if use_sf_periods and cat in _SF_NAMES and cat in SINKING_FUND_RESETS:
             budget_limit = _sf_period_budget(cat, year, month)
         else:
@@ -1145,10 +1152,12 @@ def monthly_summary(
             categories.append(
                 {
                     "name": cat,
-                    "spent": spent,
+                    "spent": net_spent,
+                    "gross_spent": spent,
+                    "incoming": round(incoming, 2),
                     "budget": budget_limit,
-                    "remaining": round(budget_limit - spent, 2),
-                    "pct_used": round(spent / budget_limit * 100, 1)
+                    "remaining": round(budget_limit - net_spent, 2),
+                    "pct_used": round(net_spent / budget_limit * 100, 1)
                     if budget_limit
                     else 0.0,
                 }

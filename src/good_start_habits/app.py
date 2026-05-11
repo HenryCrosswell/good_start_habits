@@ -21,11 +21,14 @@ from good_start_habits.config import (
 )  # noqa: E402
 from good_start_habits.config import SAVINGS_ACCOUNTS  # noqa: E402
 from good_start_habits.db import (  # noqa: E402
+    delete_incoming_fund,
     get_budget_settings,
     get_db,
+    get_incoming_funds,
     get_savings_baselines,
     init_db,
     save_budget_settings,
+    save_incoming_fund,
     save_savings_baseline,
 )
 from good_start_habits.habits import (  # noqa: E402
@@ -209,6 +212,9 @@ def budget():
     settings = get_budget_settings(db, disp_year, disp_month)
     income = settings["base_income"] + settings["extra_income"]
     savings_baselines = get_savings_baselines(db, disp_year, disp_month)
+    incoming_funds = (
+        get_incoming_funds(db, disp_year, disp_month) if view != "year" else {}
+    )
 
     if view == "year":
         since = datetime(disp_year, 1, 1, tzinfo=timezone.utc)
@@ -228,7 +234,14 @@ def budget():
         provider_transactions[provider] = txns
         all_transactions.extend(txns)
 
-    def _build(txns: list[dict], cat_limits=None, txn_income=None, sav_baselines=None):
+    def _build(
+        txns: list[dict],
+        cat_limits=None,
+        txn_income=None,
+        sav_baselines=None,
+        incoming=None,
+    ):
+        incoming = incoming or {}
         if view == "year":
             return budget_module.build_yearly_charts(
                 txns, disp_year, projection, cat_limits
@@ -243,13 +256,21 @@ def budget():
                 baselines=sav_baselines,
             ),
             budget_module.monthly_summary(
-                txns, disp_year, disp_month, cat_limits, income=txn_income
+                txns,
+                disp_year,
+                disp_month,
+                cat_limits,
+                income=txn_income,
+                incoming_funds=incoming,
             ),
         )
 
     views: dict[str, dict] = {"all": {}}
     views["all"]["charts"], views["all"]["summary"] = _build(
-        all_transactions, txn_income=income, sav_baselines=savings_baselines
+        all_transactions,
+        txn_income=income,
+        sav_baselines=savings_baselines,
+        incoming=incoming_funds,
     )
     for provider, txns in provider_transactions.items():
         c, s = _build(txns, PROVIDER_BUDGET_LIMITS.get(provider))
@@ -273,10 +294,14 @@ def budget():
             and c["spent"] > 0
             and c["name"] not in sf_cat_names
         ]
+        total_spent = round(sum(c["spent"] for c in expected), 2)
+        total_budget = round(sum(plimits.get(c["name"], 0.0) for c in expected), 2)
         provider_breakdowns[p] = {
             "categories": expected,
             "error_cats": error_cats,
             "error_total": round(sum(c["spent"] for c in error_cats), 2),
+            "total_spent": total_spent,
+            "total_budget": total_budget,
         }
 
     wrong_card_charts: dict[str, str] = {}
@@ -446,6 +471,31 @@ def budget_api_reclassify():
         )
         db.commit()
         budget_module.load_overrides(db)
+    return jsonify({"ok": True})
+
+
+@app.route("/budget/api/incoming", methods=["POST"])
+def budget_api_incoming():
+    """Assign an incoming fund (e.g., partner reimbursement) to a category."""
+    db = get_db()
+    data = request.get_json(silent=True) or {}
+    description = data.get("description", "").strip()
+    category = data.get("category", "").strip()
+    amount = data.get("amount", 0.0)
+    timestamp = data.get("timestamp", datetime.now(timezone.utc).isoformat())
+    provider = data.get("provider", "")
+
+    if description and category and amount > 0:
+        save_incoming_fund(db, description, category, amount, timestamp, provider)
+        return jsonify({"ok": True, "message": "Incoming fund recorded"})
+    return jsonify({"ok": False, "message": "Invalid data"}), 400
+
+
+@app.route("/budget/api/incoming/<int:fund_id>", methods=["DELETE"])
+def budget_api_incoming_delete(fund_id: int):
+    """Delete an incoming fund assignment."""
+    db = get_db()
+    delete_incoming_fund(db, fund_id)
     return jsonify({"ok": True})
 
 
