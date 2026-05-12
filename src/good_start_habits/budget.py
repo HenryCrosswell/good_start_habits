@@ -1320,3 +1320,77 @@ def get_uncategorized_transactions(
             )
     result.sort(key=lambda x: x["date"], reverse=True)
     return result
+
+
+def get_unassigned_incoming(
+    db: Any,
+    provider_transactions: dict[str, list[dict]],
+    year: int | None = None,
+    month: int | None = None,
+) -> list[dict]:
+    """Return incoming (positive) transactions not yet assigned to a category.
+
+    Filters out known income sources (transfers, salary-like credits).
+    Excludes transactions already in the incoming_funds table.
+    """
+    month_prefix = f"{year:04d}-{month:02d}" if year and month else None
+
+    # Get already-assigned incoming funds
+    assigned_descs: set[str] = set()
+    if year and month:
+        rows = db.execute(
+            "SELECT description_lower FROM incoming_funds WHERE timestamp LIKE ?",
+            (f"{month_prefix}%",),
+        ).fetchall()
+        assigned_descs = {r[0] for r in rows}
+
+    result = []
+    for provider, txns in provider_transactions.items():
+        for t in txns:
+            # Only look at positive amounts (credits)
+            if t.get("amount", 0) <= 0:
+                continue
+            if month_prefix and t.get("timestamp", "")[:7] != month_prefix:
+                continue
+
+            desc = t.get("description", "").lower().strip()
+            # Skip if already assigned
+            if desc in assigned_descs:
+                continue
+
+            # Skip known income sources (salary, expected transfers, etc.)
+            classification = t.get("transaction_classification", [])
+            if isinstance(classification, list) and classification:
+                top = classification[0]
+                # Skip transfers and income classifications
+                if top in ("TRANSFER", "INCOME"):
+                    continue
+
+            # Skip common income patterns
+            skip_patterns = [
+                "salary",
+                "wage",
+                "payroll",
+                "dividend",
+                "interest",
+                "refund",
+            ]
+            if any(p in desc for p in skip_patterns):
+                continue
+
+            raw = t.get("description", "")
+            rule_desc = re.sub(r"\s+\d{4}-\d{2}-\d{2}\s*$", "", raw).lower().strip()
+            result.append(
+                {
+                    "description": _clean_desc(raw or "Unknown"),
+                    "raw_description": rule_desc,
+                    "full_description": raw.lower().strip(),
+                    "amount": round(t.get("amount", 0), 2),
+                    "date": t.get("timestamp", "")[:10],
+                    "provider": provider,
+                    "type": "incoming",  # Mark as incoming for template
+                }
+            )
+
+    result.sort(key=lambda x: x["date"], reverse=True)
+    return result

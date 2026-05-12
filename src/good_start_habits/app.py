@@ -346,8 +346,17 @@ def budget():
         if view == "sort"
         else []
     )
-    total_uncategorized = round(sum(t["amount"] for t in uncategorized_txns), 2)  # noqa: F841
-
+    unassigned_incoming = (
+        budget_module.get_unassigned_incoming(
+            db, recent_txn_source, year=txn_year, month=txn_month
+        )
+        if view == "sort"
+        else []
+    )
+    # Combine uncategorized (outgoing) and unassigned incoming (credits)
+    sort_txns = uncategorized_txns + unassigned_incoming
+    sort_txns.sort(key=lambda x: x["date"], reverse=True)
+    total_uncategorized = round(sum(t["amount"] for t in sort_txns), 2)  # noqa: F841
     import calendar as _cal
 
     display_month = f"{_cal.month_name[disp_month].upper()} {disp_year}"
@@ -403,7 +412,7 @@ def budget():
         ],
         wrong_card_charts=wrong_card_charts,
         sinking_fund_cats=sinking_fund_cats,
-        uncategorized_txns=uncategorized_txns,
+        uncategorized_txns=sort_txns,
         total_uncategorized=total_uncategorized,
     )
 
