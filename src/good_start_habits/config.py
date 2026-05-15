@@ -88,6 +88,7 @@ ACTIVE_TIMES = {
 
 ROTATION_INTERVAL = randint(1800, 7200)  # (5, 15)
 DWELL_TIME = randint(300, 600)  # (5, 15)
+AUTO_SWAP = True  # Auto-swap back to clock when outside active hours
 
 # Which categories belong to which provider (drives per-tab budget limits).
 # Transport is split: trains on Amex, parking on Nationwide.

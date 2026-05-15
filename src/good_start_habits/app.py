@@ -13,6 +13,7 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, url
 from good_start_habits import budget as budget_module  # noqa: E402
 from good_start_habits import truelayer  # noqa: E402
 from good_start_habits.config import (
+    AUTO_SWAP,
     CATEGORY_GROUPS,
     DWELL_TIME,
     PROVIDER_BUDGET_LIMITS,
@@ -104,8 +105,9 @@ def clock():
             "clock.html",
             active=True,
             rotation_interval=ROTATION_INTERVAL,
+            auto_swap=AUTO_SWAP,
         )
-    return render_template("clock.html", active=False)
+    return render_template("clock.html", active=False, auto_swap=AUTO_SWAP)
 
 
 # ---------------------------------------------------------------------------
