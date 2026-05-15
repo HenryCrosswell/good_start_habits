@@ -1126,6 +1126,11 @@ def monthly_summary(
             if period_spent > 0:
                 cat_totals[sf_cat] = period_spent
 
+    # Filter out provider assignments from incoming_funds (they don't reduce category balances)
+    category_incoming = {
+        k: v for k, v in incoming_funds.items() if not k.startswith("provider:")
+    }
+
     total_spent = round(sum(cat_totals.values()), 2)
     total_budget = sum(cat_limits.values())
     total_savings, _ = _savings_totals(transactions, year, month)
@@ -1142,7 +1147,7 @@ def monthly_summary(
     categories: list[dict] = []
     for cat in all_cats:
         spent = round(cat_totals.get(cat, 0.0), 2)
-        incoming = incoming_funds.get(cat, 0.0)
+        incoming = category_incoming.get(cat, 0.0)
         net_spent = round(max(0.0, spent - incoming), 2)
         if use_sf_periods and cat in _SF_NAMES and cat in SINKING_FUND_RESETS:
             budget_limit = _sf_period_budget(cat, year, month)

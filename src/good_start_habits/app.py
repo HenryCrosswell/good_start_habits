@@ -485,7 +485,7 @@ def budget_api_reclassify():
 
 @app.route("/budget/api/incoming", methods=["POST"])
 def budget_api_incoming():
-    """Assign an incoming fund (e.g., partner reimbursement) to a category."""
+    """Assign an incoming fund (e.g., partner reimbursement) to a category or provider."""
     db = get_db()
     data = request.get_json(silent=True) or {}
     description = data.get("description", "").strip()
@@ -493,8 +493,12 @@ def budget_api_incoming():
     amount = data.get("amount", 0.0)
     timestamp = data.get("timestamp", datetime.now(timezone.utc).isoformat())
     provider = data.get("provider", "")
+    is_provider_assign = data.get("is_provider_assign", False)
 
     if description and category and amount > 0:
+        # If assigning to a provider, prefix the category with "provider:"
+        if is_provider_assign:
+            category = f"provider:{category}"
         save_incoming_fund(db, description, category, amount, timestamp, provider)
         return jsonify({"ok": True, "message": "Incoming fund recorded"})
     return jsonify({"ok": False, "message": "Invalid data"}), 400

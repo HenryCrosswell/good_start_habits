@@ -95,8 +95,8 @@ PROVIDER_BUDGET_LIMITS: dict[str, dict[str, float]] = {
     "nationwide": {  # these categories only, anything else wouldbe an error
         "Rent": 1475.0,
         "Bills & Utilities": 242.33,
-        "Transport": 100.0,  # parking direct debit
-        "Subscriptions": 78.0,
+        "Transport": 103.0,  # parking direct debit
+        "Subscriptions": 65.31,
     },
     "amex": {  # these categories only, anything else wouldbe an error
         "Groceries": 160.0,
@@ -131,9 +131,9 @@ BUDGET_LIMITS: dict[str, float] = {
     "Eating Out & Social": 170.0,  # restaurants, bars, nights out
     "Rent": 1475.0,  # full outgoing; GF contribution tracked via extra_income
     "Bills & Utilities": 242.33,  # full outgoing; GF contribution tracked via extra_income
-    "Transport": 430.0,  # trains (330) + parking (100)
+    "Transport": 433.0,  # trains (330) + parking (103)
     "Petrol": 60.0,  # £60, 01/04/07/10 — sinking fund - resets at start of these months
-    "Subscriptions": 82.0,  # gym (50) + phone (10) + claude (18) + tesco (4)
+    "Subscriptions": 69.31,  # gym (50) + phone (10) + maxfun (3.72) + google (1.59)+ tesco (4)
     "Proton": 64.95,  # £64.95, 01 — sinking fund
     "Haircut": 45,  # £45, 02/04/06/08/10/12 — sinking fund
     "Skin & Haircare": 20.0,  # £20, 01/05/09 — sinking fund
