@@ -186,7 +186,7 @@ html, body {
 </svg>
 
 <div class="clock-content">
-    <h1 id="clock" data-rotation="{{ rotation_interval if active else 0 }}"></h1>
+    <h1 id="clock" data-rotation="{{ rotation_interval if (active and auto_swap) else 0 }}"></h1>
     <p id="status">{% if active %}☀{% else %}🌙{% endif %}</p>
 </div>
 {% endblock %}
