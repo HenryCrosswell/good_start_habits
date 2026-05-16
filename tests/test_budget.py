@@ -56,7 +56,8 @@ class TestMapCategoryByDescription:
         assert map_category([], "Contactless Payment GREGGS") == "Food & Coffee"
 
     def test_rent_by_payee(self):
-        assert map_category([], "Standing order ASHTONS RESIDENTIA 404608") == "Rent"
+        # Rent is excluded from budget tracking — maps to None
+        assert map_category([], "Standing order ASHTONS RESIDENTIA 404608") is None
 
     def test_transfer_excluded(self):
         assert map_category([], "Transfer to AJ Bell AJ Bell via Lloyds") is None
@@ -219,12 +220,11 @@ class TestSpendingFilter:
             _txn(-12.50, "Contactless Payment TESCO-STORES"),  # keep
             _txn(2440.0, "Credit SALARY"),  # credit — remove
             _txn(-4000.0, "Transfer to AJ Bell AJ Bell"),  # transfer — remove
-            _txn(-760.0, "Standing order ASHTONS RESIDENTIA"),  # keep (rent)
+            _txn(-760.0, "Standing order ASHTONS RESIDENTIA"),  # rent — excluded
         ]
         kept = _spending(txns)
-        assert len(kept) == 2
+        assert len(kept) == 1
         assert kept[0]["description"] == "Contactless Payment TESCO-STORES"
-        assert kept[1]["description"] == "Standing order ASHTONS RESIDENTIA"
 
 
 # ---------------------------------------------------------------------------

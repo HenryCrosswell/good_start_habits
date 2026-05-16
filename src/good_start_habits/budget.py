@@ -1355,6 +1355,9 @@ def get_unassigned_incoming(
             # Only look at positive amounts (credits)
             if t.get("amount", 0) <= 0:
                 continue
+            # Skip trivial credits (rounding pots, leftover monthly < £5)
+            if t.get("amount", 0) < 5.0:
+                continue
             if month_prefix and t.get("timestamp", "")[:7] != month_prefix:
                 continue
 

@@ -94,7 +94,6 @@ AUTO_SWAP = False  # Auto-swap back to clock when outside active hours
 # Transport is split: trains on Amex, parking on Nationwide.
 PROVIDER_BUDGET_LIMITS: dict[str, dict[str, float]] = {
     "nationwide": {  # these categories only, anything else wouldbe an error
-        "Rent": 1475.0,
         "Bills & Utilities": 242.33,
         "Transport": 103.0,  # parking direct debit
         "Subscriptions": 65.31,
@@ -130,7 +129,6 @@ BUDGET_LIMITS: dict[str, float] = {
     "Groceries": 160.0,  # big food shop
     "Food & Coffee": 130.0,  # misc food, coffees, snacks
     "Eating Out & Social": 170.0,  # restaurants, bars, nights out
-    "Rent": 1475.0,  # full outgoing; GF contribution tracked via extra_income
     "Bills & Utilities": 242.33,  # full outgoing; GF contribution tracked via extra_income
     "Transport": 433.0,  # trains (330) + parking (103)
     "Petrol": 60.0,  # £60, 01/04/07/10 — sinking fund - resets at start of these months
@@ -169,9 +167,9 @@ CATEGORY_MAP: dict[str, Any] = {
     # Entertainment
     "Entertainment": "Eating Out & Social",
     "Hobbies": "Eating Out & Social",
-    # Rent / housing
-    "Housing": "Rent",
-    "Rent": "Rent",
+    # Rent / housing — excluded from spending (tracked separately outside budget)
+    "Housing": None,
+    "Rent": None,
     # Bills
     "Bills": "Bills & Utilities",
     "Utilities": "Bills & Utilities",
@@ -209,7 +207,7 @@ BASE_INCOME: float = 2440.0
 DEFAULT_EXTRA_INCOME: float = 880.0
 
 CATEGORY_GROUPS: dict[str, list[str]] = {
-    "Fixed": ["Rent", "Bills & Utilities", "Transport", "Subscriptions"],
+    "Fixed": ["Bills & Utilities", "Transport", "Subscriptions"],
     "Essentials": ["Groceries", "Food & Coffee"],
     "Discretionary": [
         "Eating Out & Social",
@@ -295,8 +293,8 @@ DESCRIPTION_PATTERNS: list[tuple[str, str | None]] = [
     ("lifetime isa", None),  # generic LISA transfers
     ("flex saver", None),  # Nationwide Flex Saver
     ("nationwide sav", None),  # Nationwide savings account
-    # ── Rent ─────────────────────────────────────────────────────────────────
-    ("ashton", "Rent"),
+    # ── Rent — excluded from spending totals ─────────────────────────────────
+    ("ashton", None),
     # ── User-confirmed Nationwide payees ─────────────────────────────────────
     ("amrit.kaur", "Bills & Utilities"),  # GF council tax repayment (dominant) + misc
     ("stalbans.gov", "Transport"),  # St Albans parking permit

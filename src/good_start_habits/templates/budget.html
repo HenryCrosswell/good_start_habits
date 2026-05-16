@@ -681,6 +681,160 @@ html, body {
 }
 .sf-notes { width: 180px; }
 
+/* ── Per-provider remaining cards (replaces summary-grid) ── */
+.prov-rem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
+    border-bottom: 3px solid #111111;
+    flex-shrink: 0;
+}
+.prem-cell {
+    padding: 0.55rem 0.7rem 0.4rem;
+    border-right: 2px solid #111111;
+    border-left: 3px solid transparent;
+}
+.prem-cell:last-child { border-right: none; }
+.prem-label {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888888;
+    line-height: 2;
+}
+.prem-val {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 0.9rem;
+    font-weight: bold;
+    line-height: 1.2;
+}
+.prem-val.over { color: #FF1493; }
+.prem-val.good { color: #00A840; }
+.prem-sub {
+    font-family: 'VT323', monospace;
+    font-size: 0.82rem;
+    color: #888888;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── Cat amounts on own line (task 6) ────────────────────── */
+.cat-sub-amounts {
+    font-family: 'VT323', monospace;
+    font-size: 0.88rem;
+    color: #888888;
+    padding-left: 1.55rem;
+    margin-top: -0.1rem;
+    letter-spacing: 0.02em;
+}
+.cat-sub-amounts .spent { color: #111111; font-weight: bold; }
+
+/* ── Savings target tracker ──────────────────────────────── */
+.savings-tracker {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 1.5rem 2rem;
+    gap: 1.2rem;
+    background: rgba(0,200,81,0.03);
+    box-sizing: border-box;
+}
+.sav-row {
+    display: flex;
+    gap: 2.5rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.sav-big {
+    text-align: center;
+}
+.sav-big-val {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 2.8rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+.sav-big-lbl {
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    color: #888888;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+}
+.sav-progress-wrap {
+    width: 100%;
+    max-width: 500px;
+}
+.sav-progress-bar {
+    height: 12px;
+    background: #EEEEEE;
+    border: 2px solid #CCCCCC;
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+}
+.sav-progress-fill {
+    height: 100%;
+    background: #00C851;
+    border-right: 2px solid #007830;
+    transition: width 0.6s steps(20, end);
+}
+.sav-progress-pct {
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    color: #888888;
+    text-align: right;
+    letter-spacing: 0.04em;
+}
+.sav-stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.sav-stat {
+    text-align: center;
+    padding: 0.5rem 0.8rem;
+    border: 2px solid #111111;
+    box-shadow: 3px 3px 0 #111111;
+    background: #FFFFFF;
+    min-width: 100px;
+}
+.sav-stat-val {
+    font-family: 'Cherry Cream Soda', monospace;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #111111;
+    line-height: 1.2;
+}
+.sav-stat-val.over { color: #FF1493; }
+.sav-stat-val.accent { color: #9B30FF; }
+.sav-stat-lbl {
+    font-family: 'VT323', monospace;
+    font-size: 0.82rem;
+    color: #888888;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 0.15rem;
+}
+
+/* ── Mobile transaction drawer ───────────────────────────── */
+.mobile-txn-drawer {
+    display: none;
+    flex-direction: column;
+    background: #FAFAFA;
+    border-bottom: 2px solid #EEEEEE;
+    border-left: 4px solid #9B30FF;
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #DDDDDD transparent;
+}
+
 /* ── Category group headers ──────────────────────────────── */
 .cat-group-hdr {
     padding: 0.4rem 0.8rem;
@@ -1119,8 +1273,12 @@ html, body {
         border-bottom: none;
     }
     .cat-list { max-height: none; }
+    .prov-rem-grid { display: grid; }
     .summary-grid { display: none; }
     .right-panel { display: none; }
+    /* Sort and list panels must be visible on mobile */
+    .right-panel.sort-panel,
+    .right-panel.list-panel { display: flex !important; }
     .sort-panel { overflow: visible; }
     .sort-list { max-height: 70vh; overflow-y: auto; }
     .settings-panel { position: static; border-top: 3px solid #FFE600; border-bottom: 3px solid #FFE600; }
@@ -1135,6 +1293,8 @@ html, body {
     .list-spent { display: none; }
     .list-remaining { font-size: 0.9rem; }
     .list-reset { font-size: 0.75rem; }
+    /* Mobile transaction drawers */
+    .mobile-txn-drawer { display: flex; }
 }
 </style>
 {% endblock %}
@@ -1167,7 +1327,8 @@ html, body {
                 <span class="status-dot {{ status[provider] }}"></span>
                 <span>{{ provider | upper }}</span>
                 {% if status[provider] == 'connected' %}
-                    <form method="post" action="/auth/disconnect/{{ provider }}" style="margin:0;">
+                    <form method="post" action="/auth/disconnect/{{ provider }}" style="margin:0;"
+                          onsubmit="return confirm('Disconnect {{ provider | upper }}? This will remove access to your transaction data.')">
                         <button type="submit" class="btn-link">X</button>
                     </form>
                 {% else %}
@@ -1310,45 +1471,26 @@ html, body {
 
     <!-- ── List view ─────────────────────────────────────────── -->
     <div class="left-panel">
-        {% if summary %}
-        {% set income = summary.income %}
-        {% set balance = summary.usable_balance %}
-        {% set pct = summary.pct_used %}
-        <div class="summary-grid">
-            <div class="stat-cell">
-                <div class="stat-label">Spent</div>
-                <div class="stat-value {% if pct > 100 %}over{% endif %}">£{{ "%.0f"|format(summary.total_spent) }}</div>
-                <div class="stat-sub">{{ pct }}% USED</div>
-            </div>
-            <div class="stat-cell">
-                <div class="stat-label">{% if income %}Income Left{% else %}Left{% endif %}</div>
-                {% if income %}
-                <div class="stat-value {% if balance < 0 %}over{% else %}good{% endif %}">
-                    {% if balance < 0 %}-{% endif %}£{{ "%.0f"|format(balance | abs) }}
+        {% set provider_colours = {'nationwide': '#00B4D8', 'amex': '#9B30FF', 'monzo': '#FF1493'} %}
+        {% if connected_providers %}
+        <div class="prov-rem-grid">
+            {% for p in connected_providers %}
+            {% set rem = provider_remaining.get(p, 0) %}
+            <div class="prem-cell" style="border-left-color: {{ provider_colours.get(p, '#888') }};">
+                <div class="prem-label">{{ p | upper }}</div>
+                <div class="prem-val {% if rem < 0 %}over{% else %}good{% endif %}">
+                    {% if rem < 0 %}-{% endif %}£{{ "%.0f"|format(rem | abs) }}
                 </div>
-                <div class="stat-sub">OF £{{ "%.0f"|format(income) }}</div>
-                {% else %}
-                {% set remaining = summary.total_budget - summary.total_spent %}
-                <div class="stat-value {% if remaining < 0 %}over{% else %}good{% endif %}">
-                    {% if remaining < 0 %}-{% endif %}£{{ "%.0f"|format(remaining | abs) }}
-                </div>
-                <div class="stat-sub">OF £{{ "%.0f"|format(summary.total_budget) }}</div>
-                {% endif %}
+                <div class="prem-sub">left</div>
             </div>
-            <div class="stat-cell">
-                <div class="stat-label">Saved</div>
-                <div class="stat-value good">£{{ "%.0f"|format(summary.total_savings) }}</div>
-                {% if summary.projected_savings %}
-                <div class="stat-sub">→ £{{ "%.0f"|format(summary.projected_savings) }}</div>
-                {% else %}
-                <div class="stat-sub">THIS MONTH</div>
-                {% endif %}
+            {% endfor %}
+            {% if current_savings_total > 0 %}
+            <div class="prem-cell" style="border-left-color: #00C851;">
+                <div class="prem-label">SAVED</div>
+                <div class="prem-val good">£{{ "%.0f"|format(current_savings_total) }}</div>
+                <div class="prem-sub">total</div>
             </div>
-            <div class="stat-cell">
-                <div class="stat-label">Cats</div>
-                <div class="stat-value">{{ summary.categories | length }}</div>
-                <div class="stat-sub">TRACKED</div>
-            </div>
+            {% endif %}
         </div>
         {% endif %}
         <div class="empty-state" style="font-size:0.85rem;color:#BBBBBB;letter-spacing:0.06em;padding-top:1.5rem;">
@@ -1469,52 +1611,34 @@ html, body {
     <!-- ── Left panel ─────────────────────────────────────── -->
     <div class="left-panel">
 
-        {% if summary %}
-        {% set income = summary.income %}
-        {% set balance = summary.usable_balance %}
-        {% set pct = summary.pct_used %}
-        <div class="summary-grid">
-            <div class="stat-cell">
-                <div class="stat-label">Spent</div>
-                <div class="stat-value {% if pct > 100 %}over{% endif %}">£{{ "%.0f"|format(summary.total_spent) }}</div>
-                <div class="stat-sub">{{ pct }}% USED</div>
-            </div>
-            <div class="stat-cell">
-                <div class="stat-label">{% if income %}Income Left{% else %}Left{% endif %}</div>
-                {% if income %}
-                <div class="stat-value {% if balance < 0 %}over{% else %}good{% endif %}">
-                    {% if balance < 0 %}-{% endif %}£{{ "%.0f"|format(balance | abs) }}
+        {% set cat_colours = ['#FF1493','#9B30FF','#FF6B00','#00B4D8','#00C851','#E01A5A','#0077DD','#FF00CC','#FF8C00','#00C8A0'] %}
+        {% set provider_colours = {'nationwide': '#00B4D8', 'amex': '#9B30FF', 'monzo': '#FF1493'} %}
+
+        {% if connected_providers %}
+        <div class="prov-rem-grid">
+            {% for p in connected_providers %}
+            {% set rem = provider_remaining.get(p, 0) %}
+            <div class="prem-cell" style="border-left-color: {{ provider_colours.get(p, '#888') }};">
+                <div class="prem-label">{{ p | upper }}</div>
+                <div class="prem-val {% if rem < 0 %}over{% else %}good{% endif %}">
+                    {% if rem < 0 %}-{% endif %}£{{ "%.0f"|format(rem | abs) }}
                 </div>
-                <div class="stat-sub">OF £{{ "%.0f"|format(income) }}</div>
-                {% else %}
-                {% set remaining = summary.total_budget - summary.total_spent %}
-                <div class="stat-value {% if remaining < 0 %}over{% else %}good{% endif %}">
-                    {% if remaining < 0 %}-{% endif %}£{{ "%.0f"|format(remaining | abs) }}
-                </div>
-                <div class="stat-sub">OF £{{ "%.0f"|format(summary.total_budget) }}</div>
-                {% endif %}
+                <div class="prem-sub">left</div>
             </div>
-            <div class="stat-cell">
-                <div class="stat-label">Saved</div>
-                <div class="stat-value good">£{{ "%.0f"|format(summary.total_savings) }}</div>
-                {% if summary.projected_savings %}
-                <div class="stat-sub">→ £{{ "%.0f"|format(summary.projected_savings) }}</div>
-                {% else %}
-                <div class="stat-sub">THIS MONTH</div>
-                {% endif %}
+            {% endfor %}
+            {% if current_savings_total > 0 %}
+            <div class="prem-cell" style="border-left-color: #00C851;">
+                <div class="prem-label">SAVED</div>
+                <div class="prem-val good">£{{ "%.0f"|format(current_savings_total) }}</div>
+                <div class="prem-sub">total</div>
             </div>
-            <div class="stat-cell">
-                <div class="stat-label">Cats</div>
-                <div class="stat-value">{{ summary.categories | length }}</div>
-                <div class="stat-sub">TRACKED</div>
-            </div>
+            {% endif %}
         </div>
         {% endif %}
 
         <div class="cat-list-header">// Categories</div>
 
-        {% set cat_colours = ['#FF1493','#9B30FF','#FF6B00','#00B4D8','#00C851','#E01A5A','#0077DD','#FF00CC','#FF8C00','#00C8A0'] %}
-        {% set provider_colours = {'nationwide': '#00B4D8', 'amex': '#9B30FF', 'monzo': '#FF1493'} %}
+
         {% if connected_providers %}
         <div class="cat-list" id="cat-list">
             {% set ns = namespace(colour_idx=0) %}
@@ -1539,10 +1663,10 @@ html, body {
                         <span class="cat-dot" style="background:{{ colour }};"></span>
                         {{ cat.name | upper }}
                     </div>
-                    <div class="cat-amounts">
-                        <span class="spent">£{{ "%.0f"|format(cat.spent) }}</span>
-                        {% if cat.budget %}/£{{ "%.0f"|format(cat.budget) }}{% endif %}
-                    </div>
+                </div>
+                <div class="cat-sub-amounts">
+                    <span class="spent">£{{ "%.0f"|format(cat.spent) }}</span>
+                    {% if cat.budget %}<span>/£{{ "%.0f"|format(cat.budget) }}</span>{% endif %}
                 </div>
                 {% if cat.budget %}
                 <div class="cat-track">
@@ -1550,9 +1674,9 @@ html, body {
                          style="width:{{ [cat.pct_used, 100]|min }}%; background:{{ colour }};"></div>
                 </div>
                 <div class="cat-rem {% if cat.remaining < 0 %}over{% endif %}">
-                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT{% if cat.next_reset %} · RESETS {{ cat.next_reset | upper }}{% endif %}
-        {% else %}£{{ "%.0f"|format(cat.remaining | abs) }} OVER{% if cat.next_reset %} · RESETS {{ cat.next_reset | upper }}{% endif %}{% endif %}
-    </div>
+                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT
+                    {% else %}£{{ "%.0f"|format(cat.remaining | abs) }} OVER{% endif %}
+                </div>
                 {% endif %}
             </div>
             {% endif %}
@@ -1566,9 +1690,9 @@ html, body {
                         <span class="cat-dot" style="background:#FF6B00;"></span>
                         WRONG CARD
                     </div>
-                    <div class="cat-amounts">
-                        <span class="spent" style="color:#FF6B00;">£{{ "%.0f"|format(pdata.error_total) }}</span>
-                    </div>
+                </div>
+                <div class="cat-sub-amounts">
+                    <span class="spent" style="color:#FF6B00;">£{{ "%.0f"|format(pdata.error_total) }}</span>
                 </div>
                 <div class="cat-rem" style="color:#FF6B00;">
                     {% for ec in pdata.error_cats %}{{ ec.name | upper }}{% if not loop.last %} · {% endif %}{% endfor %}
@@ -1587,10 +1711,10 @@ html, body {
                         <span class="cat-dot" style="background:#9B30FF;"></span>
                         {{ cat.name | upper }}
                     </div>
-                    <div class="cat-amounts">
-                        {% if cat.spent > 0 %}<span class="spent">£{{ "%.0f"|format(cat.spent) }}</span>/{% endif %}
-                        <span style="color:#9B30FF;">£{{ "%.2f"|format(cat.budget) }}</span>
-                    </div>
+                </div>
+                <div class="cat-sub-amounts">
+                    {% if cat.spent > 0 %}<span class="spent">£{{ "%.0f"|format(cat.spent) }}</span>{% endif %}
+                    <span style="color:#9B30FF;">/£{{ "%.2f"|format(cat.budget) }}</span>
                 </div>
                 {% if cat.spent > 0 %}
                 <div class="cat-track">
@@ -1598,8 +1722,8 @@ html, body {
                          style="width:{{ [cat.pct_used, 100]|min }}%; background:#9B30FF;"></div>
                 </div>
                 <div class="cat-rem {% if cat.remaining < 0 %}over{% endif %}">
-                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT
-                    {% else %}£{{ "%.0f"|format(cat.remaining | abs) }} OVER{% endif %}
+                    {% if cat.remaining >= 0 %}£{{ "%.0f"|format(cat.remaining) }} LEFT{% if cat.next_reset %} · RESETS {{ cat.next_reset | upper }}{% endif %}
+                    {% else %}£{{ "%.0f"|format(cat.remaining | abs) }} OVER{% if cat.next_reset %} · RESETS {{ cat.next_reset | upper }}{% endif %}{% endif %}
                 </div>
                 {% else %}
                 <div class="cat-rem" style="color:#9B30FF80;">{% if cat.next_reset %}RESETS {{ cat.next_reset | upper }}{% else %}£{{ "%.2f"|format(cat.budget) }}{% endif %}</div>
@@ -1618,16 +1742,16 @@ html, body {
                         <span class="cat-dot" style="background:#00C851;"></span>
                         SAVINGS
                     </div>
-                    <div class="cat-amounts">
-                        <span class="spent" style="color:#00C851;">£{{ "%.0f"|format(summary.total_savings) }}</span>
-                    </div>
                 </div>
-                <div class="cat-rem" style="color:#00C851;">
-                    {% if summary.projected_savings %}
-                        → £{{ "%.0f"|format(summary.projected_savings) }} PROJECTED
-                    {% else %}
-                        THIS MONTH
-                    {% endif %}
+                <div class="cat-sub-amounts">
+                    <span class="spent" style="color:#00C851;">£{{ "%.0f"|format(current_savings_total) }}</span>
+                    <span style="color:#888;">/£{{ "{:,}".format(savings_target_amount) }} target</span>
+                </div>
+                <div class="cat-track">
+                    <div class="cat-fill" style="width:{{ [(current_savings_total / savings_target_amount * 100), 100]|min }}%; background:#00C851;"></div>
+                </div>
+                <div class="cat-rem" style="color:#888888;">
+                    £{{ "%.0f"|format(savings_gap) }} TO GO · {{ savings_months_remaining }}M LEFT
                 </div>
             </div>
             {% endif %}
@@ -1656,6 +1780,7 @@ html, body {
                     <div id="amt-bg-lbl" class="amt-bg-lbl good"></div>
                 </div>
                 <div id="cat-chart"></div>
+                <div id="savings-tracker" class="savings-tracker"></div>
             </div>
         </div>
 
@@ -1802,6 +1927,14 @@ html, body {
         {% endfor %}
     };
 
+    /* savings target tracker */
+    var SAV_CURRENT  = {{ current_savings_total }};
+    var SAV_TARGET   = {{ savings_target_amount }};
+    var SAV_TARGET_M = {{ savings_target_month | tojson }};
+    var SAV_GAP      = {{ savings_gap }};
+    var SAV_MONTHLY  = {{ monthly_savings_needed }};
+    var SAV_MONTHS   = {{ savings_months_remaining }};
+
     var activeCatIdx  = 0;
     var activeCatName = '';
     var chartRendered = false;
@@ -1840,11 +1973,30 @@ html, body {
     }
 
     function startAutoSwitch() {
+        if (window.innerWidth <= 768) return; // no auto-cycle on mobile
         clearInterval(autoTimer);
         startProgress(CAT_COLOURS[activeCatIdx % CAT_COLOURS.length]);
         autoTimer = setInterval(function () {
             renderCat((activeCatIdx + 1) % perCatData.length);
         }, AUTO_MS);
+    }
+
+    function fmt(n) { return '£' + Math.round(n).toLocaleString(); }
+
+    function buildSavingsTracker() {
+        var pct = Math.min(100, Math.round(SAV_CURRENT / SAV_TARGET * 100));
+        return '<div class="sav-row">' +
+            '<div class="sav-big"><div class="sav-big-val" style="color:#00C851;">' + fmt(SAV_CURRENT) + '</div><div class="sav-big-lbl">CURRENT</div></div>' +
+            '<div class="sav-big"><div class="sav-big-val" style="color:#111111;">' + fmt(SAV_TARGET) + '</div><div class="sav-big-lbl">TARGET · ' + SAV_TARGET_M + '</div></div>' +
+            '</div>' +
+            '<div class="sav-progress-wrap">' +
+            '<div class="sav-progress-bar"><div class="sav-progress-fill" style="width:' + pct + '%;"></div></div>' +
+            '<div class="sav-progress-pct">' + pct + '% THERE</div>' +
+            '</div>' +
+            '<div class="sav-stats">' +
+            '<div class="sav-stat"><div class="sav-stat-val over">' + fmt(SAV_GAP) + '</div><div class="sav-stat-lbl">to go</div></div>' +
+            '<div class="sav-stat"><div class="sav-stat-val accent">' + fmt(SAV_MONTHLY) + '/mo</div><div class="sav-stat-lbl">needed (' + SAV_MONTHS + ' months)</div></div>' +
+            '</div>';
     }
 
     function renderCat(idx) {
@@ -1855,107 +2007,76 @@ html, body {
         var lastY  = cat.y.length ? cat.y[cat.y.length - 1] : 0;
         var rem    = Math.round(lastY);
 
-        /* ── Remaining-amount watermark ───────────────── */
-        var bgVal = document.getElementById('amt-bg-val');
-        var bgLbl = document.getElementById('amt-bg-lbl');
-        if (cat.is_savings) {
-            bgVal.textContent = '£' + Math.abs(rem).toLocaleString();
-            bgVal.className   = 'amt-bg-val good';
-            bgLbl.textContent = 'SAVED';
-            bgLbl.className   = 'amt-bg-lbl good';
-        } else if (rem >= 0) {
-            bgVal.textContent = '£' + rem;
-            bgVal.className   = 'amt-bg-val good';
-            bgLbl.textContent = 'LEFT';
-            bgLbl.className   = 'amt-bg-lbl good';
-        } else {
-            bgVal.textContent = '£' + Math.abs(rem);
-            bgVal.className   = 'amt-bg-val over';
-            bgLbl.textContent = 'OVER';
-            bgLbl.className   = 'amt-bg-lbl over';
-        }
+        var tracker = document.getElementById('savings-tracker');
+        var el      = document.getElementById('cat-chart');
+        var bgEl    = document.getElementById('amt-bg');
 
-        document.getElementById('chart-cat-name').textContent = cat.name.toUpperCase();
-
-        var remEl = document.getElementById('chart-remaining');
         if (cat.is_savings) {
-            remEl.textContent = '£' + rem + ' SAVED';
-            remEl.className   = 'chart-remaining good';
-        } else if (rem >= 0) {
-            remEl.textContent = '£' + rem + ' LEFT';
+            /* ── Savings tracker replaces chart ── */
+            el.style.display      = 'none';
+            bgEl.style.display    = 'none';
+            tracker.style.display = 'flex';
+            tracker.innerHTML = buildSavingsTracker();
+
+            document.getElementById('chart-cat-name').textContent = 'SAVINGS';
+            var remEl = document.getElementById('chart-remaining');
+            remEl.textContent = fmt(SAV_GAP) + ' TO GO';
             remEl.className   = 'chart-remaining good';
         } else {
-            remEl.textContent = '£' + Math.abs(rem) + ' OVER';
-            remEl.className   = 'chart-remaining over';
-        }
+            el.style.display      = '';
+            bgEl.style.display    = '';
+            tracker.style.display = 'none';
 
-        var el = document.getElementById('cat-chart');
-        if (cat.is_savings && SAVINGS_CHART && SAVINGS_CHART.data) {
-            var savLayout = Object.assign({}, CHART_LAYOUT, {
-                margin: Object.assign({}, CHART_LAYOUT.margin, { l: 70 }),
-                xaxis: Object.assign({}, CHART_LAYOUT.xaxis, { range: [1, cat.days_in_month] }),
-                yaxis: Object.assign({}, CHART_LAYOUT.yaxis, {
-                    title: { text: '£ BALANCE', font: { size: 13, color: '#AAAAAA', family: "'VT323', monospace" } },
-                    tickformat: ',d',
-                    rangemode: 'tozero',
-                }),
-                showlegend: true,
-                legend: {
-                    orientation: 'v', x: 0.02, y: 0.98,
-                    xanchor: 'left', yanchor: 'top',
-                    font: { size: 12, color: '#888888', family: "'VT323', monospace" },
-                    bgcolor: 'rgba(255,255,255,0.88)',
-                    bordercolor: '#DDDDDD', borderwidth: 1,
-                },
-            });
-            if (!chartRendered) {
-                Plotly.newPlot(el, SAVINGS_CHART.data, savLayout, { responsive: true, displayModeBar: false });
-                chartRendered = true;
+            /* ── Remaining-amount watermark ── */
+            var bgVal = document.getElementById('amt-bg-val');
+            var bgLbl = document.getElementById('amt-bg-lbl');
+            if (rem >= 0) {
+                bgVal.textContent = '£' + rem;
+                bgVal.className   = 'amt-bg-val good';
+                bgLbl.textContent = 'LEFT';
+                bgLbl.className   = 'amt-bg-lbl good';
             } else {
-                Plotly.react(el, SAVINGS_CHART.data, savLayout);
+                bgVal.textContent = '£' + Math.abs(rem);
+                bgVal.className   = 'amt-bg-val over';
+                bgLbl.textContent = 'OVER';
+                bgLbl.className   = 'amt-bg-lbl over';
             }
-        } else {
+
+            document.getElementById('chart-cat-name').textContent = cat.name.toUpperCase();
+
+            var remEl = document.getElementById('chart-remaining');
+            if (rem >= 0) {
+                remEl.textContent = '£' + rem + ' LEFT';
+                remEl.className   = 'chart-remaining good';
+            } else {
+                remEl.textContent = '£' + Math.abs(rem) + ' OVER';
+                remEl.className   = 'chart-remaining over';
+            }
+
+            var split = splitAtZero(cat.x, cat.y);
             var traces = [];
-            if (cat.is_savings) {
-                traces.push({
-                    x: cat.x, y: cat.y,
-                    type: 'scatter', mode: 'lines',
-                    line: { color: '#00C851', width: 5, shape: 'spline', smoothing: 0.6 },
-                    hovertemplate: '£%{y:.0f} saved<extra></extra>',
-                });
-            } else {
-                var split = splitAtZero(cat.x, cat.y);
-                if (split.posX.length) traces.push({
-                    x: split.posX, y: split.posY,
-                    type: 'scatter', mode: 'lines',
-                    line: { color: '#00C851', width: 5, shape: 'spline', smoothing: 0.6 },
-                    hovertemplate: '£%{y:.0f} left<extra></extra>',
-                });
-                if (split.negX.length) traces.push({
-                    x: split.negX, y: split.negY,
-                    type: 'scatter', mode: 'lines',
-                    line: { color: '#FF1493', width: 5, shape: 'spline', smoothing: 0.6 },
-                    hovertemplate: '£%{y:.0f}<extra></extra>',
-                });
-            }
+            if (split.posX.length) traces.push({
+                x: split.posX, y: split.posY, type: 'scatter', mode: 'lines',
+                line: { color: '#00C851', width: 5, shape: 'spline', smoothing: 0.6 },
+                hovertemplate: '£%{y:.0f} left<extra></extra>',
+            });
+            if (split.negX.length) traces.push({
+                x: split.negX, y: split.negY, type: 'scatter', mode: 'lines',
+                line: { color: '#FF1493', width: 5, shape: 'spline', smoothing: 0.6 },
+                hovertemplate: '£%{y:.0f}<extra></extra>',
+            });
             if (cat.proj) {
-                var pColour = cat.is_savings ? '#00C851' : (cat.proj.y[cat.proj.y.length-1] >= 0 ? '#00C851' : '#FF1493');
+                var pColour = cat.proj.y[cat.proj.y.length-1] >= 0 ? '#00C851' : '#FF1493';
                 traces.push({
-                    x: cat.proj.x, y: cat.proj.y,
-                    type: 'scatter', mode: 'lines',
+                    x: cat.proj.x, y: cat.proj.y, type: 'scatter', mode: 'lines',
                     line: { color: pColour, dash: 'dot', width: 3 },
                     hoverinfo: 'skip', showlegend: false,
                 });
             }
-
-            var yAxisOverride = cat.is_savings
-                ? { title: { text: '£ SAVED', font: { size: 13, color: '#AAAAAA', family: "'VT323', monospace" } } }
-                : {};
             var layout = Object.assign({}, CHART_LAYOUT, {
                 xaxis: Object.assign({}, CHART_LAYOUT.xaxis, { range: [1, cat.days_in_month] }),
-                yaxis: Object.assign({}, CHART_LAYOUT.yaxis, yAxisOverride),
+                yaxis: Object.assign({}, CHART_LAYOUT.yaxis, {}),
             });
-
             if (!chartRendered) {
                 Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false });
                 chartRendered = true;
@@ -2005,6 +2126,20 @@ html, body {
         }
 
         startAutoSwitch();
+    }
+
+    function buildTxnDrawerHtml(txns) {
+        if (!txns.length) return '<div style="padding:0.7rem 0.9rem;font-family:VT323,monospace;color:#aaa;font-size:0.95rem;">NO TRANSACTIONS.</div>';
+        return txns.map(function (t) {
+            var p = (t.provider || 'monzo').slice(0,3).toUpperCase();
+            var cls = t.provider || 'monzo';
+            return '<div class="txn-row" style="padding:0.35rem 0.9rem;">' +
+                '<div class="txn-chip ' + cls + '" style="width:26px;height:26px;font-size:0.55rem;">' + p + '</div>' +
+                '<div class="txn-desc">' + esc(t.description).toUpperCase() + '</div>' +
+                '<div class="txn-date">' + t.date.slice(5) + '</div>' +
+                '<div class="txn-amount" style="font-size:0.95rem;">£' + t.amount.toFixed(2) + '</div>' +
+                '</div>';
+        }).join('');
     }
 
     function esc(s) {
@@ -2209,6 +2344,42 @@ html, body {
 
     renderCat(0);
 
+    /* ── Mobile: tap category to toggle transaction drawer ── */
+    if (window.innerWidth <= 768) {
+        document.querySelectorAll('.cat-item').forEach(function (item) {
+            item.addEventListener('click', function (e) {
+                if (e.target.tagName === 'BUTTON') return;
+                var catName = item.dataset.cat;
+                // Toggle: close if already open
+                var next = item.nextElementSibling;
+                if (next && next.classList.contains('mobile-txn-drawer')) {
+                    next.remove();
+                    item.classList.remove('active');
+                    item.style.borderLeftColor = 'transparent';
+                    item.style.background = '';
+                    return;
+                }
+                // Close any other open drawer
+                document.querySelectorAll('.mobile-txn-drawer').forEach(function (d) { d.remove(); });
+                // Highlight
+                document.querySelectorAll('.cat-item').forEach(function (ci) {
+                    ci.classList.remove('active');
+                    ci.style.borderLeftColor = 'transparent';
+                    ci.style.background = '';
+                });
+                item.classList.add('active');
+                item.style.borderLeftColor = '#9B30FF';
+                item.style.background = '#9B30FF18';
+                var txns = catTxns[catName] || [];
+                var drawer = document.createElement('div');
+                drawer.className = 'mobile-txn-drawer';
+                drawer.innerHTML = buildTxnDrawerHtml(txns);
+                item.insertAdjacentElement('afterend', drawer);
+                drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        });
+    }
+
 {% elif charts and charts.burn_rate and view != 'sort' %}
 
     var fig = {{ charts.burn_rate | safe }};
@@ -2303,6 +2474,7 @@ window.toggleSettings = function () {
 
 /* ── Interaction-aware dwell timer ─────────────────────────── */
 (function () {
+    if (!{{ auto_swap | tojson }}) return;  /* AUTO_SWAP=False disables return-to-clock */
     if (new URLSearchParams(window.location.search).get('freeze') === '1') return;
     var IDLE_MS   = 25000;   /* 25 s when idle */
     var ACTIVE_MS = 120000;  /* 2 min after any button/link/input interaction */

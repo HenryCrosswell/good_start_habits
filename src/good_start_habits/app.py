@@ -383,6 +383,36 @@ def budget():
         key=lambda c: sf_order.index(c["name"]) if c["name"] in sf_order else 999
     )
 
+    # SF overflow → reduces Nationwide remaining (task 9)
+    sf_overflow = sum(
+        abs(c["remaining"])
+        for c in (all_summary.get("categories") or [])
+        if c["name"] in sf_cat_names
+        and c.get("budget", 0) > 0
+        and c.get("remaining", 0) < 0
+    )
+    provider_remaining: dict[str, float] = {}
+    for _p in connected_providers:
+        _pb = provider_breakdowns.get(_p, {})
+        _rem = round(_pb.get("total_budget", 0.0) - _pb.get("total_spent", 0.0), 2)
+        if _p == "nationwide":
+            _rem = round(_rem - sf_overflow, 2)
+        provider_remaining[_p] = _rem
+
+    # Savings target tracker (task 10)
+    _savings_target = 50000.0
+    _target_month_label = "July 2027"
+    _months_remaining = (2027 - today.year) * 12 + (7 - today.month)
+    _target_baseline = sum(v for k, v in savings_baselines.items() if k != "Atom")
+    _monthly_contrib = (
+        (all_summary.get("total_savings") or 0.0) if view != "year" else 0.0
+    )
+    current_savings_total = round(_target_baseline + _monthly_contrib, 2)
+    savings_gap = round(_savings_target - current_savings_total, 2)
+    monthly_savings_needed = (
+        round(savings_gap / _months_remaining, 2) if _months_remaining > 0 else 0.0
+    )
+
     return render_template(
         "budget.html",
         status=status,
@@ -416,6 +446,14 @@ def budget():
         sinking_fund_cats=sinking_fund_cats,
         uncategorized_txns=sort_txns,
         total_uncategorized=total_uncategorized,
+        auto_swap=AUTO_SWAP,
+        provider_remaining=provider_remaining,
+        current_savings_total=current_savings_total,
+        savings_target_amount=int(_savings_target),
+        savings_target_month=_target_month_label,
+        savings_gap=savings_gap,
+        monthly_savings_needed=monthly_savings_needed,
+        savings_months_remaining=_months_remaining,
     )
 
 
