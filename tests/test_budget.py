@@ -1,14 +1,31 @@
 """Tests for budget categorisation and summary logic."""
 
 import json
+from unittest.mock import MagicMock
 
 from good_start_habits.budget import (
     _spending,
     build_monthly_charts,
     build_yearly_charts,
+    get_unassigned_incoming,
     map_category,
     monthly_summary,
 )
+
+
+def _mock_db() -> MagicMock:
+    db = MagicMock()
+    db.execute.return_value.fetchall.return_value = []
+    return db
+
+
+def _incoming_txn(amount: float, description: str, day: int = 10) -> dict:
+    return {
+        "amount": amount,
+        "description": description,
+        "transaction_classification": [],
+        "timestamp": f"2026-04-{day:02d}T12:00:00Z",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -387,3 +404,52 @@ class TestBuildYearlyCharts:
             txns, 2026, projection=False, cat_limits={"Food & Coffee": 100.0}
         )
         assert "cumulative" in result
+
+
+# ---------------------------------------------------------------------------
+# get_unassigned_incoming — trivial-credit filter (Task 4)
+# ---------------------------------------------------------------------------
+
+
+class TestGetUnassignedIncoming:
+    def test_keeps_credit_above_threshold(self):
+        txns = {"monzo": [_incoming_txn(10.00, "Credit FRIEND REPAYMENT")]}
+        result = get_unassigned_incoming(_mock_db(), txns, 2026, 4)
+        assert len(result) == 1
+
+    def test_filters_credit_below_five_pounds(self):
+        txns = {"monzo": [_incoming_txn(4.99, "left-over monthly")]}
+        result = get_unassigned_incoming(_mock_db(), txns, 2026, 4)
+        assert result == []
+
+    def test_filters_credit_exactly_at_zero(self):
+        txns = {"monzo": [_incoming_txn(0.01, "left-over monthly")]}
+        result = get_unassigned_incoming(_mock_db(), txns, 2026, 4)
+        assert result == []
+
+    def test_keeps_credit_exactly_at_threshold(self):
+        txns = {"monzo": [_incoming_txn(5.00, "Credit CASHBACK")]}
+        result = get_unassigned_incoming(_mock_db(), txns, 2026, 4)
+        assert len(result) == 1
+
+    def test_ignores_outgoing(self):
+        txns = {"monzo": [_incoming_txn(-20.00, "Contactless Payment TESCO")]}
+        result = get_unassigned_incoming(_mock_db(), txns, 2026, 4)
+        assert result == []
+
+    def test_filters_salary_pattern(self):
+        txns = {"nationwide": [_incoming_txn(2440.00, "Credit SALARY EMPLOYER")]}
+        result = get_unassigned_incoming(_mock_db(), txns, 2026, 4)
+        assert result == []
+
+    def test_filters_wrong_month(self):
+        txns = {
+            "monzo": [
+                {
+                    **_incoming_txn(20.00, "Credit FRIEND REPAYMENT"),
+                    "timestamp": "2026-03-10T12:00:00Z",  # March, not April
+                }
+            ]
+        }
+        result = get_unassigned_incoming(_mock_db(), txns, 2026, 4)
+        assert result == []
