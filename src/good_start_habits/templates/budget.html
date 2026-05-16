@@ -1269,7 +1269,7 @@ html, body {
         <div class="sort-list">
             {% if uncategorized_txns %}
             {% for txn in uncategorized_txns %}
-            <div class="sort-row" {% if txn.type == 'incoming' %}style="background:#F0FFF0;border-left:4px solid #00C851;"{% endif %}>
+            <div class="sort-row" {% if txn.type == 'incoming' %}style="background:#F0FFF0;border-left:4px solid #00C851;" data-provider="{{ txn.provider }}" data-date="{{ txn.date }}"{% endif %}>
                 <div class="txn-chip {{ txn.provider }}">{{ txn.provider[:3] | upper }}</div>
                 <div class="sort-desc" title="{{ txn.description | upper }}">{{ txn.description | upper }}</div>
                 <div class="txn-date">{{ txn.date }}</div>
@@ -2258,18 +2258,18 @@ window.toggleSettings = function () {
         var payload = { description: desc, category: cat };
         var endpoint = '/budget/api/reclassify';
 
-        // If it's incoming and assigned to provider, use incoming endpoint
-        if (txnType === 'incoming' && cat && cat.startsWith('provider:')) {
+        if (txnType === 'incoming') {
             endpoint = '/budget/api/incoming';
-            var provider = cat.replace('provider:', '');
-            payload = {
-                description: desc,
-                category: provider,
-                amount: parseFloat((form.closest('.sort-row').querySelector('.txn-amount').textContent || '').replace(/[£+]/g, '')) || 0,
-                timestamp: new Date().toISOString(),
-                provider: provider,
-                is_provider_assign: true
-            };
+            var row = form.closest('.sort-row');
+            var amount = parseFloat((row.querySelector('.txn-amount').textContent || '').replace(/[£+]/g, '')) || 0;
+            var txnDate = (row.dataset.date || new Date().toISOString().slice(0, 10)) + 'T00:00:00Z';
+            var rowProvider = row.dataset.provider || '';
+            if (cat && cat.startsWith('provider:')) {
+                var provider = cat.replace('provider:', '');
+                payload = { description: desc, category: provider, amount: amount, timestamp: txnDate, provider: provider, is_provider_assign: true };
+            } else {
+                payload = { description: desc, category: cat, amount: amount, timestamp: txnDate, provider: rowProvider, is_provider_assign: false };
+            }
         }
 
         fetch(endpoint, {

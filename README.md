@@ -72,3 +72,14 @@ ruff check .
 ruff format .
 mypy src/
 ```
+
+---
+
+## Recent changes
+
+- `b10853c` – claude haiku fix income to budget
+- `afd70ea` – claude haiku fix income to budget
+- `47001fa` – claude haiku fix income to budget
+- `f78f63c` – claude haiku fix income to budget
+- `396e9a3` – claude haiku fix income to budget
+- `95e020a` – claude haiku fix for headers and income to budget
