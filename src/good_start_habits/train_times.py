@@ -225,6 +225,8 @@ def _parse_ts(ts: ET.Element) -> dict:
         )
     return {
         "rid": _attr(ts, "rid"),
+        "toc": _attr(ts, "toc"),
+        "ssd": _attr(ts, "ssd"),
         "locations": locations,
     }
 
@@ -373,6 +375,71 @@ def find_commute_trains(
                 "dep_delayed": from_cp.get("dep_delayed", False),
                 "arr_delayed": to_cp.get("arr_delayed", False),
                 "platform": from_cp.get("platform"),
+                "leave_home_by": leave_home_dt.strftime("%H:%M"),
+                "work_arrival": work_arrival_dt.strftime("%H:%M"),
+                "arrives_on_time": target_dt is not None
+                and work_arrival_dt <= target_dt,
+                "recommended": False,
+                "_dep_dt": dep_dt,
+            }
+        )
+
+    # Also process orphan TS updates: trains with real-time data but no schedule seen
+    # in this window. Darwin only re-broadcasts schedules periodically; TS updates flow
+    # continuously. If a TS includes both TIPLOCs in order, treat it as a valid train.
+    seen_rids = {t["rid"] for t in trains}
+    for rid, ts in ts_updates.items():
+        if rid in seen_rids:
+            continue
+        if toc and ts.get("toc") and ts["toc"] != toc:
+            continue
+        if ts.get("ssd") and ts["ssd"] != today_str:
+            continue
+
+        locs = ts["locations"]
+        from_idx = next(
+            (i for i, loc in enumerate(locs) if loc["tiploc"] == from_tiploc), None
+        )
+        to_idx = next(
+            (i for i, loc in enumerate(locs) if loc["tiploc"] == to_tiploc), None
+        )
+        if from_idx is None or to_idx is None or from_idx >= to_idx:
+            continue
+
+        from_loc = locs[from_idx]
+        to_loc = locs[to_idx]
+
+        est_dep = from_loc.get("dep_et") or from_loc.get("arr_et", "")
+        est_arr = to_loc.get("arr_et") or to_loc.get("dep_et", "")
+        if not est_dep or not est_arr:
+            continue
+
+        dep_hhmm = _parse_hhmm(est_dep)
+        arr_hhmm = _parse_hhmm(est_arr)
+        if not dep_hhmm or not arr_hhmm:
+            continue
+
+        dep_dt = datetime.combine(now.date(), dtime(*dep_hhmm))
+        arr_dt = datetime.combine(now.date(), dtime(*arr_hhmm))
+        if arr_dt < dep_dt:
+            arr_dt += timedelta(days=1)
+        if dep_dt < now - timedelta(minutes=1):
+            continue
+
+        leave_home_dt = dep_dt - timedelta(minutes=home_walk_mins)
+        work_arrival_dt = arr_dt + timedelta(minutes=work_walk_mins)
+
+        trains.append(
+            {
+                "uid": rid,
+                "rid": rid,
+                "scheduled_dep": "",  # no schedule in this window
+                "estimated_dep": est_dep,
+                "scheduled_arr": "",
+                "estimated_arr": est_arr,
+                "dep_delayed": from_loc.get("dep_delayed", False),
+                "arr_delayed": to_loc.get("arr_delayed", False),
+                "platform": from_loc.get("platform"),
                 "leave_home_by": leave_home_dt.strftime("%H:%M"),
                 "work_arrival": work_arrival_dt.strftime("%H:%M"),
                 "arrives_on_time": target_dt is not None

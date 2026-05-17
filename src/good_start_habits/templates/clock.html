@@ -22,94 +22,150 @@ html, body {
     background: #FFFFFF;
 }
 
-/* Train widget */
+/* ── Train widget ─────────────────────────────────────────── */
 #train-widget {
     position: fixed;
     top: 18px;
     right: 16px;
     z-index: 25;
-    width: 280px;
-    background: #FFFFFF;
-    border: 3px solid #111111;
-    box-shadow: 5px 5px 0 #111111;
+    width: 348px;
+    background: rgba(255,255,255,0.95);
+    border-top: 5px solid #FFE600;
     font-family: 'VT323', monospace;
     font-size: 16px;
 }
-.tw-header {
-    background: #FFE600;
-    border-bottom: 3px solid #111111;
-    padding: 3px 10px;
+.tw-status {
+    text-align: center;
+    padding: 3px 10px 1px;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    min-height: 20px;
+}
+.tw-s-ok   { color: #00C851; }
+.tw-s-late { color: #FF6B00; }
+.tw-s-dim  { color: #999; }
+.tw-s-err  { color: #FF1493; font-size: 12px; }
+.tw-scene {
     display: flex;
-    justify-content: space-between;
+    align-items: flex-end;
+    padding: 4px 8px 6px;
+}
+.tw-side {
+    flex: 0 0 76px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    font-size: 18px;
-    letter-spacing: 0.08em;
+    gap: 2px;
 }
-#tw-resync {
-    background: none;
-    border: 2px solid #111111;
-    cursor: pointer;
-    font-size: 15px;
-    padding: 0 7px 1px;
-    box-shadow: 2px 2px 0 #111111;
-    font-family: inherit;
-    line-height: 1.5;
-    transition: background 0.1s, color 0.1s;
-}
-#tw-resync:hover { background: #111111; color: #FFE600; }
-#tw-body {
-    padding: 8px 12px 6px;
-    min-height: 60px;
-}
-.tw-loading, .tw-none { font-size: 15px; color: #666; padding: 4px 0; }
-.tw-error { font-size: 15px; color: #FF1493; padding: 4px 0; }
-.tw-main { margin-bottom: 4px; }
-.tw-leave-label {
-    font-size: 12px;
-    letter-spacing: 0.12em;
-    color: #888;
-    margin-bottom: -2px;
-}
-.tw-leave-time {
+.tw-walk-min { font-size: 11px; color: #888; }
+.tw-side-lbl { font-size: 11px; color: #888; letter-spacing: 0.07em; }
+.tw-leave-big {
     font-family: 'Limelight', monospace;
-    font-size: 48px;
-    line-height: 1;
+    font-size: 20px;
     color: #9B30FF;
-    text-shadow: 3px 3px 0 #111111;
-    letter-spacing: -0.02em;
+    text-shadow: 2px 2px 0 #111;
+    line-height: 1;
 }
-.tw-dep, .tw-arr { font-size: 15px; margin-top: 1px; }
-.tw-delayed { color: #FF6B00; }
-.tw-sched { color: #aaa; font-size: 13px; }
-.tw-ontime { color: #00C851; }
-.tw-late-badge { color: #FF1493; }
-.tw-divider {
-    border: none;
-    border-top: 2px solid #E0D8CC;
-    margin: 5px 0;
-}
-.tw-others { font-size: 14px; }
-.tw-other-row {
-    display: flex;
-    align-items: baseline;
-    gap: 0;
-    padding: 1px 0;
-}
-.tw-other-leave {
+.tw-work-big {
     font-family: 'Limelight', monospace;
     font-size: 18px;
     color: #111;
-    min-width: 54px;
+    line-height: 1;
 }
-.tw-other-dep { color: #555; flex: 1; }
-.tw-other-status { margin-left: 4px; }
+.tw-ontime-yes { color: #00C851; }
+.tw-ontime-no  { color: #FF1493; }
+.tw-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.tw-plat-label { font-size: 12px; color: #555; letter-spacing: 0.05em; }
+.tw-train-times { font-size: 14px; color: #111; letter-spacing: 0.05em; text-align: center; }
+.tw-dep-late  { color: #FF6B00; }
+.tw-dep-sched { color: #aaa; font-size: 11px; }
+#tw-alts {
+    border-top: 1px solid #E8E8E8;
+    padding: 3px 10px 4px;
+    font-size: 13px;
+}
+.tw-alt-row { display: flex; align-items: baseline; padding: 1px 0; gap: 4px; }
+.tw-alt-leave {
+    font-family: 'Limelight', monospace;
+    font-size: 16px;
+    color: #333;
+    min-width: 50px;
+}
+.tw-alt-info { flex: 1; font-size: 12px; color: #555; }
+.tw-alt-ok   { color: #00C851; }
+.tw-alt-no   { color: #FF1493; }
 .tw-footer {
-    border-top: 2px solid #E0D8CC;
-    padding: 2px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 10px 4px;
+    border-top: 1px solid #E8E8E8;
+    background: #F8F8F8;
     font-size: 12px;
     color: #aaa;
-    background: #F8F8F8;
 }
+#tw-resync {
+    background: none;
+    border: 1.5px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    padding: 1px 8px;
+    color: #555;
+    transition: background 0.1s, color 0.1s;
+}
+#tw-resync:hover { background: #FFE600; border-color: #111; color: #111; }
+
+/* ── Walking figure animations ──────────────────────────── */
+@keyframes tw-walk-bob {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-1.5px); }
+}
+@keyframes tw-leg-f {
+    0%, 100% { transform: rotate(-22deg); }
+    50%       { transform: rotate(22deg); }
+}
+@keyframes tw-leg-b {
+    0%, 100% { transform: rotate(22deg); }
+    50%       { transform: rotate(-22deg); }
+}
+@keyframes tw-arm-f {
+    0%, 100% { transform: rotate(18deg); }
+    50%       { transform: rotate(-18deg); }
+}
+@keyframes tw-arm-b {
+    0%, 100% { transform: rotate(-18deg); }
+    50%       { transform: rotate(18deg); }
+}
+@keyframes tw-wheel-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+@keyframes tw-smoke {
+    0%   { opacity: 0.65; transform: translateY(0) scale(0.5); }
+    100% { opacity: 0;    transform: translateY(-18px) scale(1.4); }
+}
+.tw-figure { animation: tw-walk-bob 0.55s ease-in-out infinite; }
+.tw-figure .tw-lf { animation: tw-leg-f 0.55s ease-in-out infinite; transform-origin: 15px 29px; }
+.tw-figure .tw-lb { animation: tw-leg-b 0.55s ease-in-out infinite; transform-origin: 15px 29px; }
+.tw-figure .tw-af { animation: tw-arm-f 0.55s ease-in-out infinite; transform-origin: 15px 14px; }
+.tw-figure .tw-ab { animation: tw-arm-b 0.55s ease-in-out infinite; transform-origin: 15px 14px; }
+.tw-train-svg .tw-wh {
+    animation: tw-wheel-spin 0.75s linear infinite;
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+}
+.tw-train-svg .tw-sm     { animation: tw-smoke 1.8s ease-out infinite; }
+.tw-train-svg .tw-sm.d1  { animation-delay: 0s;   }
+.tw-train-svg .tw-sm.d2  { animation-delay: 0.6s; }
+.tw-train-svg .tw-sm.d3  { animation-delay: 1.2s; }
 
 /* TV test-card rainbow stripe at very top */
 #pt-container::before {
@@ -275,16 +331,127 @@ html, body {
 </svg>
 
 <div id="train-widget">
-    <div class="tw-header">
-        <span>TRAINS</span>
-        <button id="tw-resync" onclick="trainResync()" title="Resync live data">↺</button>
+
+  <!-- Status badge -->
+  <div class="tw-status" id="tw-status-row">
+    <span class="tw-s-dim">CONNECTING…</span>
+  </div>
+
+  <!-- Scene: walker | train | walker -->
+  <div class="tw-scene">
+
+    <!-- Left: home → station -->
+    <div class="tw-side">
+      <svg class="tw-figure" viewBox="0 0 30 52" width="24" height="42" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="6" r="5.5" fill="#111"/>
+        <line x1="15" y1="11" x2="15" y2="29" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+        <g class="tw-af"><line x1="15" y1="14" x2="24" y2="22" stroke="#111" stroke-width="2" stroke-linecap="round"/></g>
+        <g class="tw-ab"><line x1="15" y1="14" x2="6"  y2="22" stroke="#111" stroke-width="2" stroke-linecap="round"/></g>
+        <g class="tw-lf"><line x1="15" y1="29" x2="22" y2="47" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></g>
+        <g class="tw-lb"><line x1="15" y1="29" x2="8"  y2="47" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></g>
+      </svg>
+      <div class="tw-walk-min">12 min</div>
+      <div class="tw-side-lbl">LEAVE</div>
+      <div class="tw-leave-big" id="tw-leave">--:--</div>
     </div>
-    <div id="tw-body">
-        <div class="tw-loading">Connecting...</div>
+
+    <!-- Centre: steam train at platform -->
+    <div class="tw-center">
+      <svg class="tw-train-svg" viewBox="0 0 128 65" width="128" height="65" xmlns="http://www.w3.org/2000/svg">
+        <!-- Smoke puffs (animated) -->
+        <circle class="tw-sm d1" cx="21" cy="11" r="5"  fill="#aaa"/>
+        <circle class="tw-sm d2" cx="25" cy="6"  r="4"  fill="#bbb"/>
+        <circle class="tw-sm d3" cx="18" cy="3"  r="3"  fill="#ccc"/>
+        <!-- Chimney -->
+        <rect x="16" y="12" width="11" height="10" fill="#222" rx="1"/>
+        <rect x="13" y="11" width="17" height="3"  fill="#222" rx="1"/>
+        <!-- Boiler dome -->
+        <ellipse cx="48" cy="23" rx="9" ry="6" fill="#BB0000"/>
+        <!-- Main boiler -->
+        <rect x="10" y="24" width="78" height="17" fill="#CC0000" rx="3"/>
+        <!-- Footplate -->
+        <rect x="8"  y="39" width="80" height="4"  fill="#AA0000"/>
+        <!-- Front buffer -->
+        <rect x="2"  y="36" width="10" height="5"  fill="#555" rx="1"/>
+        <rect x="0"  y="38" width="12" height="3"  fill="#444"/>
+        <!-- Cab -->
+        <rect x="86" y="17" width="42" height="25" fill="#880000" rx="2"/>
+        <rect x="84" y="14" width="44" height="5"  fill="#AA0000" rx="2"/>
+        <rect x="90" y="20" width="11" height="9"  fill="#AADEFF" rx="1" stroke="#333" stroke-width="1"/>
+        <!-- Drive wheel 1 -->
+        <g class="tw-wh">
+          <circle cx="36" cy="49" r="11" fill="none" stroke="#222" stroke-width="2.5"/>
+          <circle cx="36" cy="49" r="2.5" fill="#333"/>
+          <line x1="36" y1="38" x2="36" y2="60" stroke="#333" stroke-width="1.5"/>
+          <line x1="25" y1="49" x2="47" y2="49" stroke="#333" stroke-width="1.5"/>
+          <line x1="28.2" y1="41.2" x2="43.8" y2="56.8" stroke="#333" stroke-width="1"/>
+          <line x1="43.8" y1="41.2" x2="28.2" y2="56.8" stroke="#333" stroke-width="1"/>
+        </g>
+        <!-- Drive wheel 2 -->
+        <g class="tw-wh">
+          <circle cx="67" cy="49" r="11" fill="none" stroke="#222" stroke-width="2.5"/>
+          <circle cx="67" cy="49" r="2.5" fill="#333"/>
+          <line x1="67" y1="38" x2="67" y2="60" stroke="#333" stroke-width="1.5"/>
+          <line x1="56" y1="49" x2="78" y2="49" stroke="#333" stroke-width="1.5"/>
+          <line x1="59.2" y1="41.2" x2="74.8" y2="56.8" stroke="#333" stroke-width="1"/>
+          <line x1="74.8" y1="41.2" x2="59.2" y2="56.8" stroke="#333" stroke-width="1"/>
+        </g>
+        <!-- Front small wheel -->
+        <g class="tw-wh">
+          <circle cx="14" cy="48" r="7"  fill="none" stroke="#222" stroke-width="2"/>
+          <circle cx="14" cy="48" r="2"  fill="#333"/>
+          <line x1="14" y1="41" x2="14" y2="55" stroke="#333" stroke-width="1.2"/>
+          <line x1="7"  y1="48" x2="21" y2="48" stroke="#333" stroke-width="1.2"/>
+        </g>
+        <!-- Rear small wheel -->
+        <g class="tw-wh">
+          <circle cx="96" cy="48" r="7"  fill="none" stroke="#222" stroke-width="2"/>
+          <circle cx="96" cy="48" r="2"  fill="#333"/>
+          <line x1="96" y1="41" x2="96" y2="55" stroke="#333" stroke-width="1.2"/>
+          <line x1="89" y1="48" x2="103" y2="48" stroke="#333" stroke-width="1.2"/>
+        </g>
+        <!-- Connecting rod -->
+        <rect x="36" y="46" width="31" height="3" fill="#444" rx="1.5"/>
+        <!-- Platform / rail -->
+        <rect x="0" y="62" width="128" height="3" fill="#555"/>
+        <line x1="0" y1="61" x2="128" y2="61" stroke="#333" stroke-width="1.5"/>
+      </svg>
+      <div class="tw-plat-label">Platform <span id="tw-plat">–</span></div>
+      <div class="tw-train-times">
+        <span id="tw-dep">--:--</span>
+        <span style="color:#999"> → </span>
+        <span id="tw-arr">--:--</span>
+      </div>
     </div>
-    <div class="tw-footer">
-        <span id="tw-updated">–</span>
+
+    <!-- Right: station → work -->
+    <div class="tw-side">
+      <svg class="tw-figure" viewBox="0 0 30 52" width="24" height="42" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="6" r="5.5" fill="#111"/>
+        <line x1="15" y1="11" x2="15" y2="29" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+        <g class="tw-ab"><line x1="15" y1="14" x2="24" y2="22" stroke="#111" stroke-width="2" stroke-linecap="round"/></g>
+        <g class="tw-af"><line x1="15" y1="14" x2="6"  y2="22" stroke="#111" stroke-width="2" stroke-linecap="round"/></g>
+        <g class="tw-lb"><line x1="15" y1="29" x2="22" y2="47" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></g>
+        <g class="tw-lf"><line x1="15" y1="29" x2="8"  y2="47" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></g>
+      </svg>
+      <div class="tw-walk-min">12 min</div>
+      <div class="tw-side-lbl">AT WORK</div>
+      <div class="tw-work-big">
+        <span id="tw-work">--:--</span><span id="tw-ontime"></span>
+      </div>
     </div>
+
+  </div><!-- /.tw-scene -->
+
+  <!-- Alternative trains -->
+  <div id="tw-alts" style="display:none"></div>
+
+  <!-- Footer -->
+  <div class="tw-footer">
+    <span id="tw-updated">–</span>
+    <button id="tw-resync" onclick="trainResync()" title="Resync live data">↺ Resync</button>
+  </div>
+
 </div>
 
 <div class="clock-content">
@@ -332,79 +499,99 @@ html, body {
             });
         }
 
+        function setText(id, val) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = val;
+        }
+        function setHTML(id, val) {
+            var el = document.getElementById(id);
+            if (el) el.innerHTML = val;
+        }
+
         function renderTrains(data) {
-            var body = document.getElementById('tw-body');
-            var btn  = document.getElementById('tw-resync');
-            var upd  = document.getElementById('tw-updated');
+            var statusRow = document.getElementById('tw-status-row');
+            var alts      = document.getElementById('tw-alts');
+            var btn       = document.getElementById('tw-resync');
+            var upd       = document.getElementById('tw-updated');
 
             var refreshing = data.status === 'refreshing' || data.status === 'loading';
-            btn.textContent = refreshing ? '⟳' : '↺';
+            btn.textContent = refreshing ? '⟳ …' : '↺ Resync';
             if (data.fetched_at) upd.textContent = 'Updated ' + data.fetched_at;
 
-            // Keep polling while the backend is still fetching
             if (refreshing) schedulePoll(3000);
 
-            if (refreshing && !(data.trains && data.trains.length)) {
-                body.innerHTML = '<div class="tw-loading">Fetching live data…</div>';
-                return;
-            }
             if (data.status === 'unavailable' || data.status === 'error') {
-                body.innerHTML = '<div class="tw-error">' + esc(data.error || 'Unavailable') + '</div>';
+                statusRow.innerHTML = '<span class="tw-s-err">' + esc(data.error || 'Unavailable') + '</span>';
                 return;
             }
 
             var trains = data.trains || [];
+
+            if (refreshing && !trains.length) {
+                statusRow.innerHTML = '<span class="tw-s-dim">FETCHING LIVE DATA…</span>';
+                return;
+            }
             if (!trains.length) {
-                body.innerHTML = '<div class="tw-none">No active trains found</div>';
+                statusRow.innerHTML = '<span class="tw-s-dim">NO ACTIVE TRAINS</span>';
                 return;
             }
 
             var rec    = trains.find(function (t) { return t.recommended; }) || trains[0];
             var others = trains.filter(function (t) { return t !== rec; }).slice(0, 2);
 
-            var html = '<div class="tw-main">';
-            html += '<div class="tw-leave-label">LEAVE BY</div>';
-            html += '<div class="tw-leave-time">' + esc(rec.leave_home_by) + '</div>';
+            // Status badge
+            var isDelayed = rec.dep_delayed || rec.arr_delayed;
+            statusRow.innerHTML = isDelayed
+                ? '<span class="tw-s-late">⚠ DELAYED</span>'
+                : '<span class="tw-s-ok">● ON TIME</span>';
 
-            // Departure line
-            var depTime = esc(rec.estimated_dep);
-            if (rec.dep_delayed && rec.scheduled_dep !== rec.estimated_dep) {
-                depTime += ' <span class="tw-sched">(' + esc(rec.scheduled_dep) + ')</span>';
+            // Leave time
+            setText('tw-leave', rec.leave_home_by || '--:--');
+
+            // Platform
+            setText('tw-plat', rec.platform || '–');
+
+            // Departure time
+            var depHtml = esc(rec.estimated_dep || '--:--');
+            if (rec.dep_delayed && rec.scheduled_dep && rec.scheduled_dep !== rec.estimated_dep) {
+                depHtml = '<span class="tw-dep-late">' + esc(rec.estimated_dep) + '</span>'
+                        + ' <span class="tw-dep-sched">(' + esc(rec.scheduled_dep) + ')</span>';
             }
-            var plat = rec.platform ? ' · p' + esc(rec.platform) : '';
-            var lateBadge = rec.dep_delayed ? ' <span class="tw-delayed">LATE</span>' : '';
-            html += '<div class="tw-dep">Dep ' + depTime + plat + lateBadge + '</div>';
+            setHTML('tw-dep', depHtml);
 
-            // Arrival + work line
-            var arrTime = esc(rec.estimated_arr);
-            if (rec.arr_delayed && rec.scheduled_arr !== rec.estimated_arr) {
-                arrTime += ' <span class="tw-sched">(' + esc(rec.scheduled_arr) + ')</span>';
+            // Arrival time
+            var arrHtml = esc(rec.estimated_arr || '--:--');
+            if (rec.arr_delayed && rec.scheduled_arr && rec.scheduled_arr !== rec.estimated_arr) {
+                arrHtml = '<span class="tw-dep-late">' + esc(rec.estimated_arr) + '</span>';
             }
-            var onTime = rec.arrives_on_time
-                ? '<span class="tw-ontime">✓</span>'
-                : '<span class="tw-late-badge">✗ LATE</span>';
-            html += '<div class="tw-arr">Arr ' + arrTime + ' → Work ' + esc(rec.work_arrival) + ' ' + onTime + '</div>';
-            html += '</div>';
+            setHTML('tw-arr', arrHtml);
 
+            // Work arrival + on-time icon
+            setText('tw-work', rec.work_arrival || '--:--');
+            setHTML('tw-ontime', rec.arrives_on_time
+                ? '<span class="tw-ontime-yes"> ✓</span>'
+                : '<span class="tw-ontime-no"> ✗</span>');
+
+            // Alternatives
             if (others.length) {
-                html += '<hr class="tw-divider">';
-                html += '<div class="tw-others">';
+                alts.style.display = '';
+                var html = '';
                 others.forEach(function (t) {
                     var p = t.platform ? ' p' + esc(t.platform) : '';
-                    var d = t.dep_delayed ? ' <span class="tw-delayed">⚠</span>' : '';
+                    var d = t.dep_delayed ? ' <span style="color:#FF6B00">⚠</span>' : '';
                     var ws = t.arrives_on_time
-                        ? '<span class="tw-ontime">✓</span>'
-                        : '<span class="tw-late-badge">✗</span>';
-                    html += '<div class="tw-other-row">';
-                    html += '<span class="tw-other-leave">' + esc(t.leave_home_by) + '</span>';
-                    html += '<span class="tw-other-dep"> Dep ' + esc(t.estimated_dep) + p + d + ' → ' + esc(t.work_arrival) + '</span>';
-                    html += '<span class="tw-other-status"> ' + ws + '</span>';
+                        ? '<span class="tw-alt-ok">✓</span>'
+                        : '<span class="tw-alt-no">✗</span>';
+                    html += '<div class="tw-alt-row">';
+                    html += '<span class="tw-alt-leave">→ ' + esc(t.leave_home_by) + '</span>';
+                    html += '<span class="tw-alt-info"> dep ' + esc(t.estimated_dep) + p + d
+                          + ' · work ' + esc(t.work_arrival) + ' ' + ws + '</span>';
                     html += '</div>';
                 });
-                html += '</div>';
+                alts.innerHTML = html;
+            } else {
+                alts.style.display = 'none';
             }
-
-            body.innerHTML = html;
         }
 
         function schedulePoll(ms) {
@@ -417,14 +604,14 @@ html, body {
                 .then(function (r) { return r.json(); })
                 .then(renderTrains)
                 .catch(function () {
-                    document.getElementById('tw-body').innerHTML =
-                        '<div class="tw-error">Connection error</div>';
+                    var sr = document.getElementById('tw-status-row');
+                    if (sr) sr.innerHTML = '<span class="tw-s-err">Connection error</span>';
                 });
         }
 
         window.trainResync = function () {
             if (pollTimer) clearTimeout(pollTimer);
-            document.getElementById('tw-resync').textContent = '⟳';
+            document.getElementById('tw-resync').textContent = '⟳ …';
             trainFetch(true);
         };
 
