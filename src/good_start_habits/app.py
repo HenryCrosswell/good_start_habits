@@ -21,11 +21,10 @@ from good_start_habits.config import (
     PROVIDER_BUDGET_LIMITS,
     ROTATION_INTERVAL,
     SINKING_FUND_RESETS,
-    TRAIN_FROM_TIPLOC,
+    TRAIN_FROM_CRS,
+    TRAIN_HOME_DEPARTURE_TARGET,
     TRAIN_HOME_WALK_MINS,
-    TRAIN_LISTEN_SECS,
-    TRAIN_TO_TIPLOC,
-    TRAIN_TOC,
+    TRAIN_TO_CRS,
     TRAIN_WORK_ARRIVAL_TARGET,
     TRAIN_WORK_WALK_MINS,
 )  # noqa: E402
@@ -90,6 +89,8 @@ if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     _scheduler.add_job(_garmin_sync_job, "interval", minutes=30)
     _scheduler.start()
     atexit.register(lambda: _scheduler.shutdown(wait=False))
+    # Persistent Darwin listener — runs for the lifetime of the process
+    train_times.start_listener()
 
 
 # ---------------------------------------------------------------------------
@@ -105,32 +106,36 @@ def fire_up_db():
 # ---------------------------------------------------------------------------
 # Train widget cache (module-level; shared across Gunicorn threads)
 # ---------------------------------------------------------------------------
+# find_all_commute_trains now reads from the persistent listener's in-memory
+# store — it is instant, so we cache for 30 s to avoid redundant processing
+# on rapid polling but don't need a long TTL.
 
 _train_cache: dict = {
-    "trains": None,
+    "outbound": None,
+    "return": None,
     "fetched_at": None,
     "error": None,
     "fetching": False,
 }
 _train_lock = threading.Lock()
-_TRAIN_CACHE_TTL = 180  # seconds
+_TRAIN_CACHE_TTL = 30
 
 
 def _do_train_fetch() -> None:
     try:
-        result = train_times.find_commute_trains(
-            from_tiploc=TRAIN_FROM_TIPLOC,
-            to_tiploc=TRAIN_TO_TIPLOC,
-            toc=TRAIN_TOC,
+        result = train_times.find_all_commute_trains(
+            from_crs=TRAIN_FROM_CRS,
+            to_crs=TRAIN_TO_CRS,
             home_walk_mins=TRAIN_HOME_WALK_MINS,
             work_walk_mins=TRAIN_WORK_WALK_MINS,
             target_work_arrival=TRAIN_WORK_ARRIVAL_TARGET,
-            listen_seconds=TRAIN_LISTEN_SECS,
+            target_work_departure=TRAIN_HOME_DEPARTURE_TARGET,
         )
         with _train_lock:
             _train_cache.update(
                 {
-                    "trains": result["trains"],
+                    "outbound": result["outbound"],
+                    "return": result["return"],
                     "fetched_at": datetime.now(),
                     "error": None,
                     "fetching": False,
@@ -162,6 +167,8 @@ def _ensure_train_fetch(force: bool = False) -> None:
 
 @app.route("/")
 def clock():
+    if train_times.credentials_configured():
+        _ensure_train_fetch()
     if check_current_datetime():
         return render_template(
             "clock.html",
@@ -178,9 +185,10 @@ def api_trains():
         return jsonify(
             {
                 "status": "unavailable",
-                "trains": [],
+                "outbound": {"trains": [], "target": TRAIN_WORK_ARRIVAL_TARGET},
+                "return": {"trains": [], "target": TRAIN_HOME_DEPARTURE_TARGET},
                 "fetched_at": None,
-                "error": "NR credentials not configured (NR_ACCESS_KEY / NR_SECRET_KEY)",
+                "error": "NR credentials not configured — add NR_API_TOKEN to .env",
             }
         )
 
@@ -193,18 +201,19 @@ def api_trains():
             if _train_cache["fetched_at"]
             else None
         )
-        if _train_cache["fetching"]:
-            status = "refreshing"
-        elif _train_cache["error"]:
+        if _train_cache["error"]:
             status = "error"
-        elif _train_cache["trains"] is not None:
+        elif _train_cache["outbound"] is not None:
             status = "ok"
         else:
             status = "loading"
         return jsonify(
             {
                 "status": status,
-                "trains": _train_cache["trains"] or [],
+                "outbound": _train_cache["outbound"]
+                or {"trains": [], "target": TRAIN_WORK_ARRIVAL_TARGET},
+                "return": _train_cache["return"]
+                or {"trains": [], "target": TRAIN_HOME_DEPARTURE_TARGET},
                 "fetched_at": fetched_str,
                 "error": _train_cache["error"],
             }
@@ -793,6 +802,32 @@ def garmin_sync():
 # ---------------------------------------------------------------------------
 # Debug
 # ---------------------------------------------------------------------------
+
+
+@app.route("/debug/trains-diagnostic")
+def debug_trains_diagnostic():
+    """Live LDB departure board diagnostic — shows raw SOAP response on error."""
+    import urllib.error as _ue
+
+    out = {"from_crs": TRAIN_FROM_CRS, "to_crs": TRAIN_TO_CRS, "calls": []}
+    for from_crs, to_crs, label in [
+        (TRAIN_FROM_CRS, TRAIN_TO_CRS, "outbound"),
+        (TRAIN_TO_CRS, TRAIN_FROM_CRS, "return"),
+    ]:
+        entry: dict = {"direction": label, "from": from_crs, "to": to_crs}
+        try:
+            raw = train_times._fetch_ldb(from_crs, to_crs)
+            entry["status"] = "ok"
+            entry["bytes"] = len(raw)
+            entry["body_preview"] = raw[:1500].decode("utf-8", errors="replace")
+        except _ue.HTTPError as exc:
+            entry["status"] = f"http_{exc.code}"
+            entry["error_body"] = exc.read().decode("utf-8", errors="replace")
+        except Exception as exc:
+            entry["status"] = "error"
+            entry["error"] = str(exc)
+        out["calls"].append(entry)
+    return jsonify(out)
 
 
 @app.route("/debug")

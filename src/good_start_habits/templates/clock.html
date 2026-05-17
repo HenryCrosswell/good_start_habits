@@ -3,6 +3,7 @@
 {% block title %}Clock{% endblock %}
 
 {% block extra_styles %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 html, body {
     height: 100vh;
@@ -22,150 +23,226 @@ html, body {
     background: #FFFFFF;
 }
 
-/* ── Train widget ─────────────────────────────────────────── */
+/* ── Train widget — vintage railway poster ────────────────── */
 #train-widget {
     position: fixed;
     top: 18px;
     right: 16px;
     z-index: 25;
-    width: 348px;
-    background: rgba(255,255,255,0.95);
-    border-top: 5px solid #FFE600;
-    font-family: 'VT323', monospace;
-    font-size: 16px;
+    width: 320px;
+    background: #F2E8D5;
+    border: 2px solid #2B1A10;
+    box-shadow: 5px 5px 0 #2B1A10;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #2B1A10;
 }
-.tw-status {
-    text-align: center;
-    padding: 3px 10px 1px;
-    font-size: 14px;
-    letter-spacing: 0.1em;
-    min-height: 20px;
+
+/* Header: navy banner with route name */
+.tw-header {
+    background: #1C2D4A;
+    padding: 8px 12px 7px;
+    border-bottom: 3px solid #B8962E;
 }
-.tw-s-ok   { color: #00C851; }
-.tw-s-late { color: #FF6B00; }
-.tw-s-dim  { color: #999; }
-.tw-s-err  { color: #FF1493; font-size: 12px; }
-.tw-scene {
-    display: flex;
-    align-items: flex-end;
-    padding: 4px 8px 6px;
-}
-.tw-side {
-    flex: 0 0 76px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-}
-.tw-walk-min { font-size: 11px; color: #888; }
-.tw-side-lbl { font-size: 11px; color: #888; letter-spacing: 0.07em; }
-.tw-leave-big {
-    font-family: 'Limelight', monospace;
-    font-size: 20px;
-    color: #9B30FF;
-    text-shadow: 2px 2px 0 #111;
-    line-height: 1;
-}
-.tw-work-big {
-    font-family: 'Limelight', monospace;
-    font-size: 18px;
-    color: #111;
-    line-height: 1;
-}
-.tw-ontime-yes { color: #00C851; }
-.tw-ontime-no  { color: #FF1493; }
-.tw-center {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-}
-.tw-plat-label { font-size: 12px; color: #555; letter-spacing: 0.05em; }
-.tw-train-times { font-size: 14px; color: #111; letter-spacing: 0.05em; text-align: center; }
-.tw-dep-late  { color: #FF6B00; }
-.tw-dep-sched { color: #aaa; font-size: 11px; }
-#tw-alts {
-    border-top: 1px solid #E8E8E8;
-    padding: 3px 10px 4px;
+.tw-route {
+    font-family: 'Playfair Display', Georgia, serif;
     font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #F2E8D5;
+    line-height: 1.2;
 }
-.tw-alt-row { display: flex; align-items: baseline; padding: 1px 0; gap: 4px; }
-.tw-alt-leave {
-    font-family: 'Limelight', monospace;
-    font-size: 16px;
-    color: #333;
-    min-width: 50px;
+.tw-route-arrow {
+    color: #B8962E;
+    margin: 0 5px;
 }
-.tw-alt-info { flex: 1; font-size: 12px; color: #555; }
-.tw-alt-ok   { color: #00C851; }
-.tw-alt-no   { color: #FF1493; }
+.tw-status-flag {
+    margin-top: 4px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.tw-s-ok   { color: #7EC87E; }
+.tw-s-late { color: #E8A04A; }
+.tw-s-canc { color: #E87A7A; font-weight: bold; }
+.tw-s-dim  { color: #7A8FA8; }
+.tw-s-err  { color: #E87A7A; font-size: 10px; }
+
+/* Direction tabs */
+.tw-tabs {
+    display: flex;
+    border-bottom: 2px solid #B8962E;
+}
+.tw-tab {
+    flex: 1;
+    background: #E8DBBF;
+    border: none;
+    padding: 5px 8px;
+    font-family: Georgia, serif;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #7A6245;
+    cursor: pointer;
+    border-right: 1px solid #C4A882;
+    transition: background 0.15s, color 0.15s;
+}
+.tw-tab:last-child { border-right: none; }
+.tw-tab-active { background: #1C2D4A; color: #F2E8D5; font-weight: bold; }
+.tw-tab:hover:not(.tw-tab-active) { background: #D4C9A9; }
+
+/* Leave by / At work bar */
+.tw-timing-bar {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid #C4A882;
+}
+.tw-timing-cell {
+    flex: 1;
+    padding: 8px 12px 7px;
+}
+.tw-timing-cell + .tw-timing-cell {
+    border-left: 1px solid #C4A882;
+}
+.tw-timing-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #7A6245;
+    margin-bottom: 1px;
+}
+.tw-timing-time {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 30px;
+    font-weight: 900;
+    color: #8C1F28;
+    line-height: 1;
+}
+.tw-timing-sub {
+    font-size: 9px;
+    color: #9A8060;
+    margin-top: 1px;
+}
+.tw-ontime-yes { color: #2D6A27; font-weight: bold; }
+.tw-ontime-no  { color: #8C1F28; font-weight: bold; }
+
+/* Train board rows */
+.tw-board { border-bottom: 1px solid #C4A882; }
+.tw-col-hdr {
+    display: flex;
+    align-items: center;
+    padding: 3px 12px 3px 15px;
+    gap: 0;
+    background: #E8DBBF;
+    border-bottom: 1px solid #C4A882;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #7A6245;
+}
+.tw-col-hdr span { flex: 1; }
+.tw-col-hdr .tc-dur { width: 38px; flex: none; }
+.tw-col-hdr .tc-type { width: 54px; flex: none; }
+.tw-col-hdr .tc-badge { width: 18px; flex: none; }
+
+.tw-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px 6px 11px;
+    gap: 0;
+    border-left: 4px solid transparent;
+    border-bottom: 1px solid #E2D5BC;
+    line-height: 1;
+}
+.tw-row:last-child { border-bottom: none; }
+.tw-row-rec { border-left-color: #B8962E; background: #FBF5E9; }
+.tw-row-alt { opacity: 0.65; }
+.tw-row-canc { opacity: 0.6; position: relative; background: rgba(180,40,40,0.05); }
+.tw-row-canc::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    right: 0;
+    height: 2px;
+    background: rgba(140,31,40,0.55);
+    pointer-events: none;
+}
+
+.tw-dep-col { flex: 1; min-width: 0; }
+.tw-dep-time {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: #2B1A10;
+    line-height: 1;
+}
+.tw-dep-late-time { color: #B05E1D; }
+.tw-dep-canc-time { color: #8C1F28; }
+.tw-dep-sched {
+    display: block;
+    font-size: 9px;
+    color: #9A8060;
+    text-decoration: line-through;
+}
+.tw-arr-col { flex: 1; font-size: 13px; color: #5A4535; padding-left: 6px; }
+.tw-dur-col {
+    width: 38px;
+    font-size: 11px;
+    color: #7A6245;
+    text-align: right;
+    padding-right: 6px;
+    white-space: nowrap;
+}
+.tw-type-col { width: 54px; text-align: center; }
+.tw-type-exp {
+    display: inline-block;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: #1C2D4A;
+    color: #F2E8D5;
+    padding: 1px 4px;
+    border-radius: 1px;
+}
+.tw-type-stp {
+    display: inline-block;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid #9A8060;
+    color: #9A8060;
+    padding: 1px 4px;
+    border-radius: 1px;
+}
+.tw-badge-col { width: 18px; text-align: right; }
+.tw-badge-ok   { color: #2D6A27; font-size: 14px; }
+.tw-badge-no   { color: #8C1F28; font-size: 14px; }
+.tw-badge-warn { color: #B05E1D; font-size: 14px; }
+.tw-badge-canc { color: #8C1F28; font-size: 12px; letter-spacing: 0; }
+
+/* Footer */
 .tw-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 3px 10px 4px;
-    border-top: 1px solid #E8E8E8;
-    background: #F8F8F8;
-    font-size: 12px;
-    color: #aaa;
+    padding: 4px 12px 5px;
+    background: #E8DBBF;
+    font-size: 10px;
+    color: #9A8060;
+    letter-spacing: 0.06em;
 }
 #tw-resync {
     background: none;
-    border: 1.5px solid #ccc;
-    border-radius: 3px;
+    border: 1px solid #9A8060;
     cursor: pointer;
-    font-family: 'VT323', monospace;
-    font-size: 14px;
+    font-family: Georgia, serif;
+    font-size: 11px;
     padding: 1px 8px;
-    color: #555;
-    transition: background 0.1s, color 0.1s;
+    color: #7A6245;
+    transition: all 0.15s;
 }
-#tw-resync:hover { background: #FFE600; border-color: #111; color: #111; }
-
-/* ── Walking figure animations ──────────────────────────── */
-@keyframes tw-walk-bob {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-1.5px); }
-}
-@keyframes tw-leg-f {
-    0%, 100% { transform: rotate(-22deg); }
-    50%       { transform: rotate(22deg); }
-}
-@keyframes tw-leg-b {
-    0%, 100% { transform: rotate(22deg); }
-    50%       { transform: rotate(-22deg); }
-}
-@keyframes tw-arm-f {
-    0%, 100% { transform: rotate(18deg); }
-    50%       { transform: rotate(-18deg); }
-}
-@keyframes tw-arm-b {
-    0%, 100% { transform: rotate(-18deg); }
-    50%       { transform: rotate(18deg); }
-}
-@keyframes tw-wheel-spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-}
-@keyframes tw-smoke {
-    0%   { opacity: 0.65; transform: translateY(0) scale(0.5); }
-    100% { opacity: 0;    transform: translateY(-18px) scale(1.4); }
-}
-.tw-figure { animation: tw-walk-bob 0.55s ease-in-out infinite; }
-.tw-figure .tw-lf { animation: tw-leg-f 0.55s ease-in-out infinite; transform-origin: 15px 29px; }
-.tw-figure .tw-lb { animation: tw-leg-b 0.55s ease-in-out infinite; transform-origin: 15px 29px; }
-.tw-figure .tw-af { animation: tw-arm-f 0.55s ease-in-out infinite; transform-origin: 15px 14px; }
-.tw-figure .tw-ab { animation: tw-arm-b 0.55s ease-in-out infinite; transform-origin: 15px 14px; }
-.tw-train-svg .tw-wh {
-    animation: tw-wheel-spin 0.75s linear infinite;
-    transform-box: fill-box;
-    transform-origin: 50% 50%;
-}
-.tw-train-svg .tw-sm     { animation: tw-smoke 1.8s ease-out infinite; }
-.tw-train-svg .tw-sm.d1  { animation-delay: 0s;   }
-.tw-train-svg .tw-sm.d2  { animation-delay: 0.6s; }
-.tw-train-svg .tw-sm.d3  { animation-delay: 1.2s; }
+#tw-resync:hover { background: #1C2D4A; border-color: #1C2D4A; color: #F2E8D5; }
 
 /* TV test-card rainbow stripe at very top */
 #pt-container::before {
@@ -332,124 +409,47 @@ html, body {
 
 <div id="train-widget">
 
-  <!-- Status badge -->
-  <div class="tw-status" id="tw-status-row">
-    <span class="tw-s-dim">CONNECTING…</span>
+  <div class="tw-header">
+    <div class="tw-route" id="tw-route-text">
+      St Albans City<span class="tw-route-arrow">→</span>Farringdon
+    </div>
+    <div class="tw-status-flag" id="tw-status-row">
+      <span class="tw-s-dim">Connecting…</span>
+    </div>
   </div>
 
-  <!-- Scene: walker | train | walker -->
-  <div class="tw-scene">
+  <div class="tw-tabs">
+    <button class="tw-tab tw-tab-active" id="tw-tab-out" onclick="twSetTab('outbound')">▶ To Work</button>
+    <button class="tw-tab" id="tw-tab-ret" onclick="twSetTab('return')">▶ Home</button>
+  </div>
 
-    <!-- Left: home → station -->
-    <div class="tw-side">
-      <svg class="tw-figure" viewBox="0 0 30 52" width="24" height="42" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="15" cy="6" r="5.5" fill="#111"/>
-        <line x1="15" y1="11" x2="15" y2="29" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
-        <g class="tw-af"><line x1="15" y1="14" x2="24" y2="22" stroke="#111" stroke-width="2" stroke-linecap="round"/></g>
-        <g class="tw-ab"><line x1="15" y1="14" x2="6"  y2="22" stroke="#111" stroke-width="2" stroke-linecap="round"/></g>
-        <g class="tw-lf"><line x1="15" y1="29" x2="22" y2="47" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></g>
-        <g class="tw-lb"><line x1="15" y1="29" x2="8"  y2="47" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></g>
-      </svg>
-      <div class="tw-walk-min">12 min</div>
-      <div class="tw-side-lbl">LEAVE</div>
-      <div class="tw-leave-big" id="tw-leave">--:--</div>
+  <div class="tw-timing-bar">
+    <div class="tw-timing-cell">
+      <div class="tw-timing-label" id="tw-label-leave">Leave home by</div>
+      <div class="tw-timing-time" id="tw-leave">--:--</div>
+      <div class="tw-timing-sub" id="tw-walk-a">12 min walk</div>
     </div>
-
-    <!-- Centre: steam train at platform -->
-    <div class="tw-center">
-      <svg class="tw-train-svg" viewBox="0 0 128 65" width="128" height="65" xmlns="http://www.w3.org/2000/svg">
-        <!-- Smoke puffs (animated) -->
-        <circle class="tw-sm d1" cx="21" cy="11" r="5"  fill="#aaa"/>
-        <circle class="tw-sm d2" cx="25" cy="6"  r="4"  fill="#bbb"/>
-        <circle class="tw-sm d3" cx="18" cy="3"  r="3"  fill="#ccc"/>
-        <!-- Chimney -->
-        <rect x="16" y="12" width="11" height="10" fill="#222" rx="1"/>
-        <rect x="13" y="11" width="17" height="3"  fill="#222" rx="1"/>
-        <!-- Boiler dome -->
-        <ellipse cx="48" cy="23" rx="9" ry="6" fill="#BB0000"/>
-        <!-- Main boiler -->
-        <rect x="10" y="24" width="78" height="17" fill="#CC0000" rx="3"/>
-        <!-- Footplate -->
-        <rect x="8"  y="39" width="80" height="4"  fill="#AA0000"/>
-        <!-- Front buffer -->
-        <rect x="2"  y="36" width="10" height="5"  fill="#555" rx="1"/>
-        <rect x="0"  y="38" width="12" height="3"  fill="#444"/>
-        <!-- Cab -->
-        <rect x="86" y="17" width="42" height="25" fill="#880000" rx="2"/>
-        <rect x="84" y="14" width="44" height="5"  fill="#AA0000" rx="2"/>
-        <rect x="90" y="20" width="11" height="9"  fill="#AADEFF" rx="1" stroke="#333" stroke-width="1"/>
-        <!-- Drive wheel 1 -->
-        <g class="tw-wh">
-          <circle cx="36" cy="49" r="11" fill="none" stroke="#222" stroke-width="2.5"/>
-          <circle cx="36" cy="49" r="2.5" fill="#333"/>
-          <line x1="36" y1="38" x2="36" y2="60" stroke="#333" stroke-width="1.5"/>
-          <line x1="25" y1="49" x2="47" y2="49" stroke="#333" stroke-width="1.5"/>
-          <line x1="28.2" y1="41.2" x2="43.8" y2="56.8" stroke="#333" stroke-width="1"/>
-          <line x1="43.8" y1="41.2" x2="28.2" y2="56.8" stroke="#333" stroke-width="1"/>
-        </g>
-        <!-- Drive wheel 2 -->
-        <g class="tw-wh">
-          <circle cx="67" cy="49" r="11" fill="none" stroke="#222" stroke-width="2.5"/>
-          <circle cx="67" cy="49" r="2.5" fill="#333"/>
-          <line x1="67" y1="38" x2="67" y2="60" stroke="#333" stroke-width="1.5"/>
-          <line x1="56" y1="49" x2="78" y2="49" stroke="#333" stroke-width="1.5"/>
-          <line x1="59.2" y1="41.2" x2="74.8" y2="56.8" stroke="#333" stroke-width="1"/>
-          <line x1="74.8" y1="41.2" x2="59.2" y2="56.8" stroke="#333" stroke-width="1"/>
-        </g>
-        <!-- Front small wheel -->
-        <g class="tw-wh">
-          <circle cx="14" cy="48" r="7"  fill="none" stroke="#222" stroke-width="2"/>
-          <circle cx="14" cy="48" r="2"  fill="#333"/>
-          <line x1="14" y1="41" x2="14" y2="55" stroke="#333" stroke-width="1.2"/>
-          <line x1="7"  y1="48" x2="21" y2="48" stroke="#333" stroke-width="1.2"/>
-        </g>
-        <!-- Rear small wheel -->
-        <g class="tw-wh">
-          <circle cx="96" cy="48" r="7"  fill="none" stroke="#222" stroke-width="2"/>
-          <circle cx="96" cy="48" r="2"  fill="#333"/>
-          <line x1="96" y1="41" x2="96" y2="55" stroke="#333" stroke-width="1.2"/>
-          <line x1="89" y1="48" x2="103" y2="48" stroke="#333" stroke-width="1.2"/>
-        </g>
-        <!-- Connecting rod -->
-        <rect x="36" y="46" width="31" height="3" fill="#444" rx="1.5"/>
-        <!-- Platform / rail -->
-        <rect x="0" y="62" width="128" height="3" fill="#555"/>
-        <line x1="0" y1="61" x2="128" y2="61" stroke="#333" stroke-width="1.5"/>
-      </svg>
-      <div class="tw-plat-label">Platform <span id="tw-plat">–</span></div>
-      <div class="tw-train-times">
-        <span id="tw-dep">--:--</span>
-        <span style="color:#999"> → </span>
-        <span id="tw-arr">--:--</span>
-      </div>
+    <div class="tw-timing-cell">
+      <div class="tw-timing-label" id="tw-label-arrive">At work by</div>
+      <div class="tw-timing-time" id="tw-work">--:--</div>
+      <div class="tw-timing-sub" id="tw-ontime">&nbsp;</div>
     </div>
+  </div>
 
-    <!-- Right: station → work -->
-    <div class="tw-side">
-      <svg class="tw-figure" viewBox="0 0 30 52" width="24" height="42" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="15" cy="6" r="5.5" fill="#111"/>
-        <line x1="15" y1="11" x2="15" y2="29" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
-        <g class="tw-ab"><line x1="15" y1="14" x2="24" y2="22" stroke="#111" stroke-width="2" stroke-linecap="round"/></g>
-        <g class="tw-af"><line x1="15" y1="14" x2="6"  y2="22" stroke="#111" stroke-width="2" stroke-linecap="round"/></g>
-        <g class="tw-lb"><line x1="15" y1="29" x2="22" y2="47" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></g>
-        <g class="tw-lf"><line x1="15" y1="29" x2="8"  y2="47" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></g>
-      </svg>
-      <div class="tw-walk-min">12 min</div>
-      <div class="tw-side-lbl">AT WORK</div>
-      <div class="tw-work-big">
-        <span id="tw-work">--:--</span><span id="tw-ontime"></span>
-      </div>
+  <div class="tw-board">
+    <div class="tw-col-hdr">
+      <span>Departs</span>
+      <span>Arrives</span>
+      <span class="tc-dur">Dur</span>
+      <span class="tc-type">Type</span>
+      <span class="tc-badge"></span>
     </div>
+    <div id="tw-board-rows"></div>
+  </div>
 
-  </div><!-- /.tw-scene -->
-
-  <!-- Alternative trains -->
-  <div id="tw-alts" style="display:none"></div>
-
-  <!-- Footer -->
   <div class="tw-footer">
     <span id="tw-updated">–</span>
-    <button id="tw-resync" onclick="trainResync()" title="Resync live data">↺ Resync</button>
+    <button id="tw-resync" onclick="trainResync()">↺ Resync</button>
   </div>
 
 </div>
@@ -492,32 +492,33 @@ html, body {
     // ── Train widget ────────────────────────────────────────────────────────
     (function () {
         var pollTimer = null;
+        var twTab = 'outbound';
+        var twLastData = null;
 
         function esc(s) {
             return String(s || '').replace(/[&<>"']/g, function (c) {
                 return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
             });
         }
+        function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+        function setHTML(id, val) { var el = document.getElementById(id); if (el) el.innerHTML = val; }
 
-        function setText(id, val) {
-            var el = document.getElementById(id);
-            if (el) el.textContent = val;
-        }
-        function setHTML(id, val) {
-            var el = document.getElementById(id);
-            if (el) el.innerHTML = val;
-        }
+        window.twSetTab = function (dir) {
+            twTab = dir;
+            document.getElementById('tw-tab-out').className = 'tw-tab' + (dir === 'outbound' ? ' tw-tab-active' : '');
+            document.getElementById('tw-tab-ret').className = 'tw-tab' + (dir === 'return'   ? ' tw-tab-active' : '');
+            if (twLastData) renderWidget(twLastData);
+        };
 
-        function renderTrains(data) {
+        function renderWidget(data) {
+            twLastData = data;
             var statusRow = document.getElementById('tw-status-row');
-            var alts      = document.getElementById('tw-alts');
             var btn       = document.getElementById('tw-resync');
             var upd       = document.getElementById('tw-updated');
 
             var refreshing = data.status === 'refreshing' || data.status === 'loading';
-            btn.textContent = refreshing ? '⟳ …' : '↺ Resync';
+            btn.textContent = refreshing ? '⟳' : '↺ Resync';
             if (data.fetched_at) upd.textContent = 'Updated ' + data.fetched_at;
-
             if (refreshing) schedulePoll(3000);
 
             if (data.status === 'unavailable' || data.status === 'error') {
@@ -525,73 +526,113 @@ html, body {
                 return;
             }
 
-            var trains = data.trains || [];
+            var isReturn = twTab === 'return';
+            var dirData  = isReturn ? data['return'] : data['outbound'];
+            var trains   = (dirData && dirData.trains) ? dirData.trains : [];
+
+            // Update route header and timing labels
+            var routeEl = document.getElementById('tw-route-text');
+            if (routeEl) {
+                routeEl.innerHTML = isReturn
+                    ? 'Farringdon<span class="tw-route-arrow">→</span>St Albans City'
+                    : 'St Albans City<span class="tw-route-arrow">→</span>Farringdon';
+            }
+            setText('tw-label-leave',  isReturn ? 'Leave work by' : 'Leave home by');
+            setText('tw-label-arrive', isReturn ? 'Home by'       : 'At work by');
+            setText('tw-walk-a',       isReturn ? '12 min walk to station' : '12 min walk to station');
 
             if (refreshing && !trains.length) {
-                statusRow.innerHTML = '<span class="tw-s-dim">FETCHING LIVE DATA…</span>';
+                statusRow.innerHTML = '<span class="tw-s-dim">Fetching…</span>';
+                setHTML('tw-board-rows', '');
                 return;
             }
             if (!trains.length) {
-                statusRow.innerHTML = '<span class="tw-s-dim">NO ACTIVE TRAINS</span>';
+                statusRow.innerHTML = '<span class="tw-s-dim">No trains found</span>';
+                setHTML('tw-board-rows', '');
+                setText('tw-leave', '--:--');
+                setText('tw-work', '--:--');
+                setHTML('tw-ontime', '&nbsp;');
                 return;
             }
 
-            var rec    = trains.find(function (t) { return t.recommended; }) || trains[0];
+            // Find recommended (non-cancelled preferred) then fall back to first
+            var rec = trains.find(function (t) { return t.recommended && !t.cancelled; })
+                   || trains.find(function (t) { return t.recommended; })
+                   || trains[0];
             var others = trains.filter(function (t) { return t !== rec; }).slice(0, 2);
 
-            // Status badge
-            var isDelayed = rec.dep_delayed || rec.arr_delayed;
-            statusRow.innerHTML = isDelayed
-                ? '<span class="tw-s-late">⚠ DELAYED</span>'
-                : '<span class="tw-s-ok">● ON TIME</span>';
-
-            // Leave time
-            setText('tw-leave', rec.leave_home_by || '--:--');
-
-            // Platform
-            setText('tw-plat', rec.platform || '–');
-
-            // Departure time
-            var depHtml = esc(rec.estimated_dep || '--:--');
-            if (rec.dep_delayed && rec.scheduled_dep && rec.scheduled_dep !== rec.estimated_dep) {
-                depHtml = '<span class="tw-dep-late">' + esc(rec.estimated_dep) + '</span>'
-                        + ' <span class="tw-dep-sched">(' + esc(rec.scheduled_dep) + ')</span>';
-            }
-            setHTML('tw-dep', depHtml);
-
-            // Arrival time
-            var arrHtml = esc(rec.estimated_arr || '--:--');
-            if (rec.arr_delayed && rec.scheduled_arr && rec.scheduled_arr !== rec.estimated_arr) {
-                arrHtml = '<span class="tw-dep-late">' + esc(rec.estimated_arr) + '</span>';
-            }
-            setHTML('tw-arr', arrHtml);
-
-            // Work arrival + on-time icon
-            setText('tw-work', rec.work_arrival || '--:--');
-            setHTML('tw-ontime', rec.arrives_on_time
-                ? '<span class="tw-ontime-yes"> ✓</span>'
-                : '<span class="tw-ontime-no"> ✗</span>');
-
-            // Alternatives
-            if (others.length) {
-                alts.style.display = '';
-                var html = '';
-                others.forEach(function (t) {
-                    var p = t.platform ? ' p' + esc(t.platform) : '';
-                    var d = t.dep_delayed ? ' <span style="color:#FF6B00">⚠</span>' : '';
-                    var ws = t.arrives_on_time
-                        ? '<span class="tw-alt-ok">✓</span>'
-                        : '<span class="tw-alt-no">✗</span>';
-                    html += '<div class="tw-alt-row">';
-                    html += '<span class="tw-alt-leave">→ ' + esc(t.leave_home_by) + '</span>';
-                    html += '<span class="tw-alt-info"> dep ' + esc(t.estimated_dep) + p + d
-                          + ' · work ' + esc(t.work_arrival) + ' ' + ws + '</span>';
-                    html += '</div>';
-                });
-                alts.innerHTML = html;
+            // Status flag — reflect the rec train's state
+            if (rec.cancelled) {
+                statusRow.innerHTML = '<span class="tw-s-canc">✖ Cancelled</span>';
+            } else if (rec.dep_delayed || rec.arr_delayed) {
+                statusRow.innerHTML = '<span class="tw-s-late">⚠ Delayed</span>';
             } else {
-                alts.style.display = 'none';
+                statusRow.innerHTML = '<span class="tw-s-ok">● On time</span>';
             }
+
+            setText('tw-leave', rec.leave_home_by || '--:--');
+            setText('tw-work',  rec.work_arrival  || '--:--');
+
+            var ontimeLabel;
+            if (rec.cancelled) {
+                ontimeLabel = '<span class="tw-ontime-no">Cancelled ✖</span>';
+            } else if (rec.arrives_on_time) {
+                ontimeLabel = isReturn
+                    ? '<span class="tw-ontime-yes">On schedule ✓</span>'
+                    : '<span class="tw-ontime-yes">On time ✓</span>';
+            } else {
+                ontimeLabel = '<span class="tw-ontime-no">Running late ✗</span>';
+            }
+            setHTML('tw-ontime', ontimeLabel);
+
+            var allRows = [rec].concat(others);
+            var html = '';
+            allRows.forEach(function (t, i) {
+                var isRec = i === 0;
+                var rowCls = 'tw-row';
+                if (t.cancelled) {
+                    rowCls += ' tw-row-canc';
+                } else if (isRec) {
+                    rowCls += ' tw-row-rec';
+                } else {
+                    rowCls += ' tw-row-alt';
+                }
+
+                var depInner;
+                if (t.cancelled) {
+                    depInner = '<span class="tw-dep-time tw-dep-canc-time">' + esc(t.scheduled_dep || t.estimated_dep || '--:--') + '</span>';
+                } else if (t.dep_delayed && t.scheduled_dep && t.scheduled_dep !== t.estimated_dep) {
+                    depInner = '<span class="tw-dep-time tw-dep-late-time">' + esc(t.estimated_dep) + '</span>'
+                             + '<span class="tw-dep-sched">' + esc(t.scheduled_dep) + '</span>';
+                } else {
+                    depInner = '<span class="tw-dep-time">' + esc(t.estimated_dep || '--:--') + '</span>';
+                }
+
+                var dur      = t.journey_mins ? t.journey_mins + 'm' : '–';
+                var typeHtml = t.is_express
+                    ? '<span class="tw-type-exp">Express</span>'
+                    : '<span class="tw-type-stp">Slow</span>';
+
+                var badge;
+                if (t.cancelled) {
+                    badge = '<span class="tw-badge-canc">✖</span>';
+                } else if (t.dep_delayed || t.arr_delayed) {
+                    badge = '<span class="tw-badge-warn">⚠</span>';
+                } else if (t.arrives_on_time) {
+                    badge = '<span class="tw-badge-ok">✓</span>';
+                } else {
+                    badge = '<span class="tw-badge-no">✗</span>';
+                }
+
+                html += '<div class="' + rowCls + '">'
+                      + '<div class="tw-dep-col">' + depInner + '</div>'
+                      + '<div class="tw-arr-col">' + esc(t.estimated_arr || '--:--') + '</div>'
+                      + '<div class="tw-dur-col">' + dur + '</div>'
+                      + '<div class="tw-type-col">' + typeHtml + '</div>'
+                      + '<div class="tw-badge-col">' + badge + '</div>'
+                      + '</div>';
+            });
+            setHTML('tw-board-rows', html);
         }
 
         function schedulePoll(ms) {
@@ -602,7 +643,7 @@ html, body {
         function trainFetch(force) {
             fetch('/api/trains' + (force ? '?refresh=1' : ''))
                 .then(function (r) { return r.json(); })
-                .then(renderTrains)
+                .then(renderWidget)
                 .catch(function () {
                     var sr = document.getElementById('tw-status-row');
                     if (sr) sr.innerHTML = '<span class="tw-s-err">Connection error</span>';
@@ -611,12 +652,12 @@ html, body {
 
         window.trainResync = function () {
             if (pollTimer) clearTimeout(pollTimer);
-            document.getElementById('tw-resync').textContent = '⟳ …';
+            document.getElementById('tw-resync').textContent = '⟳';
             trainFetch(true);
         };
 
         trainFetch(false);
-        setInterval(function () { trainFetch(false); }, 60000);
+        setInterval(function () { trainFetch(false); }, 120000);
     })();
 </script>
 {% endblock %}
