@@ -4,6 +4,7 @@ import atexit
 import logging
 import os
 import sqlite3
+import threading
 from datetime import date, datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -12,6 +13,7 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, url
 
 from good_start_habits import budget as budget_module  # noqa: E402
 from good_start_habits import truelayer  # noqa: E402
+from good_start_habits import train_times  # noqa: E402
 from good_start_habits.config import (
     AUTO_SWAP,
     CATEGORY_GROUPS,
@@ -19,6 +21,13 @@ from good_start_habits.config import (
     PROVIDER_BUDGET_LIMITS,
     ROTATION_INTERVAL,
     SINKING_FUND_RESETS,
+    TRAIN_FROM_TIPLOC,
+    TRAIN_HOME_WALK_MINS,
+    TRAIN_LISTEN_SECS,
+    TRAIN_TO_TIPLOC,
+    TRAIN_TOC,
+    TRAIN_WORK_ARRIVAL_TARGET,
+    TRAIN_WORK_WALK_MINS,
 )  # noqa: E402
 from good_start_habits.config import SAVINGS_ACCOUNTS  # noqa: E402
 from good_start_habits.db import (  # noqa: E402
@@ -94,6 +103,59 @@ def fire_up_db():
 
 
 # ---------------------------------------------------------------------------
+# Train widget cache (module-level; shared across Gunicorn threads)
+# ---------------------------------------------------------------------------
+
+_train_cache: dict = {
+    "trains": None,
+    "fetched_at": None,
+    "error": None,
+    "fetching": False,
+}
+_train_lock = threading.Lock()
+_TRAIN_CACHE_TTL = 180  # seconds
+
+
+def _do_train_fetch() -> None:
+    try:
+        result = train_times.find_commute_trains(
+            from_tiploc=TRAIN_FROM_TIPLOC,
+            to_tiploc=TRAIN_TO_TIPLOC,
+            toc=TRAIN_TOC,
+            home_walk_mins=TRAIN_HOME_WALK_MINS,
+            work_walk_mins=TRAIN_WORK_WALK_MINS,
+            target_work_arrival=TRAIN_WORK_ARRIVAL_TARGET,
+            listen_seconds=TRAIN_LISTEN_SECS,
+        )
+        with _train_lock:
+            _train_cache.update(
+                {
+                    "trains": result["trains"],
+                    "fetched_at": datetime.now(),
+                    "error": None,
+                    "fetching": False,
+                }
+            )
+    except Exception as exc:
+        log.exception("Train fetch failed")
+        with _train_lock:
+            _train_cache.update({"error": str(exc), "fetching": False})
+
+
+def _ensure_train_fetch(force: bool = False) -> None:
+    with _train_lock:
+        if _train_cache["fetching"]:
+            return
+        now = datetime.now()
+        if not force and _train_cache["fetched_at"] is not None:
+            age = (now - _train_cache["fetched_at"]).total_seconds()
+            if age < _TRAIN_CACHE_TTL:
+                return
+        _train_cache["fetching"] = True
+    threading.Thread(target=_do_train_fetch, daemon=True).start()
+
+
+# ---------------------------------------------------------------------------
 # Clock / standby
 # ---------------------------------------------------------------------------
 
@@ -108,6 +170,45 @@ def clock():
             auto_swap=AUTO_SWAP,
         )
     return render_template("clock.html", active=False, auto_swap=AUTO_SWAP)
+
+
+@app.route("/api/trains")
+def api_trains():
+    if not train_times.credentials_configured():
+        return jsonify(
+            {
+                "status": "unavailable",
+                "trains": [],
+                "fetched_at": None,
+                "error": "NR credentials not configured (NR_ACCESS_KEY / NR_SECRET_KEY)",
+            }
+        )
+
+    force = request.args.get("refresh") == "1"
+    _ensure_train_fetch(force=force)
+
+    with _train_lock:
+        fetched_str = (
+            _train_cache["fetched_at"].strftime("%H:%M")
+            if _train_cache["fetched_at"]
+            else None
+        )
+        if _train_cache["fetching"]:
+            status = "refreshing"
+        elif _train_cache["error"]:
+            status = "error"
+        elif _train_cache["trains"] is not None:
+            status = "ok"
+        else:
+            status = "loading"
+        return jsonify(
+            {
+                "status": status,
+                "trains": _train_cache["trains"] or [],
+                "fetched_at": fetched_str,
+                "error": _train_cache["error"],
+            }
+        )
 
 
 # ---------------------------------------------------------------------------

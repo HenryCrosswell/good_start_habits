@@ -22,6 +22,95 @@ html, body {
     background: #FFFFFF;
 }
 
+/* Train widget */
+#train-widget {
+    position: fixed;
+    top: 18px;
+    right: 16px;
+    z-index: 25;
+    width: 280px;
+    background: #FFFFFF;
+    border: 3px solid #111111;
+    box-shadow: 5px 5px 0 #111111;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+}
+.tw-header {
+    background: #FFE600;
+    border-bottom: 3px solid #111111;
+    padding: 3px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+}
+#tw-resync {
+    background: none;
+    border: 2px solid #111111;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 0 7px 1px;
+    box-shadow: 2px 2px 0 #111111;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: background 0.1s, color 0.1s;
+}
+#tw-resync:hover { background: #111111; color: #FFE600; }
+#tw-body {
+    padding: 8px 12px 6px;
+    min-height: 60px;
+}
+.tw-loading, .tw-none { font-size: 15px; color: #666; padding: 4px 0; }
+.tw-error { font-size: 15px; color: #FF1493; padding: 4px 0; }
+.tw-main { margin-bottom: 4px; }
+.tw-leave-label {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: #888;
+    margin-bottom: -2px;
+}
+.tw-leave-time {
+    font-family: 'Limelight', monospace;
+    font-size: 48px;
+    line-height: 1;
+    color: #9B30FF;
+    text-shadow: 3px 3px 0 #111111;
+    letter-spacing: -0.02em;
+}
+.tw-dep, .tw-arr { font-size: 15px; margin-top: 1px; }
+.tw-delayed { color: #FF6B00; }
+.tw-sched { color: #aaa; font-size: 13px; }
+.tw-ontime { color: #00C851; }
+.tw-late-badge { color: #FF1493; }
+.tw-divider {
+    border: none;
+    border-top: 2px solid #E0D8CC;
+    margin: 5px 0;
+}
+.tw-others { font-size: 14px; }
+.tw-other-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+    padding: 1px 0;
+}
+.tw-other-leave {
+    font-family: 'Limelight', monospace;
+    font-size: 18px;
+    color: #111;
+    min-width: 54px;
+}
+.tw-other-dep { color: #555; flex: 1; }
+.tw-other-status { margin-left: 4px; }
+.tw-footer {
+    border-top: 2px solid #E0D8CC;
+    padding: 2px 12px;
+    font-size: 12px;
+    color: #aaa;
+    background: #F8F8F8;
+}
+
 /* TV test-card rainbow stripe at very top */
 #pt-container::before {
     content: '';
@@ -185,6 +274,19 @@ html, body {
     <rect width="100%" height="100%" fill="url(#sq-pattern)"/>
 </svg>
 
+<div id="train-widget">
+    <div class="tw-header">
+        <span>TRAINS</span>
+        <button id="tw-resync" onclick="trainResync()" title="Resync live data">↺</button>
+    </div>
+    <div id="tw-body">
+        <div class="tw-loading">Connecting...</div>
+    </div>
+    <div class="tw-footer">
+        <span id="tw-updated">–</span>
+    </div>
+</div>
+
 <div class="clock-content">
     <h1 id="clock" data-rotation="{{ rotation_interval if (active and auto_swap) else 0 }}"></h1>
     <p id="status">{% if active %}☀{% else %}🌙{% endif %}</p>
@@ -219,5 +321,115 @@ html, body {
         var dest = Math.random() < 0.5 ? '/budget' : '/habits';
         ptNavigate(dest, 'random', rotation);
     }
+
+    // ── Train widget ────────────────────────────────────────────────────────
+    (function () {
+        var pollTimer = null;
+
+        function esc(s) {
+            return String(s || '').replace(/[&<>"']/g, function (c) {
+                return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+            });
+        }
+
+        function renderTrains(data) {
+            var body = document.getElementById('tw-body');
+            var btn  = document.getElementById('tw-resync');
+            var upd  = document.getElementById('tw-updated');
+
+            var refreshing = data.status === 'refreshing' || data.status === 'loading';
+            btn.textContent = refreshing ? '⟳' : '↺';
+            if (data.fetched_at) upd.textContent = 'Updated ' + data.fetched_at;
+
+            // Keep polling while the backend is still fetching
+            if (refreshing) schedulePoll(3000);
+
+            if (refreshing && !(data.trains && data.trains.length)) {
+                body.innerHTML = '<div class="tw-loading">Fetching live data…</div>';
+                return;
+            }
+            if (data.status === 'unavailable' || data.status === 'error') {
+                body.innerHTML = '<div class="tw-error">' + esc(data.error || 'Unavailable') + '</div>';
+                return;
+            }
+
+            var trains = data.trains || [];
+            if (!trains.length) {
+                body.innerHTML = '<div class="tw-none">No active trains found</div>';
+                return;
+            }
+
+            var rec    = trains.find(function (t) { return t.recommended; }) || trains[0];
+            var others = trains.filter(function (t) { return t !== rec; }).slice(0, 2);
+
+            var html = '<div class="tw-main">';
+            html += '<div class="tw-leave-label">LEAVE BY</div>';
+            html += '<div class="tw-leave-time">' + esc(rec.leave_home_by) + '</div>';
+
+            // Departure line
+            var depTime = esc(rec.estimated_dep);
+            if (rec.dep_delayed && rec.scheduled_dep !== rec.estimated_dep) {
+                depTime += ' <span class="tw-sched">(' + esc(rec.scheduled_dep) + ')</span>';
+            }
+            var plat = rec.platform ? ' · p' + esc(rec.platform) : '';
+            var lateBadge = rec.dep_delayed ? ' <span class="tw-delayed">LATE</span>' : '';
+            html += '<div class="tw-dep">Dep ' + depTime + plat + lateBadge + '</div>';
+
+            // Arrival + work line
+            var arrTime = esc(rec.estimated_arr);
+            if (rec.arr_delayed && rec.scheduled_arr !== rec.estimated_arr) {
+                arrTime += ' <span class="tw-sched">(' + esc(rec.scheduled_arr) + ')</span>';
+            }
+            var onTime = rec.arrives_on_time
+                ? '<span class="tw-ontime">✓</span>'
+                : '<span class="tw-late-badge">✗ LATE</span>';
+            html += '<div class="tw-arr">Arr ' + arrTime + ' → Work ' + esc(rec.work_arrival) + ' ' + onTime + '</div>';
+            html += '</div>';
+
+            if (others.length) {
+                html += '<hr class="tw-divider">';
+                html += '<div class="tw-others">';
+                others.forEach(function (t) {
+                    var p = t.platform ? ' p' + esc(t.platform) : '';
+                    var d = t.dep_delayed ? ' <span class="tw-delayed">⚠</span>' : '';
+                    var ws = t.arrives_on_time
+                        ? '<span class="tw-ontime">✓</span>'
+                        : '<span class="tw-late-badge">✗</span>';
+                    html += '<div class="tw-other-row">';
+                    html += '<span class="tw-other-leave">' + esc(t.leave_home_by) + '</span>';
+                    html += '<span class="tw-other-dep"> Dep ' + esc(t.estimated_dep) + p + d + ' → ' + esc(t.work_arrival) + '</span>';
+                    html += '<span class="tw-other-status"> ' + ws + '</span>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            body.innerHTML = html;
+        }
+
+        function schedulePoll(ms) {
+            if (pollTimer) clearTimeout(pollTimer);
+            pollTimer = setTimeout(function () { trainFetch(false); }, ms);
+        }
+
+        function trainFetch(force) {
+            fetch('/api/trains' + (force ? '?refresh=1' : ''))
+                .then(function (r) { return r.json(); })
+                .then(renderTrains)
+                .catch(function () {
+                    document.getElementById('tw-body').innerHTML =
+                        '<div class="tw-error">Connection error</div>';
+                });
+        }
+
+        window.trainResync = function () {
+            if (pollTimer) clearTimeout(pollTimer);
+            document.getElementById('tw-resync').textContent = '⟳';
+            trainFetch(true);
+        };
+
+        trainFetch(false);
+        setInterval(function () { trainFetch(false); }, 60000);
+    })();
 </script>
 {% endblock %}

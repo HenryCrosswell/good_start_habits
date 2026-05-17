@@ -75,6 +75,18 @@ HABIT_ACTIVE_DAYS: dict[str, list[str]] = {
     "Track run": ["Tuesday", "Thursday", "Saturday"],
 }
 
+# ---------------------------------------------------------------------------
+# Train commute settings
+# ---------------------------------------------------------------------------
+
+TRAIN_FROM_TIPLOC = "STALBCY"  # St Albans City
+TRAIN_TO_TIPLOC = "FRNDNLT"  # Farringdon Thameslink
+TRAIN_TOC = "TL"  # Thameslink
+TRAIN_HOME_WALK_MINS = 12  # home → St Albans City station
+TRAIN_WORK_WALK_MINS = 12  # Farringdon station → office
+TRAIN_WORK_ARRIVAL_TARGET = "09:00"  # target arrival time at work
+TRAIN_LISTEN_SECS = 20  # how long to listen to Darwin per fetch
+
 ACTIVE_TIMES = {
     "Monday": ("06:00:00", "21:00:00"),
     "Tuesday": ("06:00:00", "21:00:00"),
