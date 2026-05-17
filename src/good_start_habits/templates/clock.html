@@ -185,6 +185,23 @@ html, body {
     color: #9A8060;
     text-decoration: line-through;
 }
+.tw-dep-platform {
+    display: block;
+    font-size: 9px;
+    color: #7A6245;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.tw-dep-platform-est {
+    display: block;
+    font-size: 9px;
+    color: #9A8060;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-style: italic;
+    border-bottom: 1px dashed #C4A882;
+    display: inline-block;
+}
 .tw-arr-col { flex: 1; font-size: 13px; color: #5A4535; padding-left: 6px; }
 .tw-dur-col {
     width: 38px;
@@ -598,14 +615,21 @@ html, body {
                     rowCls += ' tw-row-alt';
                 }
 
+                var platformHtml = t.platform
+                    ? (t.platform_estimated
+                        ? '<span class="tw-dep-platform-est">~Plat ' + esc(t.platform) + '?</span>'
+                        : '<span class="tw-dep-platform">Plat ' + esc(t.platform) + '</span>')
+                    : '';
+
                 var depInner;
                 if (t.cancelled) {
-                    depInner = '<span class="tw-dep-time tw-dep-canc-time">' + esc(t.scheduled_dep || t.estimated_dep || '--:--') + '</span>';
+                    depInner = '<span class="tw-dep-time tw-dep-canc-time">' + esc(t.scheduled_dep || t.estimated_dep || '--:--') + '</span>' + platformHtml;
                 } else if (t.dep_delayed && t.scheduled_dep && t.scheduled_dep !== t.estimated_dep) {
                     depInner = '<span class="tw-dep-time tw-dep-late-time">' + esc(t.estimated_dep) + '</span>'
-                             + '<span class="tw-dep-sched">' + esc(t.scheduled_dep) + '</span>';
+                             + '<span class="tw-dep-sched">' + esc(t.scheduled_dep) + '</span>'
+                             + platformHtml;
                 } else {
-                    depInner = '<span class="tw-dep-time">' + esc(t.estimated_dep || '--:--') + '</span>';
+                    depInner = '<span class="tw-dep-time">' + esc(t.estimated_dep || '--:--') + '</span>' + platformHtml;
                 }
 
                 var dur      = t.journey_mins ? t.journey_mins + 'm' : '–';

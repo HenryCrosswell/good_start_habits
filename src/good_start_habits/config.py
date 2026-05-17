@@ -85,6 +85,8 @@ TRAIN_HOME_WALK_MINS = 12  # home → St Albans City station
 TRAIN_WORK_WALK_MINS = 12  # Farringdon station → office
 TRAIN_WORK_ARRIVAL_TARGET = "09:00"  # target arrival time at work
 TRAIN_HOME_DEPARTURE_TARGET = "17:00"  # target office departure time for return journey
+TRAIN_PLATFORM_MIN_SAMPLES = 3  # minimum observations before estimating a platform
+TRAIN_PLATFORM_MIN_CONFIDENCE = 0.75  # fraction of observations that must agree
 
 ACTIVE_TIMES = {
     "Monday": ("06:00:00", "21:00:00"),

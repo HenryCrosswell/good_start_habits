@@ -24,18 +24,23 @@ from good_start_habits.config import (
     TRAIN_FROM_CRS,
     TRAIN_HOME_DEPARTURE_TARGET,
     TRAIN_HOME_WALK_MINS,
+    TRAIN_PLATFORM_MIN_CONFIDENCE,
+    TRAIN_PLATFORM_MIN_SAMPLES,
     TRAIN_TO_CRS,
     TRAIN_WORK_ARRIVAL_TARGET,
     TRAIN_WORK_WALK_MINS,
 )  # noqa: E402
 from good_start_habits.config import SAVINGS_ACCOUNTS  # noqa: E402
 from good_start_habits.db import (  # noqa: E402
+    DB_PATH,
     delete_incoming_fund,
+    estimate_train_platform,
     get_budget_settings,
     get_db,
     get_incoming_funds,
     get_savings_baselines,
     init_db,
+    record_train_platform,
     save_budget_settings,
     save_incoming_fund,
     save_savings_baseline,
@@ -131,12 +136,48 @@ def _do_train_fetch() -> None:
             target_work_arrival=TRAIN_WORK_ARRIVAL_TARGET,
             target_work_departure=TRAIN_HOME_DEPARTURE_TARGET,
         )
+        now = datetime.now()
+        date_str = now.strftime("%Y-%m-%d")
+        day_of_week = now.weekday()
+        directions = [
+            ("outbound", TRAIN_FROM_CRS, TRAIN_TO_CRS),
+            ("return", TRAIN_TO_CRS, TRAIN_FROM_CRS),
+        ]
+        db = sqlite3.connect(DB_PATH)
+        try:
+            for key, crs_from, crs_to in directions:
+                for train in result[key]["trains"]:
+                    if train.get("platform") and not train.get("cancelled"):
+                        record_train_platform(
+                            db,
+                            crs_from,
+                            crs_to,
+                            train["scheduled_dep"],
+                            train["platform"],
+                            date_str,
+                            day_of_week,
+                        )
+                    elif not train.get("platform"):
+                        est, conf = estimate_train_platform(
+                            db,
+                            crs_from,
+                            crs_to,
+                            train["scheduled_dep"],
+                            day_of_week,
+                            TRAIN_PLATFORM_MIN_SAMPLES,
+                            TRAIN_PLATFORM_MIN_CONFIDENCE,
+                        )
+                        if est:
+                            train["platform"] = est
+                            train["platform_estimated"] = True
+        finally:
+            db.close()
         with _train_lock:
             _train_cache.update(
                 {
                     "outbound": result["outbound"],
                     "return": result["return"],
-                    "fetched_at": datetime.now(),
+                    "fetched_at": now,
                     "error": None,
                     "fetching": False,
                 }

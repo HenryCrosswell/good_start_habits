@@ -215,6 +215,76 @@ def init_garmin_tables(db: sqlite3.Connection) -> None:
     )
 
 
+def init_train_platform_history(db: sqlite3.Connection) -> None:
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS train_platform_history (
+            from_crs      TEXT    NOT NULL,
+            to_crs        TEXT    NOT NULL,
+            scheduled_dep TEXT    NOT NULL,
+            platform      TEXT    NOT NULL,
+            date          TEXT    NOT NULL,
+            day_of_week   INTEGER NOT NULL,
+            PRIMARY KEY (from_crs, to_crs, scheduled_dep, date)
+        )
+        """
+    )
+
+
+def record_train_platform(
+    db: sqlite3.Connection,
+    from_crs: str,
+    to_crs: str,
+    scheduled_dep: str,
+    platform: str,
+    date_str: str,
+    day_of_week: int,
+) -> None:
+    db.execute(
+        """
+        INSERT OR IGNORE INTO train_platform_history
+            (from_crs, to_crs, scheduled_dep, platform, date, day_of_week)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (from_crs, to_crs, scheduled_dep, platform, date_str, day_of_week),
+    )
+    db.commit()
+
+
+def estimate_train_platform(
+    db: sqlite3.Connection,
+    from_crs: str,
+    to_crs: str,
+    scheduled_dep: str,
+    day_of_week: int,
+    min_samples: int,
+    min_confidence: float,
+) -> tuple[str | None, float]:
+    """Return (platform, confidence) from history, or (None, 0) if insufficient data."""
+    rows = db.execute(
+        """
+        SELECT platform, COUNT(*) AS cnt
+        FROM train_platform_history
+        WHERE from_crs = ? AND to_crs = ? AND scheduled_dep = ?
+          AND day_of_week = ?
+          AND date >= date('now', '-90 days')
+        GROUP BY platform
+        ORDER BY cnt DESC
+        """,
+        (from_crs, to_crs, scheduled_dep, day_of_week),
+    ).fetchall()
+    if not rows:
+        return None, 0.0
+    total = sum(r[1] for r in rows)
+    if total < min_samples:
+        return None, 0.0
+    top_platform, top_count = rows[0]
+    confidence = top_count / total
+    if confidence < min_confidence:
+        return None, 0.0
+    return top_platform, confidence
+
+
 def init_db():
     """Create all tables if they do not exist and seed habit rows."""
     db = get_db()
@@ -231,6 +301,7 @@ def init_db():
     init_tl_tables(db)
     init_budget_settings(db)
     init_garmin_tables(db)
+    init_train_platform_history(db)
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS category_overrides (
