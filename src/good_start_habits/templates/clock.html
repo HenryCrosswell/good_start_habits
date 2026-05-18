@@ -26,22 +26,41 @@ html, body {
 /* ── Train widget — vintage railway poster ────────────────── */
 #train-widget {
     position: fixed;
-    top: 18px;
-    right: 16px;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 25;
-    width: 320px;
     background: #F2E8D5;
-    border: 2px solid #2B1A10;
-    box-shadow: 5px 5px 0 #2B1A10;
+    border-bottom: 3px solid #2B1A10;
+    box-shadow: 0 4px 0 rgba(43,26,16,0.18);
     font-family: Georgia, 'Times New Roman', serif;
     color: #2B1A10;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+/* Left panel: route header + tabs */
+.tw-left-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    border-right: 3px solid #B8962E;
+}
+
+/* Right panel: board + footer */
+.tw-right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 /* Header: navy banner with route name */
 .tw-header {
     background: #1C2D4A;
     padding: 8px 12px 7px;
-    border-bottom: 3px solid #B8962E;
+    flex: 1;
 }
 .tw-route {
     font-family: 'Playfair Display', Georgia, serif;
@@ -71,7 +90,7 @@ html, body {
 /* Direction tabs */
 .tw-tabs {
     display: flex;
-    border-bottom: 2px solid #B8962E;
+    border-top: 2px solid #B8962E;
 }
 .tw-tab {
     flex: 1;
@@ -95,7 +114,8 @@ html, body {
 .tw-timing-bar {
     display: flex;
     align-items: stretch;
-    border-bottom: 1px solid #C4A882;
+    border-right: 2px solid #B8962E;
+    flex: 0 0 auto;
 }
 .tw-timing-cell {
     flex: 1;
@@ -127,7 +147,7 @@ html, body {
 .tw-ontime-no  { color: #8C1F28; font-weight: bold; }
 
 /* Train board rows */
-.tw-board { border-bottom: 1px solid #C4A882; }
+.tw-board { flex: 1; }
 .tw-col-hdr {
     display: flex;
     align-items: center;
@@ -203,6 +223,7 @@ html, body {
     display: inline-block;
 }
 .tw-arr-col { flex: 1; font-size: 13px; color: #5A4535; padding-left: 6px; }
+.tw-leave-col { flex: 1; font-size: 13px; color: #5A4535; padding-left: 6px; }
 .tw-dur-col {
     width: 38px;
     font-size: 11px;
@@ -248,6 +269,7 @@ html, body {
     font-size: 10px;
     color: #9A8060;
     letter-spacing: 0.06em;
+    border-top: 1px solid #C4A882;
 }
 #tw-resync {
     background: none;
@@ -426,18 +448,19 @@ html, body {
 
 <div id="train-widget">
 
-  <div class="tw-header">
-    <div class="tw-route" id="tw-route-text">
-      St Albans City<span class="tw-route-arrow">→</span>Farringdon
+  <div class="tw-left-panel">
+    <div class="tw-header">
+      <div class="tw-route" id="tw-route-text">
+        St Albans City<span class="tw-route-arrow">→</span>Farringdon
+      </div>
+      <div class="tw-status-flag" id="tw-status-row">
+        <span class="tw-s-dim">Connecting…</span>
+      </div>
     </div>
-    <div class="tw-status-flag" id="tw-status-row">
-      <span class="tw-s-dim">Connecting…</span>
+    <div class="tw-tabs">
+      <button class="tw-tab tw-tab-active" id="tw-tab-out" onclick="twSetTab('outbound')">▶ To Work</button>
+      <button class="tw-tab" id="tw-tab-ret" onclick="twSetTab('return')">▶ Home</button>
     </div>
-  </div>
-
-  <div class="tw-tabs">
-    <button class="tw-tab tw-tab-active" id="tw-tab-out" onclick="twSetTab('outbound')">▶ To Work</button>
-    <button class="tw-tab" id="tw-tab-ret" onclick="twSetTab('return')">▶ Home</button>
   </div>
 
   <div class="tw-timing-bar">
@@ -453,20 +476,23 @@ html, body {
     </div>
   </div>
 
-  <div class="tw-board">
-    <div class="tw-col-hdr">
-      <span>Departs</span>
-      <span>Arrives</span>
-      <span class="tc-dur">Dur</span>
-      <span class="tc-type">Type</span>
-      <span class="tc-badge"></span>
+  <div class="tw-right-panel">
+    <div class="tw-board">
+      <div class="tw-col-hdr">
+        <span>Leave</span>
+        <span>Departs</span>
+        <span>Arrives</span>
+        <span class="tc-dur">Dur</span>
+        <span class="tc-type">Type</span>
+        <span class="tc-badge"></span>
+      </div>
+      <div id="tw-board-rows"></div>
     </div>
-    <div id="tw-board-rows"></div>
-  </div>
 
-  <div class="tw-footer">
-    <span id="tw-updated">–</span>
-    <button id="tw-resync" onclick="trainResync()">↺ Resync</button>
+    <div class="tw-footer">
+      <span id="tw-updated">–</span>
+      <button id="tw-resync" onclick="trainResync()">↺ Resync</button>
+    </div>
   </div>
 
 </div>
@@ -649,6 +675,7 @@ html, body {
                 }
 
                 html += '<div class="' + rowCls + '">'
+                      + '<div class="tw-leave-col">' + esc(t.leave_home_by || '--:--') + '</div>'
                       + '<div class="tw-dep-col">' + depInner + '</div>'
                       + '<div class="tw-arr-col">' + esc(t.estimated_arr || '--:--') + '</div>'
                       + '<div class="tw-dur-col">' + dur + '</div>'
