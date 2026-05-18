@@ -237,7 +237,7 @@ def _build_train_list(
         arr_dt = datetime.combine(now.date(), dtime(*arr_hhmm))
         if arr_dt < dep_dt:
             arr_dt += timedelta(days=1)
-        if dep_dt < now - timedelta(minutes=1):
+        if dep_dt < now + timedelta(minutes=walk_a_mins):
             continue
 
         leave_a_dt = dep_dt - timedelta(minutes=walk_a_mins)

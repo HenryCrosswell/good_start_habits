@@ -572,11 +572,11 @@ html, body {
                 return;
             }
 
-            // Find recommended (non-cancelled preferred) then fall back to first
+            // Find recommended non-cancelled train, then any non-cancelled, then any
             var rec = trains.find(function (t) { return t.recommended && !t.cancelled; })
-                   || trains.find(function (t) { return t.recommended; })
+                   || trains.find(function (t) { return !t.cancelled; })
                    || trains[0];
-            var others = trains.filter(function (t) { return t !== rec; }).slice(0, 2);
+            var others = trains.filter(function (t) { return t !== rec && !t.cancelled; }).slice(0, 2);
 
             // Status flag — reflect the rec train's state
             if (rec.cancelled) {
