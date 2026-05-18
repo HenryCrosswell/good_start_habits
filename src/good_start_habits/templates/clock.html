@@ -571,7 +571,11 @@ html, body {
 
             var isReturn = twTab === 'return';
             var dirData  = isReturn ? data['return'] : data['outbound'];
-            var trains   = (dirData && dirData.trains) ? dirData.trains : [];
+            var _allTrains = (dirData && dirData.trains) ? dirData.trains : [];
+            // Drop trains where you'd need to have already left — cache can be up to 30s stale
+            var _now = new Date();
+            var _nowHHMM = _now.getHours().toString().padStart(2,'0') + ':' + _now.getMinutes().toString().padStart(2,'0');
+            var trains = _allTrains.filter(function(t) { return !t.leave_home_by || t.leave_home_by >= _nowHHMM; });
 
             // Update route header and timing labels
             var routeEl = document.getElementById('tw-route-text');
